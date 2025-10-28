@@ -1,4 +1,5 @@
 const { ContainerBuilder, MessageFlags } = require("discord.js");
+const { getEmojiDrapeau, getEmojiTete } = require("../../../util/module/emoji");
 
 module.exports = {
   data: {
@@ -35,7 +36,7 @@ module.exports = {
           Authorization: `Bearer ${config.glorybot_token}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     const data = await response.json();
@@ -43,47 +44,37 @@ module.exports = {
     const staff = data?.staff || false;
 
     if (staff) {
-      const guild = await client.guilds.fetch("1349379748576366633");
       const createdEmojis = [];
       let emojiPays;
       let emojiStaff;
-      try {
-        const imageUrl1 = `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${data.pays}`;
-        const responseImage1 = await fetch(imageUrl1);
-        const arrayBuffer1 = await responseImage1.arrayBuffer();
-        const buffer1 = Buffer.from(arrayBuffer1);
-        emojiPays = await guild.emojis.create({
-          attachment: buffer1,
-          name: `${serveur}_${data.pays}`,
-        });
-        createdEmojis.push(emojiPays);
 
-        const imageUrl2 = `https://skins.nationsglory.fr/face/${staff}/3d/4`;
-        const responseImage2 = await fetch(imageUrl2);
-        const arrayBuffer2 = await responseImage2.arrayBuffer();
-        const buffer2 = Buffer.from(arrayBuffer2);
-        emojiStaff = await guild.emojis.create({
-          attachment: buffer2,
-          name: staff,
-        });
-        createdEmojis.push(emojiStaff);
+      try {
+        emojiPays = await getEmojiDrapeau(
+          client,
+          serveur,
+          data.pays.toLowerCase(),
+        );
+        if (emojiPays) createdEmojis.push(emojiPays);
+
+        emojiStaff = await getEmojiTete(client, staff.toLowerCase());
+        if (emojiStaff) createdEmojis.push(emojiStaff);
       } catch (e) {
         console.log(
           "Erreur lors de la création des émojis de qui note mon pays :",
-          e
+          e,
         );
       }
 
       const informationContainer = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
         .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## Pays Noté")
+          textDisplay.setContent("## Pays Noté"),
         )
         .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `Les notations du pays <:${emojiPays.name}:${emojiPays.id}> "**${data.pays}**" ont été faites par <:${emojiStaff.name}:${emojiStaff.id}> **${staff}**.`
-          )
+            `Les notations du pays <:${emojiPays.name}:${emojiPays.id}> "**${data.pays}**" ont été faites par <:${emojiStaff.name}:${emojiStaff.id}> **${staff}**.`,
+          ),
         );
 
       await interaction.editReply({
@@ -98,7 +89,7 @@ module.exports = {
         } catch (err) {
           console.error(
             `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-            err
+            err,
           );
         }
       }
@@ -106,13 +97,13 @@ module.exports = {
       const informationContainer = new ContainerBuilder()
         .setAccentColor(config.errorcolor)
         .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## Erreur")
+          textDisplay.setContent("## Erreur"),
         )
         .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `Le pays "**${paysSaisi}**" n'existe pas, a mal été orthographié ou n'a pas été noté cette semaine.`
-          )
+            `Le pays "**${paysSaisi}**" n'existe pas, a mal été orthographié ou n'a pas été noté cette semaine.`,
+          ),
         );
 
       await interaction.editReply({

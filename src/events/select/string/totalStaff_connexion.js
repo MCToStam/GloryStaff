@@ -1,4 +1,7 @@
-const { getAbsolutePath, getData } = require("../../../../util/module/getAndSaveData");
+const {
+  getAbsolutePath,
+  getData,
+} = require("../../../../util/module/getAndSaveData");
 const {
   EmbedBuilder,
   ActionRowBuilder,
@@ -28,7 +31,7 @@ module.exports = {
       const embedColor = interaction.message.embeds[0]?.color;
 
       serveur = Object.keys(config.couleur).find(
-        (key) => config.couleur[key] === embedColor
+        (key) => config.couleur[key] === embedColor,
       );
 
       const today = new Date();
@@ -43,7 +46,7 @@ module.exports = {
       semaineOffset = parseInt(parts[3]);
     }
 
-    const staffRaw = getData(`data/${serveur}/staff-serveur.json`)
+    const staffRaw = getData(`data/${serveur}/staff-serveur.json`);
     const staffList = Object.values(staffRaw)
       .filter((v) => Array.isArray(v))
       .flat();
@@ -51,7 +54,7 @@ module.exports = {
     const { dates, data } = getTotalConnexionTable(
       serveur,
       staffList,
-      semaineOffset
+      semaineOffset,
     );
     const imageBuffer = generateTableImage(dates, data, staffRaw);
     const attachment = new AttachmentBuilder(imageBuffer, {
@@ -73,7 +76,7 @@ module.exports = {
         .setCustomId(`staff/weektotal/${serveur}/${semaineOffset + 1}`)
         .setLabel("Semaine suivante ➡️")
         .setStyle(ButtonStyle.Primary)
-        .setDisabled(semaineOffset >= 0)
+        .setDisabled(semaineOffset >= 0),
     );
 
     if (interaction.isSelectMenu()) {

@@ -1,4 +1,5 @@
 const { getData } = require("../../util/module/getAndSaveData");
+const { getEmojiDrapeau } = require("../../util/module/emoji");
 const {
   ContainerBuilder,
   ActionRowBuilder,
@@ -21,13 +22,13 @@ async function classement_notation(client) {
         Authorization: `Bearer ${config.apitoken}`,
         "Content-Type": "application/json",
       },
-    }
+    },
   );
   const data = await response.json();
   for (const serveur of config.liste_serveur) {
     console.log(
       "🔎 Exécution du classement notations pour le serveur",
-      serveur
+      serveur,
     );
 
     const configuration = getData(`data/${serveur}/config-notation.json`);
@@ -49,13 +50,11 @@ async function classement_notation(client) {
                   config.emoji[entry.server]
                 }> ${entry.pays.replace(/([a-z])([A-Z])/g, "$1 $2")}・${
                   entry.bourse
-                }$`
+                }$`,
             )
             .join("\n");
 
           const emojis = {};
-          const createdEmojis = [];
-          const guild = await client.guilds.fetch("1349379748576366633");
 
           const topServerCountriesRaw = data
             .filter((entry) => entry.server === serveur)
@@ -63,32 +62,19 @@ async function classement_notation(client) {
 
           for (const entry of topServerCountriesRaw) {
             const pays = entry.pays.toLowerCase();
-            const emojiName = `${serveur}_${pays}`;
+            try {
+              const emoji = await getEmojiDrapeau(client, serveur, pays);
 
-            let emoji = guild.emojis.cache.find((e) => e.name === emojiName);
-            if (!emoji) {
-              try {
-                const imageUrl = `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${pays}`;
-                const responseImage = await fetch(imageUrl);
-                const arrayBuffer = await responseImage.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
-
-                emoji = await guild.emojis.create({
-                  attachment: buffer,
-                  name: emojiName,
-                });
-              } catch (err) {
-                console.error(
-                  `Erreur lors de la création de l'emoji pour ${pays}:`,
-                  err
-                );
+              if (emoji) {
+                emojis[pays] = `<:${emoji.name}:${emoji.id}>`;
+              } else {
+                emojis[pays] = "🏳️";
               }
-            }
-
-            if (emoji) {
-              createdEmojis.push(emoji);
-              emojis[pays] = `<:${emoji.name}:${emoji.id}>`;
-            } else {
+            } catch (err) {
+              console.error(
+                `Erreur lors de la récupération de l'emoji pour ${pays}:`,
+                err,
+              );
               emojis[pays] = "🏳️";
             }
           }
@@ -104,7 +90,7 @@ async function classement_notation(client) {
           const classementContainer = new ContainerBuilder()
             .setAccentColor(config.couleur[serveur])
             .addTextDisplayComponents((textDisplay) =>
-              textDisplay.setContent("## 🏆 Classement des Notations")
+              textDisplay.setContent("## 🏆 Classement des Notations"),
             )
             .addSeparatorComponents((separator) => separator)
             .addTextDisplayComponents((textDisplay) =>
@@ -114,9 +100,9 @@ async function classement_notation(client) {
                   .toUpperCase()}${serveur.slice(1)}:${
                   config.emoji[serveur]
                 }> Top 10 ${serveur.charAt(0).toUpperCase()}${serveur.slice(
-                  1
-                )} :**\n${topServerCountries}`
-              )
+                  1,
+                )} :**\n${topServerCountries}`,
+              ),
             )
             .addSeparatorComponents((separator) => separator)
             .addActionRowComponents(
@@ -132,20 +118,20 @@ async function classement_notation(client) {
                 new ButtonBuilder()
                   .setLabel("Page des Notations")
                   .setURL(
-                    `https://nationsglory.fr/notations/${serveur}/${week}`
+                    `https://nationsglory.fr/notations/${serveur}/${week}`,
                   )
-                  .setStyle(ButtonStyle.Link)
-              )
+                  .setStyle(ButtonStyle.Link),
+              ),
             );
 
           let sentMessage;
           if (classementConfig.Role) {
             const roleMentions = classementConfig.Role.map(
-              (roleId) => `<@&${roleId}>`
+              (roleId) => `<@&${roleId}>`,
             ).join(", ");
 
             const roleTextDisplay = new TextDisplayBuilder().setContent(
-              roleMentions
+              roleMentions,
             );
 
             sentMessage = await channel.send({
@@ -154,7 +140,7 @@ async function classement_notation(client) {
             });
             console.log(
               "✅ Message de classement des notations envoyé pour le serveur",
-              serveur
+              serveur,
             );
           } else {
             sentMessage = await channel.send({
@@ -163,29 +149,19 @@ async function classement_notation(client) {
             });
             console.log(
               "✅ Message de classement des notations envoyé pour le serveur",
-              serveur
+              serveur,
             );
           }
 
-          for (const emoji of createdEmojis) {
-            try {
-              await emoji.delete();
-            } catch (err) {
-              console.error(
-                `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-                err
-              );
-            }
-          }
           if (channel.type === "GUILD_NEWS") {
             try {
               await sentMessage.crosspost();
               console.log(
-                `📣 Message publié dans le salon d’annonce pour ${serveur}`
+                `📣 Message publié dans le salon d’annonce pour ${serveur}`,
               );
             } catch (err) {
               console.warn(
-                `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`
+                `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
               );
             }
           }

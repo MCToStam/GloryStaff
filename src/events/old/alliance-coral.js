@@ -28,7 +28,7 @@ module.exports = {
       "data",
       serveur,
       "alliance",
-      "donnee.json"
+      "donnee.json",
     );
 
     if (!fs.existsSync(filePath)) fs.writeFileSync(filePath, "[]", "utf-8");
@@ -54,7 +54,7 @@ module.exports = {
             .setPlaceholder("Sélectionne un utilisateur...")
             .setRequired(false)
             .setMaxValues(1)
-            .setDefaultUsers(alliance.chef[0] ? [alliance.chef[0]] : [])
+            .setDefaultUsers(alliance.chef[0] ? [alliance.chef[0]] : []),
         );
 
       const chef2 = new LabelBuilder()
@@ -66,7 +66,7 @@ module.exports = {
             .setPlaceholder("Sélectionne un utilisateur...")
             .setRequired(false)
             .setMaxValues(1)
-            .setDefaultUsers(alliance.chef[1] ? [alliance.chef[1]] : [])
+            .setDefaultUsers(alliance.chef[1] ? [alliance.chef[1]] : []),
         );
 
       modal.addLabelComponents(chef1, chef2);
@@ -80,7 +80,7 @@ module.exports = {
     ) {
       const allianceNom = interaction.customId.replace(
         "modal_ally_editchef_",
-        ""
+        "",
       );
       const chef1 =
         interaction.fields.getSelectedUsers("chef1")?.first()?.id || false;
@@ -94,7 +94,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -116,7 +116,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -134,7 +134,7 @@ module.exports = {
             .setStyle(TextInputStyle.Short)
             .setPlaceholder("Entrer le nom...")
             .setRequired(true)
-            .setMaxLength(100)
+            .setMaxLength(100),
         );
 
       const chef1 = new LabelBuilder()
@@ -145,7 +145,7 @@ module.exports = {
             .setCustomId("chef1")
             .setPlaceholder("Sélectionne un utilisateur...")
             .setRequired(false)
-            .setMaxValues(1)
+            .setMaxValues(1),
         );
 
       const chef2 = new LabelBuilder()
@@ -156,7 +156,7 @@ module.exports = {
             .setCustomId("chef2")
             .setPlaceholder("Sélectionne un utilisateur...")
             .setRequired(false)
-            .setMaxValues(1)
+            .setMaxValues(1),
         );
 
       modal.addLabelComponents(nomInput, chef1, chef2);
@@ -180,7 +180,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${nom}" n'existe pas.`)
+            t.setContent(`L'alliance "${nom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -232,7 +232,7 @@ module.exports = {
     ) {
       const allianceNom = interaction.customId.replace(
         "modal_ally_addfonda_",
-        ""
+        "",
       );
       const pays = interaction.fields.getTextInputValue("pays").trim();
 
@@ -243,7 +243,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -260,8 +260,8 @@ module.exports = {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `Le pays "${pays}" fait déjà parti de l'alliance "${allianceNom}".`
-            )
+              `Le pays "${pays}" fait déjà parti de l'alliance "${allianceNom}".`,
+            ),
           );
 
         return interaction.reply({
@@ -280,7 +280,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -310,7 +310,7 @@ module.exports = {
     ) {
       const allianceNom = interaction.customId.replace(
         "modal_ally_remfonda_",
-        ""
+        "",
       );
       const pays = interaction.fields.getTextInputValue("pays").trim();
 
@@ -321,7 +321,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -338,8 +338,8 @@ module.exports = {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `Le pays "${pays}" ne fait pas parti de l'alliance "${allianceNom}".`
-            )
+              `Le pays "${pays}" ne fait pas parti de l'alliance "${allianceNom}".`,
+            ),
           );
 
         return interaction.reply({
@@ -350,7 +350,7 @@ module.exports = {
       }
 
       alliance.listePaysFondateur = alliance.listePaysFondateur.filter(
-        (p) => p !== pays
+        (p) => p !== pays,
       );
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
@@ -360,7 +360,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -390,7 +390,7 @@ module.exports = {
     ) {
       const allianceNom = interaction.customId.replace(
         "modal_ally_addmember_",
-        ""
+        "",
       );
       const pays = interaction.fields.getTextInputValue("pays").trim();
 
@@ -401,7 +401,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -418,8 +418,8 @@ module.exports = {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `Le pays "${pays}" fait déjà parti de l'alliance "${allianceNom}".`
-            )
+              `Le pays "${pays}" fait déjà parti de l'alliance "${allianceNom}".`,
+            ),
           );
 
         return interaction.reply({
@@ -438,7 +438,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -468,7 +468,7 @@ module.exports = {
     ) {
       const allianceNom = interaction.customId.replace(
         "modal_ally_remmember_",
-        ""
+        "",
       );
       const pays = interaction.fields.getTextInputValue("pays").trim();
 
@@ -479,7 +479,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -496,8 +496,8 @@ module.exports = {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `Le pays "${pays}" ne fait pas parti de l'alliance "${allianceNom}".`
-            )
+              `Le pays "${pays}" ne fait pas parti de l'alliance "${allianceNom}".`,
+            ),
           );
 
         return interaction.reply({
@@ -508,7 +508,7 @@ module.exports = {
       }
 
       alliance.listePaysMembre = alliance.listePaysMembre.filter(
-        (p) => p !== pays
+        (p) => p !== pays,
       );
       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 
@@ -518,7 +518,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -532,7 +532,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -559,8 +559,8 @@ module.exports = {
               ChannelType.GuildText,
               ChannelType.GuildAnnouncement,
               ChannelType.PublicThread,
-              ChannelType.PrivateThread
-            )
+              ChannelType.PrivateThread,
+            ),
         );
 
       modal.addLabelComponents(channelInput);
@@ -574,9 +574,11 @@ module.exports = {
     ) {
       const allianceNom = interaction.customId.replace(
         "modal_alliance_send_",
-        ""
+        "",
       );
-      const channelId = interaction.fields.getSelectedChannels("channelId")?.first()?.id || false;
+      const channelId =
+        interaction.fields.getSelectedChannels("channelId")?.first()?.id ||
+        false;
 
       const alliance = data.find((a) => a.nom === allianceNom);
       if (!alliance) {
@@ -585,7 +587,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+            t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -604,7 +606,7 @@ module.exports = {
           .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
-            t.setContent(`Le salon "${channelId}" n'existe pas.`)
+            t.setContent(`Le salon "${channelId}" n'existe pas.`),
           );
 
         return interaction.reply({
@@ -623,10 +625,10 @@ module.exports = {
       const effectifContainer = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
         .addTextDisplayComponents((t) =>
-          t.setContent(`📜 **Effectif de l’alliance ${alliance.nom}**`)
+          t.setContent(`📜 **Effectif de l’alliance ${alliance.nom}**`),
         )
         .addTextDisplayComponents((t) =>
-          t.setContent(`**👑 Chef :** ${chefsMention}`)
+          t.setContent(`**👑 Chef :** ${chefsMention}`),
         )
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
@@ -635,8 +637,8 @@ module.exports = {
               alliance.listePaysFondateur.join(", ") || "Aucun pays fondateur"
             }\n**🌍 Pays Membre :** ${
               alliance.listePaysMembre.join(", ") || "Aucun pays membre"
-            }`
-          )
+            }`,
+          ),
         );
 
       const msg = await channel.send({
@@ -654,7 +656,7 @@ module.exports = {
         serveur,
         data,
         allianceNom,
-        true
+        true,
       );
     }
 
@@ -676,8 +678,8 @@ async function showAllianceList(interaction, serveur, data) {
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
       t.setContent(
-        `## Alliance - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`
-      )
+        `## Alliance - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+      ),
     )
     .addSeparatorComponents((s) => s);
 
@@ -697,21 +699,21 @@ async function showAllianceList(interaction, serveur, data) {
               alliance.listePaysFondateur.join(", ") || "Aucun pays fondateur"
             }\n**🌍 Pays Membre :** ${
               alliance.listePaysMembre.join(", ") || "Aucun pays membre"
-            }`
-          )
+            }`,
+          ),
         )
         .setButtonAccessory((button) =>
           button
             .setCustomId(`alliance_edit_${alliance.nom}`)
             .setLabel("Modifier")
-            .setStyle(ButtonStyle.Primary)
-        )
+            .setStyle(ButtonStyle.Primary),
+        ),
     );
   }
 
   if (!data || data.length === 0) {
     container.addTextDisplayComponents((t) =>
-      t.setContent("Aucune alliance n’a encore été créée")
+      t.setContent("Aucune alliance n’a encore été créée"),
     );
   }
 
@@ -721,8 +723,8 @@ async function showAllianceList(interaction, serveur, data) {
       new ButtonBuilder()
         .setCustomId("alliance_create")
         .setLabel("Créer une alliance")
-        .setStyle(ButtonStyle.Success)
-    )
+        .setStyle(ButtonStyle.Success),
+    ),
   );
 
   if (interaction.replied || interaction.deferred) {
@@ -745,7 +747,7 @@ async function showAlliancePage(
   serveur,
   data,
   allianceNom,
-  adminMode = false
+  adminMode = false,
 ) {
   const alliance = data.find((a) => a.nom === allianceNom);
   if (!alliance) {
@@ -754,7 +756,7 @@ async function showAlliancePage(
       .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>
-        t.setContent(`L'alliance "${allianceNom}" n'existe pas.`)
+        t.setContent(`L'alliance "${allianceNom}" n'existe pas.`),
       );
 
     return interaction.reply({
@@ -780,8 +782,8 @@ async function showAlliancePage(
           alliance.listePaysFondateur.join(", ") || "Aucun pays fondateur"
         }\n**🌍 Pays Membre :** ${
           alliance.listePaysMembre.join(", ") || "Aucun pays membre"
-        }`
-      )
+        }`,
+      ),
     )
     .addSeparatorComponents((s) => s);
 
@@ -793,7 +795,7 @@ async function showAlliancePage(
     new ButtonBuilder()
       .setCustomId(`ally_remmember_${alliance.nom}`)
       .setLabel("Retirer un pays membre")
-      .setStyle(ButtonStyle.Danger)
+      .setStyle(ButtonStyle.Danger),
   );
 
   container.addActionRowComponents(row);
@@ -811,7 +813,7 @@ async function showAlliancePage(
       new ButtonBuilder()
         .setCustomId(`alliance_delete_${alliance.nom}`)
         .setLabel("Supprimer l'alliance")
-        .setStyle(ButtonStyle.Danger)
+        .setStyle(ButtonStyle.Danger),
     );
 
     const adminRow2 = new ActionRowBuilder().addComponents(
@@ -822,7 +824,7 @@ async function showAlliancePage(
       new ButtonBuilder()
         .setCustomId(`ally_remfonda_${alliance.nom}`)
         .setLabel("Retirer un pays fondateur")
-        .setStyle(ButtonStyle.Danger)
+        .setStyle(ButtonStyle.Danger),
     );
 
     container.addActionRowComponents(adminRow);
@@ -865,10 +867,10 @@ async function updateAllianceMessage(client, alliance, serveur) {
   const effectifContainer = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
-      t.setContent(`📜 **Effectif de l’alliance ${alliance.nom}**`)
+      t.setContent(`📜 **Effectif de l’alliance ${alliance.nom}**`),
     )
     .addTextDisplayComponents((t) =>
-      t.setContent(`**👑 Chef :** ${chefsMention}`)
+      t.setContent(`**👑 Chef :** ${chefsMention}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -877,8 +879,8 @@ async function updateAllianceMessage(client, alliance, serveur) {
           alliance.listePaysFondateur.join(", ") || "Aucun pays fondateur"
         }\n**🌍 Pays Membre :** ${
           alliance.listePaysMembre.join(", ") || "Aucun pays membre"
-        }`
-      )
+        }`,
+      ),
     );
 
   await msg.edit({

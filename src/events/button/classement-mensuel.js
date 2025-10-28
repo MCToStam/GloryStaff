@@ -17,7 +17,7 @@ module.exports = {
     const files = getFiles("data/classement/mois");
 
     const matchingFile = files.find(
-      (file) => file.startsWith(`classement-${id}-`) && file.endsWith(".json")
+      (file) => file.startsWith(`classement-${id}-`) && file.endsWith(".json"),
     );
 
     const classementData = getData(`data/classement/mois/${matchingFile}`);
@@ -25,7 +25,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     try {
@@ -43,10 +43,10 @@ module.exports = {
               }> **${entry.serveur
                 .charAt(0)
                 .toUpperCase()}${entry.serveur.slice(1)}** : ${Math.round(
-                entry.moyenneNotation
+                entry.moyenneNotation,
               ).toLocaleString()}$ ( Total : ${Math.round(
-                entry.argentNotation
-              ).toLocaleString()}$ )`
+                entry.argentNotation,
+              ).toLocaleString()}$ )`,
           )
           .join("\n");
       } else {
@@ -61,15 +61,15 @@ module.exports = {
               }> **${entry.serveur
                 .charAt(0)
                 .toUpperCase()}${entry.serveur.slice(
-                1
-              )}** : ${entry.moyenneConnexion.toFixed(0)} joueurs`
+                1,
+              )}** : ${entry.moyenneConnexion.toFixed(0)} joueurs`,
           )
           .join("\n");
       }
 
       const embed = new EmbedBuilder()
         .setTitle(
-          `Classement Mensuel - ${isNotation ? "Notations" : "Connexions"}`
+          `Classement Mensuel - ${isNotation ? "Notations" : "Connexions"}`,
         )
         .setColor(config.couleur[serveur])
         .setDescription(classementTexte)

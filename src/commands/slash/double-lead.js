@@ -13,21 +13,21 @@ module.exports = {
       option
         .setName("serveur")
         .setDescription(
-          "Le serveur pour lequel afficher la liste des doubles lead"
+          "Le serveur pour lequel afficher la liste des doubles lead",
         )
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
-    const data = getData(`data/doublelead.json`)
+    const data = getData(`data/doublelead.json`);
 
     const matchingLeaders = data.filter((entry) =>
       Object.keys(entry.servers).some(
-        (server) => server.toLowerCase() === serveur
-      )
+        (server) => server.toLowerCase() === serveur,
+      ),
     );
 
     if (matchingLeaders.length === 0) {
@@ -37,8 +37,8 @@ module.exports = {
           t.setContent(
             `## Double Lead - ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }`
-          )
+            }`,
+          ),
         )
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
@@ -47,8 +47,8 @@ module.exports = {
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
             }:${config.emoji[serveur.toLowerCase()]}> **${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }**.`
-          )
+            }**.`,
+          ),
         );
       return await interaction.reply({
         components: [noDoubleLead],
@@ -63,8 +63,8 @@ module.exports = {
         t.setContent(
           `## Double Lead - ${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`
-        )
+          }`,
+        ),
       )
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>
@@ -82,11 +82,11 @@ module.exports = {
               });
               return `**${entry.leader.replace(
                 /_/g,
-                "\\_"
+                "\\_",
               )} :**\n${serverList}`;
             })
-            .join("\n")
-        )
+            .join("\n"),
+        ),
       );
 
     return await interaction.reply({

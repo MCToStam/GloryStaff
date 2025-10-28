@@ -1,5 +1,9 @@
 const config = require("../../config");
-const { getFiles, getData, saveData } = require("../../util/module/getAndSaveData");
+const {
+  getFiles,
+  getData,
+  saveData,
+} = require("../../util/module/getAndSaveData");
 const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const {
   EmbedBuilder,
@@ -66,7 +70,7 @@ const prepareServerRankings = async () => {
           Authorization: `Bearer ${config.apitoken}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     let argentNotation = 0;
@@ -74,7 +78,7 @@ const prepareServerRankings = async () => {
       const dataArgent = await responseArgent.json();
       argentNotation = dataArgent.reduce(
         (total, item) => total + (item.bourse || 0),
-        0
+        0,
       );
     } else {
       console.log(`Erreur API pour ${serveur} : ${responseArgent.statusText}`);
@@ -88,7 +92,7 @@ const prepareServerRankings = async () => {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     let moyenneConnexion = 0;
@@ -107,7 +111,7 @@ const prepareServerRankings = async () => {
       moyenneConnexion = total / values.length || 0;
     } else {
       console.log(
-        `Erreur API pour ${serveur} : ${responseConnexion.statusText}`
+        `Erreur API pour ${serveur} : ${responseConnexion.statusText}`,
       );
       continue;
     }
@@ -146,7 +150,7 @@ const prepareServerRankings = async () => {
 
   saveData(
     `data/classement/semaine/classement-${nextFileNumber}-${moisActuel}-${actualYear}.json`,
-    rankings
+    rankings,
   );
   console.log(`Classements hebdomadaireenregistrés avec succès !`);
   return { id: nextFileNumber, mois: moisActuel, annee: actualYear };
@@ -168,7 +172,7 @@ async function recapitulatif_hebdomadaire(client) {
 
       if (channel) {
         const classementData = getData(
-          `data/classement/semaine/classement-${id}-${mois}-${annee}.json`
+          `data/classement/semaine/classement-${id}-${mois}-${annee}.json`,
         );
 
         const argentNotation =
@@ -182,12 +186,12 @@ async function recapitulatif_hebdomadaire(client) {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!response_connexion.ok) {
           console.log(
-            `Erreur de l'API pour le serveur ${serveur} : ${response_connexion.statusText}`
+            `Erreur de l'API pour le serveur ${serveur} : ${response_connexion.statusText}`,
           );
           return;
         }
@@ -305,19 +309,18 @@ async function recapitulatif_hebdomadaire(client) {
           ],
         };
 
-        const imageBuffer = await chartJSNodeCanvas.renderToBuffer(
-          configuration
-        );
+        const imageBuffer =
+          await chartJSNodeCanvas.renderToBuffer(configuration);
 
         const classementArgentFormatted = formatClassement(
           classementData,
           serveur,
-          "argentNotation"
+          "argentNotation",
         );
         const classementMoyenneFormatted = formatClassement(
           classementData,
           serveur,
-          "moyenneConnexion"
+          "moyenneConnexion",
         );
 
         const attachment = new AttachmentBuilder(imageBuffer, {
@@ -326,7 +329,7 @@ async function recapitulatif_hebdomadaire(client) {
         const embed = new EmbedBuilder()
           .setTitle("Récapitulatif Hebdomadaire")
           .setThumbnail(
-            `${config.glorybot_url}/api/banniere?serveur=${serveur}`
+            `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
           )
           .addFields([
             {
@@ -372,7 +375,7 @@ async function recapitulatif_hebdomadaire(client) {
           new ButtonBuilder()
             .setCustomId(`connexion-recap-${id}`)
             .setLabel("Classement détaillées : Connexion")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         const options = {
@@ -390,24 +393,24 @@ async function recapitulatif_hebdomadaire(client) {
         const sentMessage = await channel.send(options);
         console.log(
           "✅ Récapitulatif hebdomadaire envoyé pour le serveur",
-          serveur
+          serveur,
         );
         if (channel.type === "GUILD_NEWS") {
           try {
             await sentMessage.crosspost();
             console.log(
-              `📣 Message publié dans le salon d’annonce pour ${serveur}`
+              `📣 Message publié dans le salon d’annonce pour ${serveur}`,
             );
           } catch (err) {
             console.warn(
-              `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`
+              `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
             );
           }
         }
       }
     } else {
       console.log(
-        `❌ Récap hebdomadaire désactivé ou pas de salon configuré pour le serveur ${serveur}`
+        `❌ Récap hebdomadaire désactivé ou pas de salon configuré pour le serveur ${serveur}`,
       );
     }
   }

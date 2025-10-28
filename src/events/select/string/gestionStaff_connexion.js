@@ -11,7 +11,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title
@@ -19,7 +19,7 @@ module.exports = {
       ?.trim()
       .replace(/\\/g, "");
 
-    const staffData = getData(`data/${serveur}/staff/${joueur}.json`)
+    const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
 
     if (!staffData) {
       const embed = new EmbedBuilder()
@@ -42,7 +42,7 @@ module.exports = {
       serveur,
       joueur,
       tempsJeu,
-      semaineOffset
+      semaineOffset,
     );
     const files = attachment ? [attachment] : [];
     await interaction.reply({

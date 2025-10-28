@@ -14,7 +14,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title?.split("- ")[1]?.trim();
@@ -24,8 +24,8 @@ module.exports = {
     try {
       const responseLinked = await fetch(
         `${config.glorybot_url}/api/get-bedrock?pseudo_ng=${encodeURIComponent(
-          pseudo
-        )}`
+          pseudo,
+        )}`,
       );
       if (!responseLinked.ok)
         throw new Error(`Erreur API: ${responseLinked.status}`);
@@ -43,7 +43,7 @@ module.exports = {
           linkedMinecraftPseudonym
             ? `**${joueur}** est relié au compte Minecraft **${linkedMinecraftPseudonym}**.`
             : `**${joueur}** n'est pas relié à un compte Minecraft.`
-        }`
+        }`,
       )
       .setColor(config.couleur[serveur])
       .setFooter({ text: config.footer });
@@ -55,14 +55,14 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("gestionstaff_liaisonminecraft_edit")
           .setLabel("Modifier le compte Minecraft")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
     } else {
       actionRow.addComponents(
         new ButtonBuilder()
           .setCustomId("gestionstaff_liaisonminecraft_add")
           .setLabel("Lier le compte Minecraft")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
     }
 

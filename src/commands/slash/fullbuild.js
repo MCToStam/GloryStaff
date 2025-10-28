@@ -10,21 +10,21 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel valider un fullbuild")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     )
     .addStringOption((option) =>
       option
         .setName("paysa")
         .setDescription("Pays pour lequel le fullbuild est validé")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     )
     .addStringOption((option) =>
       option
         .setName("paysb")
         .setDescription("Pays pour lequel le pays-a va s'étendre")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
@@ -32,7 +32,9 @@ module.exports = {
     const paysa = interaction.options.getString("pays-a");
     const paysb = interaction.options.getString("pays-b");
 
-    const configExpansion = getData(`data/${serveur}/config-expansionterritoriale.json`)
+    const configExpansion = getData(
+      `data/${serveur}/config-expansionterritoriale.json`,
+    );
 
     if (!configExpansion["Full Build"]?.active) {
       const erreurEmbed = new EmbedBuilder()
@@ -43,7 +45,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`
+          }** !`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -58,7 +60,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`
+          }** !`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -68,15 +70,15 @@ module.exports = {
       .setTitle("🏚️ FullBuild")
       .setColor(config.couleur[serveur])
       .setDescription(
-        `<@${interaction.user.id}> vient de valider le fullbuild de pays **${paysa}**. Ce pays a donc maintenant la permission de s'étendre sur le pays **${paysb}**.`
+        `<@${interaction.user.id}> vient de valider le fullbuild de pays **${paysa}**. Ce pays a donc maintenant la permission de s'étendre sur le pays **${paysb}**.`,
       )
       .setFooter({ text: config.footer })
       .setThumbnail(
-        `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`
+        `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`,
       );
 
     const salon = interaction.client.channels.fetch(
-      configExpansion["Full Build"]?.Salon
+      configExpansion["Full Build"]?.Salon,
     );
 
     const roleIds = configExpansion["Full Build"]?.Role;
@@ -97,7 +99,7 @@ module.exports = {
       .setTitle("🏚️ FullBuild")
       .setColor(config.couleur[serveur])
       .setDescription(
-        `Le fullbuild est correctement validé et a été envoyé ici : ${messageLink}`
+        `Le fullbuild est correctement validé et a été envoyé ici : ${messageLink}`,
       )
       .setFooter(config.footer);
 
@@ -107,11 +109,11 @@ module.exports = {
       try {
         await message.crosspost();
         console.log(
-          `📣 Message publié dans le salon d’annonce pour ${serveur}`
+          `📣 Message publié dans le salon d’annonce pour ${serveur}`,
         );
       } catch (err) {
         console.warn(
-          `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`
+          `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
         );
       }
     }

@@ -1,4 +1,9 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 
 module.exports = {
@@ -14,7 +19,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     await interaction.deferReply({ ephemeral: true });
@@ -22,7 +27,7 @@ module.exports = {
     let pseudo;
     try {
       const response = await fetch(
-        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`
+        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`,
       );
       if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
       const data = await response.json();
@@ -37,7 +42,7 @@ module.exports = {
         .setTitle("Erreur")
         .setColor(config.errorcolor)
         .setDescription(
-          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.'
+          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.',
         )
         .setFooter({ text: config.footer });
 
@@ -45,7 +50,7 @@ module.exports = {
         new ButtonBuilder()
           .setLabel("💻 Accéder au panel")
           .setStyle(ButtonStyle.Link)
-          .setURL("https://glorybot.fr")
+          .setURL("https://glorybot.fr"),
       );
 
       return interaction.editReply({
@@ -54,10 +59,10 @@ module.exports = {
         ephemeral: true,
       });
     }
-    
-    const staffData = getData(`data/${serveur}/staff-serveur.json`)
 
-    const configJail = getData(`data/${serveur}/config-jail.json`)
+    const staffData = getData(`data/${serveur}/staff-serveur.json`);
+
+    const configJail = getData(`data/${serveur}/config-jail.json`);
     const roleAutorise = configJail.jail.Grade;
 
     const gradesHierarchie = [
@@ -85,7 +90,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }**.`
+          }**.`,
         )
         .setFooter({ text: config.footer });
       return interaction.editReply({
@@ -94,7 +99,7 @@ module.exports = {
       });
     }
 
-    const jailData = getData(`data/${serveur}/jail.json`)
+    const jailData = getData(`data/${serveur}/jail.json`);
 
     const messageId = interaction.message.id;
     let threadIdToDelete = messageId;
@@ -106,7 +111,7 @@ module.exports = {
     for (const group in jailData) {
       if (jailData.hasOwnProperty(group)) {
         const entryIndex = jailData[group].findIndex(
-          (entry) => entry.messageId === messageId
+          (entry) => entry.messageId === messageId,
         );
 
         if (entryIndex !== -1) {
@@ -126,7 +131,7 @@ module.exports = {
     }
 
     if (updated) {
-      saveData(`data/${serveur}/jail.json`, jailData)
+      saveData(`data/${serveur}/jail.json`, jailData);
     }
 
     if (serveur === "cyan" && jailInfo && jailedUser) {

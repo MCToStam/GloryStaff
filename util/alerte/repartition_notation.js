@@ -1,5 +1,9 @@
 const config = require("../../config");
-const { getData, getAbsolutePath } = require("../../util/module/getAndSaveData");
+const {
+  getData,
+  getAbsolutePath,
+} = require("../../util/module/getAndSaveData");
+const { getEmojiTete } = require("../../util/module/emoji");
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -14,7 +18,7 @@ const {
 async function repartition_notation(client) {
   for (const server of config.liste_serveur) {
     try {
-      const repartitionData = getData(`data/${server}/config-notation.json`)
+      const repartitionData = getData(`data/${server}/config-notation.json`);
       const keys = Object.keys(repartitionData["répartition"]);
       const hasNumberKey = keys.some((key) => /^\d+$/.test(key));
       if (
@@ -35,32 +39,23 @@ async function repartition_notation(client) {
         } catch (err) {
           console.error(
             "Erreur lors de la récupération des données depuis l'API get-ng:",
-            err
+            err,
           );
         }
 
         const emojiMap = {};
-        const createdEmojis = [];
-        const guild = client.guilds.cache.get("1349379748576366633");
+
         for (const key of keys.filter((k) => /^\d+$/.test(k))) {
           const username = linkData[key] || false;
           if (username) {
-            const imageUrl = `https://skins.nationsglory.fr/face/${username}/3d/4`;
             try {
-              const response = await fetch(imageUrl);
-              const arrayBuffer = await response.arrayBuffer();
-              const buffer = Buffer.from(arrayBuffer);
-              const emoji = await guild.emojis.create({
-                attachment: buffer,
-                name: username,
-              });
-              createdEmojis.push(emoji);
+              const emoji = await getEmojiTete(client, username);
 
-              emojiMap[key] = emoji.toString();
+              emojiMap[key] = emoji ? `<:${emoji.name}:${emoji.id}>` : "";
             } catch (err) {
               console.log(
-                `Erreur lors de la création ou de la récupération de l'émoji pour ${username}:`,
-                err
+                `Erreur lors de la création ou récupération de l'émoji pour ${username}:`,
+                err,
               );
               emojiMap[key] = "";
             }
@@ -76,10 +71,9 @@ async function repartition_notation(client) {
           })
           .join("\n");
 
-        const imagePath = config.liste_serveur_bedrock
-          .includes(server)
+        const imagePath = config.liste_serveur_bedrock.includes(server)
           ? getAbsolutePath("data/ordredesnotations_bedrock.png")
-          : getAbsolutePath("data/ordredesnotations_java.png")
+          : getAbsolutePath("data/ordredesnotations_java.png");
 
         const attachment = new AttachmentBuilder(imagePath, {
           name: "ordre-des-notations.png",
@@ -98,19 +92,19 @@ async function repartition_notation(client) {
           .setAccentColor(config.couleur[server])
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `## Annonce des Notations - Semaine du ${jour}/${mois}`
-            )
+              `## Annonce des Notations - Semaine du ${jour}/${mois}`,
+            ),
           )
           .addSeparatorComponents((separator) => separator)
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `Voici la liste des staffs qui sont en charge des notations, si vous avez un recours à faire, il est préférable de s'adresser à la bonne qui vous a noté sur le [serveur Discord global de NationsGlory](https://discord.gg/nationsglory).\n\n${numberKeysValues}`
-            )
+              `Voici la liste des staffs qui sont en charge des notations, si vous avez un recours à faire, il est préférable de s'adresser à la bonne qui vous a noté sur le [serveur Discord global de NationsGlory](https://discord.gg/nationsglory).\n\n${numberKeysValues}`,
+            ),
           )
           .addMediaGalleryComponents(
             new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
-              mediaGalleryItem.setURL("attachment://ordre-des-notations.png")
-            )
+              mediaGalleryItem.setURL("attachment://ordre-des-notations.png"),
+            ),
           )
           .addSeparatorComponents((separator) => separator)
           .addActionRowComponents(
@@ -118,20 +112,20 @@ async function repartition_notation(client) {
               new ButtonBuilder()
                 .setCustomId("notation_help")
                 .setLabel("Informations Supplémentaires")
-                .setStyle(ButtonStyle.Success)
-            )
+                .setStyle(ButtonStyle.Success),
+            ),
           );
 
         const salon = client.channels.cache.get(
-          repartitionData["répartition"].Salon
+          repartitionData["répartition"].Salon,
         );
         if (repartitionData["répartition"]?.Role) {
           const roleMentions = repartitionData["répartition"].Role.map(
-            (roleId) => `<@&${roleId}>`
+            (roleId) => `<@&${roleId}>`,
           ).join(", ");
 
           const roleTextDisplay = new TextDisplayBuilder().setContent(
-            roleMentions
+            roleMentions,
           );
 
           await salon.send({
@@ -145,17 +139,6 @@ async function repartition_notation(client) {
             components: [repartitionContainer],
             flags: MessageFlags.IsComponentsV2,
           });
-        }
-
-        for (const emoji of createdEmojis) {
-          try {
-            await emoji.delete();
-          } catch (err) {
-            console.error(
-              `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-              err
-            );
-          }
         }
       }
     } catch (e) {

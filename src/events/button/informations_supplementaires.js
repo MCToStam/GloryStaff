@@ -15,7 +15,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const systemebrut = interaction.customId.split("-")[1]
+    const systemebrut = interaction.customId.split("-")[1];
 
     let systeme;
     if (systemebrut === "attentestaff") {
@@ -96,7 +96,7 @@ module.exports = {
         .setTitle(
           `Informations Supplémentaires - ${systeme
             .charAt(0)
-            .toUpperCase()}${systeme.slice(1)}`
+            .toUpperCase()}${systeme.slice(1)}`,
         )
         .setColor(config.couleur[serveur])
         .setDescription(description)
@@ -106,7 +106,7 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId(`previsualisation-${systeme}`)
           .setLabel("Afficher une prévisualisation du module")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
 
       return interaction.reply({
@@ -117,7 +117,7 @@ module.exports = {
     } catch (error) {
       console.error(
         "Erreur lors de la gestion des informations supplémentaires :",
-        error
+        error,
       );
       return interaction.reply({
         content:

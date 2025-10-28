@@ -3,7 +3,6 @@ const {
   getAbsolutePath,
   getData,
 } = require("../../../util/module/getAndSaveData");
-const path = require("node:path");
 const {
   SlashCommandBuilder,
   EmbedBuilder,
@@ -74,20 +73,20 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel dérank une personne")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     )
     .addUserOption((option) =>
       option
         .setName("pseudo")
         .setDescription("Le pseudonyme du joueur")
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("grade")
         .setDescription("Le grade de l'utilisateur")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
@@ -101,7 +100,7 @@ module.exports = {
     const [categorieId, gradeId] = grade.split("_");
 
     const gradesCategorie = gradeConfig.grade.filter(
-      (g) => g.categorie === categorieId
+      (g) => g.categorie === categorieId,
     );
 
     const gradeChoisi = gradesCategorie.find((g) => g.id === gradeId);
@@ -113,7 +112,7 @@ module.exports = {
     let pseudonym;
     try {
       const response = await fetch(
-        `${config.glorybot_url}/api/get-ng?discordId=${membre.id}`
+        `${config.glorybot_url}/api/get-ng?discordId=${membre.id}`,
       );
       if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
       const data = await response.json();
@@ -207,7 +206,7 @@ module.exports = {
       hexY,
       hexWidth,
       hexHeight,
-      hexCornerRadius
+      hexCornerRadius,
     );
     ctx.fill();
 
@@ -230,21 +229,21 @@ module.exports = {
       points[2].y,
       points[3].x,
       points[3].y,
-      hexCornerRadius
+      hexCornerRadius,
     );
     ctx.arcTo(
       points[3].x,
       points[3].y,
       points[4].x,
       points[4].y,
-      hexCornerRadius
+      hexCornerRadius,
     );
     ctx.arcTo(
       points[4].x,
       points[4].y,
       points[5].x,
       points[5].y,
-      hexCornerRadius
+      hexCornerRadius,
     );
     ctx.lineTo(points[5].x, points[0].y - topPadding);
     ctx.closePath();
@@ -259,7 +258,7 @@ module.exports = {
       hexX + hexWidth / 2 - imgW / 2,
       hexY + hexHeight - imgH + 100,
       imgW,
-      imgH
+      imgH,
     );
     ctx.restore();
 
@@ -286,21 +285,21 @@ module.exports = {
       badgeX + badgeWidth,
       badgeY,
       badgeX + badgeWidth,
-      badgeY + badgeRadius
+      badgeY + badgeRadius,
     );
     ctx.lineTo(badgeX + badgeWidth, badgeY + badgeHeight - badgeRadius);
     ctx.quadraticCurveTo(
       badgeX + badgeWidth,
       badgeY + badgeHeight,
       badgeX + badgeWidth - badgeRadius,
-      badgeY + badgeHeight
+      badgeY + badgeHeight,
     );
     ctx.lineTo(badgeX + badgeRadius, badgeY + badgeHeight);
     ctx.quadraticCurveTo(
       badgeX,
       badgeY + badgeHeight,
       badgeX,
-      badgeY + badgeHeight - badgeRadius
+      badgeY + badgeHeight - badgeRadius,
     );
     ctx.lineTo(badgeX, badgeY + badgeRadius);
     ctx.quadraticCurveTo(badgeX, badgeY, badgeX + badgeRadius, badgeY);
@@ -361,18 +360,11 @@ module.exports = {
       textStartX,
       subtitleY,
       subtitleMaxWidth,
-      subtitleLineHeight
+      subtitleLineHeight,
     );
 
     const buffer = await canvas.toBuffer("image/png");
 
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "data",
-      "staff",
-      `${pseudonym}.json`
-    );
     let historique = "";
 
     const gradesValides = [
@@ -394,8 +386,8 @@ module.exports = {
             `${config.emojigrade[details.grade]} **${
               details.grade
             } ${details.serveur.charAt(0).toUpperCase()}${details.serveur.slice(
-              1
-            )}** : ${date}`
+              1,
+            )}** : ${date}`,
         )
         .join("\n");
     }
@@ -434,7 +426,7 @@ module.exports = {
       } catch (err) {
         console.error(
           `Erreur lors de l'attribution ou le retrait des rôles à ${member.user.tag} sur ${guild.name} :`,
-          err
+          err,
         );
       }
     }

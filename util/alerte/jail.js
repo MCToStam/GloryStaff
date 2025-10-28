@@ -10,12 +10,12 @@ const {
 async function jail(client) {
   for (const server of config.liste_serveur) {
     try {
-      const jailConfigData = getData(`data/${server}/config-jail.json`)
+      const jailConfigData = getData(`data/${server}/config-jail.json`);
       if (jailConfigData["jail"].active && jailConfigData["jail"].Salon) {
-        const jailData = getData(`data/${server}/jail.json`)
+        const jailData = getData(`data/${server}/jail.json`);
 
         const hasJailedPlayers = Object.values(jailData).some((groupEntries) =>
-          groupEntries.some((entry) => entry)
+          groupEntries.some((entry) => entry),
         );
 
         if (!hasJailedPlayers) {
@@ -44,12 +44,12 @@ async function jail(client) {
                     .addSectionComponents((section) =>
                       section
                         .addTextDisplayComponents((textDisplay) =>
-                          textDisplay.setContent("## Joueur Connecté")
+                          textDisplay.setContent("## Joueur Connecté"),
                         )
                         .setThumbnailAccessory((thumbnail) =>
                           thumbnail.setURL(
-                            `https://skins.nationsglory.fr/face/${group}/3d/16`
-                          )
+                            `https://skins.nationsglory.fr/face/${group}/3d/16`,
+                          ),
                         )
                         .addTextDisplayComponents((textDisplay) =>
                           textDisplay.setContent(
@@ -57,13 +57,13 @@ async function jail(client) {
                               config.emoji[server.toLowerCase()]
                             }> **${
                               server.charAt(0).toUpperCase() + server.slice(1)
-                            }**.`
-                          )
-                        )
+                            }**.`,
+                          ),
+                        ),
                     );
                   try {
                     const channel = await client.channels.fetch(
-                      jailEntry.threadId
+                      jailEntry.threadId,
                     );
                     if (channel.isThread()) {
                       const jailRoles = jailConfigData.jail?.Role;
@@ -100,12 +100,12 @@ async function jail(client) {
                     .addSectionComponents((section) =>
                       section
                         .addTextDisplayComponents((textDisplay) =>
-                          textDisplay.setContent("## Joueur Déconnecté")
+                          textDisplay.setContent("## Joueur Déconnecté"),
                         )
                         .setThumbnailAccessory((thumbnail) =>
                           thumbnail.setURL(
-                            `https://skins.nationsglory.fr/face/${group}/3d/16`
-                          )
+                            `https://skins.nationsglory.fr/face/${group}/3d/16`,
+                          ),
                         )
                         .addTextDisplayComponents((textDisplay) =>
                           textDisplay.setContent(
@@ -113,14 +113,14 @@ async function jail(client) {
                               config.emoji[server.toLowerCase()]
                             }> **${
                               server.charAt(0).toUpperCase() + server.slice(1)
-                            }**.`
-                          )
-                        )
+                            }**.`,
+                          ),
+                        ),
                     );
 
                   try {
                     const channel = await client.channels.fetch(
-                      jailEntry.threadId
+                      jailEntry.threadId,
                     );
                     if (channel.isThread()) {
                       await channel.send({
@@ -134,10 +134,10 @@ async function jail(client) {
             }
           }
 
-          saveData(`data/${server}/jail.json`, jailData)
+          saveData(`data/${server}/jail.json`, jailData);
         } catch (apiError) {
           console.log(
-            `Erreur lors de la récupération de l'API pour le serveur ${server}: ${apiError}`
+            `Erreur lors de la récupération de l'API pour le serveur ${server}: ${apiError}`,
           );
         }
       }
@@ -147,4 +147,4 @@ async function jail(client) {
   }
 }
 
-module.exports = { jail }
+module.exports = { jail };

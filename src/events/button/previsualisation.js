@@ -19,7 +19,7 @@ async function getCountryEmoji(guild, serveur, pays, config) {
     const response = await fetch(
       `${
         config.glorybot_url
-      }/api/drapeau?serveur=${serveur}&pays=${pays.toLowerCase()}`
+      }/api/drapeau?serveur=${serveur}&pays=${pays.toLowerCase()}`,
     );
 
     const contentType = response.headers.get("content-type") || "";
@@ -32,14 +32,14 @@ async function getCountryEmoji(guild, serveur, pays, config) {
       `${
         config.glorybot_url
       }/api/drapeau?serveur=${serveur}&pays=${pays.toLowerCase()}`,
-      `${serveur}_${pays}`
+      `${serveur}_${pays}`,
     );
 
     return emoji;
   } catch (err) {
     console.error(
       `❌ Impossible de récupérer ou créer l'émoji pour le pays ${pays.toLowerCase()} :`,
-      err
+      err,
     );
     return null;
   }
@@ -53,7 +53,7 @@ async function fetchAndParseCountriesHTML(serveur) {
         headers: {
           "X-Requested-With": "XMLHttpRequest",
         },
-      }
+      },
     );
     const html = await response.text();
     const $ = cheerio.load(html);
@@ -88,7 +88,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     try {
@@ -116,7 +116,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("onu-help")
             .setLabel("Je n'arrive pas à accéder au salon")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         return interaction.reply({
@@ -150,7 +150,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("onu-help")
             .setLabel("Qu'est ce que l'ONU ?")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         return interaction.reply({
@@ -184,7 +184,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("onu-help")
             .setLabel("Qu'est ce que l'ONU ?")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         return interaction.reply({
@@ -218,7 +218,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("onu-help")
             .setLabel("Qu'est ce que l'ONU ?")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         return interaction.reply({
@@ -243,7 +243,7 @@ module.exports = {
           .setTitle(`Nouvelle Sanction`)
           .setColor(config.couleur[serveur])
           .setDescription(
-            `**ToStam** a maintenant **${newSanctions} ${texte_sanction}** sur le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** ! Il en avait auparavant **${oldSanctions}**.`
+            `**ToStam** a maintenant **${newSanctions} ${texte_sanction}** sur le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** ! Il en avait auparavant **${oldSanctions}**.`,
           )
           .setFooter({ text: config.footer });
         return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -259,27 +259,27 @@ module.exports = {
 
         const description = `
 **<:administrateur:1319373624439996466> Administrateurs (${effectifRole(
-          "Administrateur"
+          "Administrateur",
         )}) :**\n${
           escapeUnderscore(staffData["Administrateur"].join(", ")) || "Aucun"
         }
 \n**<:supermoderateur:1319373645923225781> Super Modérateurs (${effectifRole(
-          "Super-Modérateur"
+          "Super-Modérateur",
         )}) :**\n${
           escapeUnderscore(staffData["Super-Modérateur"].join(", ")) || "Aucun"
         }
 \n**<:moderateurplus:1320087028217548901> Modérateurs Plus (${effectifRole(
-          "Modérateur Plus"
+          "Modérateur Plus",
         )}) :**\n${
           escapeUnderscore(staffData["Modérateur Plus"].join(", ")) || "Aucun"
         }
 \n**<:moderateur:1320087126603202681> Modérateurs (${effectifRole(
-          "Modérateur"
+          "Modérateur",
         )}) :**\n${
           escapeUnderscore(staffData["Modérateur"].join(", ")) || "Aucun"
         }
 \n**<:moderateurtest:1320087193829511260> Modérateurs Tests (${effectifRole(
-          "Modérateur Test"
+          "Modérateur Test",
         )}) :**\n${
           escapeUnderscore(staffData["Modérateur Test"].join(", ")) || "Aucun"
         }
@@ -297,7 +297,7 @@ module.exports = {
             url: `https://nationsglory.fr/server/${serveur}/staff`,
           })
           .setThumbnail(
-            `${config.glorybot_url}/api/banniere?serveur=${serveur}`
+            `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
           )
           .setColor(config.couleur[serveur])
           .setDescription(description)
@@ -311,10 +311,10 @@ module.exports = {
           .setTitle(`🏚️ FullBuild`)
           .setColor(config.couleur[serveur])
           .setThumbnail(
-            `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`
+            `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`,
           )
           .setDescription(
-            `<@${interaction.user.id}> vient de valider le fullbuild de pays **${paysa}**. Ce pays a donc maintenant la permission de s'étendre sur le pays **${paysb}**.`
+            `<@${interaction.user.id}> vient de valider le fullbuild de pays **${paysa}**. Ce pays a donc maintenant la permission de s'étendre sur le pays **${paysb}**.`,
           )
           .setFooter({ text: config.footer });
         return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -326,10 +326,10 @@ module.exports = {
           .setTitle(`✈️ Conquête Territoriale`)
           .setColor(config.couleur[serveur])
           .setThumbnail(
-            `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`
+            `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`,
           )
           .setDescription(
-            `<@${interaction.user.id}> vient de valider la conquête territoriale du pays **${paysa}**. Ce pays a donc annexé le pays **${paysb}**.`
+            `<@${interaction.user.id}> vient de valider la conquête territoriale du pays **${paysa}**. Ce pays a donc annexé le pays **${paysb}**.`,
           )
           .setFooter({ text: config.footer });
         return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -338,17 +338,17 @@ module.exports = {
           .setTitle("Nouvelle Plainte")
           .setColor(config.couleur[serveur])
           .setDescription(
-            "📌 **Titre :** Plainte N°1381 : LaBrindille sur Netrox11 | Deportation assaut\n✏️ **Auteur :** Matheux74_V2\n\n*Cette plainte a été postée <t:1741278720:R>.*"
+            "📌 **Titre :** Plainte N°1381 : LaBrindille sur Netrox11 | Deportation assaut\n✏️ **Auteur :** Matheux74_V2\n\n*Cette plainte a été postée <t:1741278720:R>.*",
           )
           .setFooter({ text: config.footer });
 
         const actionRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setURL(
-              "https://nationsglory.fr/forums/thread/plainte-n1381-labrindille-sur-netrox11-deportation-assaut.129657"
+              "https://nationsglory.fr/forums/thread/plainte-n1381-labrindille-sur-netrox11-deportation-assaut.129657",
             )
             .setLabel("Aller sur la plainte")
-            .setStyle(ButtonStyle.Link)
+            .setStyle(ButtonStyle.Link),
         );
         return interaction.reply({
           embeds: [embed],
@@ -360,17 +360,17 @@ module.exports = {
           .setTitle("Nouvelle Guerre")
           .setColor(config.couleur[serveur])
           .setDescription(
-            "📌 **Titre :** Honduras vs Libye\n✏️ **Auteur :** Raptor_129\n\n*Cette guerre a été postée <t:1741527120:R>.*"
+            "📌 **Titre :** Honduras vs Libye\n✏️ **Auteur :** Raptor_129\n\n*Cette guerre a été postée <t:1741527120:R>.*",
           )
           .setFooter({ text: config.footer });
 
         const actionRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setURL(
-              "https://nationsglory.fr/forums/thread/honduras-vs-libye.129841"
+              "https://nationsglory.fr/forums/thread/honduras-vs-libye.129841",
             )
             .setLabel("Aller sur la guerre")
-            .setStyle(ButtonStyle.Link)
+            .setStyle(ButtonStyle.Link),
         );
         return interaction.reply({
           embeds: [embed],
@@ -386,17 +386,17 @@ module.exports = {
           .setDescription(
             `📌 **Titre :** Plainte N°1381 : LaBrindille sur Netrox11 | Deportation assaut\n✏️ **Auteur :** Matheux74_V2\n\n*Cette plainte est en attente depuis plus de ${
               config_forum["Plainte non traitée"].Temps || "X"
-            } jours !*`
+            } jours !*`,
           )
           .setFooter({ text: config.footer });
 
         const actionRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setURL(
-              "https://nationsglory.fr/forums/thread/plainte-n1381-labrindille-sur-netrox11-deportation-assaut.129657"
+              "https://nationsglory.fr/forums/thread/plainte-n1381-labrindille-sur-netrox11-deportation-assaut.129657",
             )
             .setLabel("Voir la plainte")
-            .setStyle(ButtonStyle.Link)
+            .setStyle(ButtonStyle.Link),
         );
         return interaction.reply({
           embeds: [embed],
@@ -412,17 +412,17 @@ module.exports = {
           .setDescription(
             `📌 **Titre :** Honduras vs Libye\n✏️ **Auteur :** Raptor_129\n\n*Cette plainte est en attente depuis plus de ${
               config_forum["Guerre non traitée"].Temps || "X"
-            } jours !*`
+            } jours !*`,
           )
           .setFooter({ text: config.footer });
 
         const actionRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
             .setURL(
-              "https://nationsglory.fr/forums/thread/honduras-vs-libye.129841"
+              "https://nationsglory.fr/forums/thread/honduras-vs-libye.129841",
             )
             .setLabel("Voir la guerre")
-            .setStyle(ButtonStyle.Link)
+            .setStyle(ButtonStyle.Link),
         );
         return interaction.reply({
           embeds: [embed],
@@ -434,7 +434,7 @@ module.exports = {
           .setTitle("Double Lead")
           .setColor(config.couleur[serveur])
           .setDescription(
-            "Le joueur **ToStam** possède différents pays sur plusieurs serveurs :\n<:NGBlue:1254508656859418754> **Blue** : France\n<:NGOrange:1254508503528378369> **Orange** : Allemagne\n"
+            "Le joueur **ToStam** possède différents pays sur plusieurs serveurs :\n<:NGBlue:1254508656859418754> **Blue** : France\n<:NGOrange:1254508503528378369> **Orange** : Allemagne\n",
           )
           .setFooter({ text: config.footer });
 
@@ -461,7 +461,7 @@ module.exports = {
         } catch (err) {
           console.error(
             "Erreur lors de la récupération des données depuis l'API get-ng:",
-            err
+            err,
           );
           return interaction.reply({
             content:
@@ -472,7 +472,7 @@ module.exports = {
 
         const createdEmojis = [];
         const guild = interaction.client.guilds.cache.get(
-          "1349379748576366633"
+          "1349379748576366633",
         );
         if (hasNumberKey) {
           const emojiMap = {};
@@ -490,7 +490,7 @@ module.exports = {
               } catch (err) {
                 console.log(
                   `Erreur lors de la création ou de la récupération de l'émoji pour ${username}:`,
-                  err
+                  err,
                 );
                 emojiMap[key] = "";
               }
@@ -547,7 +547,7 @@ module.exports = {
                 } catch (err) {
                   console.log(
                     `Erreur lors de la création ou de la récupération de l'émoji pour ${username}:`,
-                    err
+                    err,
                   );
                   emojiMap[displayName] = "";
                 }
@@ -581,7 +581,7 @@ module.exports = {
           .setColor(config.couleur[serveur])
           .setTitle(`Annonce des Notations - Semaine du ${jour}/${mois}`)
           .setDescription(
-            `Voici la liste des staffs qui sont en charge des notations, si vous avez un recours à faire, il est préférable de s'adresser à la bonne qui vous a noté sur TeamSpeak ( ts.nationsglory.fr ) ou sur Discord.\n\n${numberKeysValues}`
+            `Voici la liste des staffs qui sont en charge des notations, si vous avez un recours à faire, il est préférable de s'adresser à la bonne qui vous a noté sur TeamSpeak ( ts.nationsglory.fr ) ou sur Discord.\n\n${numberKeysValues}`,
           )
           .setImage("attachment://ordre-des-notations.png")
           .setFooter({ text: config.footer });
@@ -590,7 +590,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("notation_help")
             .setLabel("Informations Supplémentaires")
-            .setStyle(ButtonStyle.Success)
+            .setStyle(ButtonStyle.Success),
         );
 
         await interaction.editReply({
@@ -606,7 +606,7 @@ module.exports = {
           } catch (err) {
             console.error(
               `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-              err
+              err,
             );
           }
         }
@@ -625,7 +625,7 @@ module.exports = {
               Authorization: `Bearer ${config.apitoken}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
         const data = await response.json();
 
@@ -634,11 +634,11 @@ module.exports = {
           .map(
             (entry, index) =>
               `<:NG${entry.server.charAt(0).toUpperCase()}${entry.server.slice(
-                1
+                1,
               )}:${config.emoji[entry.server]}> ${entry.pays.replace(
                 /([a-z])([A-Z])/g,
-                "$1 $2"
-              )}・${entry.bourse}$`
+                "$1 $2",
+              )}・${entry.bourse}$`,
           )
           .join("\n");
 
@@ -659,12 +659,12 @@ module.exports = {
             try {
               emoji = await guild.emojis.create(
                 `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${pays}`,
-                emojiName
+                emojiName,
               );
             } catch (err) {
               console.error(
                 `Erreur lors de la création de l'emoji pour ${pays}:`,
-                err
+                err,
               );
             }
           }
@@ -696,8 +696,8 @@ module.exports = {
               .toUpperCase()}${serveur.slice(1)}:${
               config.emoji[serveur]
             }> Top 10 ${serveur.charAt(0).toUpperCase()}${serveur.slice(
-              1
-            )} :**\n${topServerCountries}`
+              1,
+            )} :**\n${topServerCountries}`,
           )
           .setColor(config.couleur[serveur])
           .setFooter({ text: config.footer });
@@ -710,7 +710,7 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId(`notation_op-${week}`)
             .setLabel("Qui note mon pays ?")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         interaction.editReply({
@@ -724,7 +724,7 @@ module.exports = {
           } catch (err) {
             console.error(
               `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-              err
+              err,
             );
           }
         }
@@ -759,7 +759,7 @@ module.exports = {
           .setTitle("🚧 Jail sur ToStam")
           .setColor(config.couleur[serveur])
           .setDescription(
-            "**Durée** : 6 heures\n**Lien de la plainte :** [Clic Ici](https://nationsglory.fr/forums/thread/plainte-n2201-tnt-illegal-hyco75-contre-timobest.132338)"
+            "**Durée** : 6 heures\n**Lien de la plainte :** [Clic Ici](https://nationsglory.fr/forums/thread/plainte-n2201-tnt-illegal-hyco75-contre-timobest.132338)",
           )
           .setFooter({ text: config.footer });
 
@@ -775,12 +775,12 @@ module.exports = {
           .setLabel("Aller sur la plainte")
           .setStyle(ButtonStyle.Link)
           .setURL(
-            "https://nationsglory.fr/forums/thread/plainte-n2201-tnt-illegal-hyco75-contre-timobest.132338"
+            "https://nationsglory.fr/forums/thread/plainte-n2201-tnt-illegal-hyco75-contre-timobest.132338",
           );
 
         const actionRow = new ActionRowBuilder().addComponents(
           buttonFinish,
-          buttonLink
+          buttonLink,
         );
 
         const files = imageBuffer
@@ -803,13 +803,13 @@ module.exports = {
                 Authorization: `Bearer ${config.glorybot_token}`,
                 "Content-Type": "application/json",
               },
-            }
+            },
           );
           disbandData = await response.json();
         } catch (err) {
           console.error(
             "Erreur lors de la récupération des pays disband :",
-            err
+            err,
           );
           return;
         }
@@ -851,7 +851,12 @@ module.exports = {
         async function formatCountriesWithFlags(list) {
           const result = [];
           for (const country of list) {
-            const emoji = await getCountryEmoji(guild, serveur, country.name, config);
+            const emoji = await getCountryEmoji(
+              guild,
+              serveur,
+              country.name,
+              config,
+            );
             if (emoji) {
               createdEmojis.push(emoji);
               result.push(`<:${emoji.name}:${emoji.id}> ${country.name}`);
@@ -899,17 +904,17 @@ module.exports = {
           new ButtonBuilder()
             .setLabel("Wiki Disband")
             .setURL(
-              "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/"
+              "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
             )
             .setStyle(ButtonStyle.Link)
             .setEmoji("1319374787570831421"),
           new ButtonBuilder()
             .setLabel("Wiki Absence")
             .setURL(
-              "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences"
+              "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
             )
             .setStyle(ButtonStyle.Link)
-            .setEmoji("1319374787570831421")
+            .setEmoji("1319374787570831421"),
         );
 
         await interaction.editReply({
@@ -923,14 +928,14 @@ module.exports = {
           } catch (err) {
             console.error(
               `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-              err
+              err,
             );
           }
         }
       } else if (systeme === "Pays Disband ( 18h15 )") {
         await interaction.deferReply({ ephemeral: true });
         const responseJson = await fetch(
-          `https://apiv2.nationsglory.fr/mods/country_list/${serveur}`
+          `https://apiv2.nationsglory.fr/mods/country_list/${serveur}`,
         );
         const addedJsonCountries = await responseJson.json();
 
@@ -954,9 +959,14 @@ module.exports = {
 
         const formattedJsonCountries = [];
         for (const c of addedJsonCountries.sort((a, b) =>
-          a.name.localeCompare(b.name)
+          a.name.localeCompare(b.name),
         )) {
-          const flagEmoji = await getCountryEmoji(guild, serveur, c.name, config);
+          const flagEmoji = await getCountryEmoji(
+            guild,
+            serveur,
+            c.name,
+            config,
+          );
           if (flagEmoji) createdEmojis.push(flagEmoji);
 
           const flag = flagEmoji ? `<:${flagEmoji.name}:${flagEmoji.id}> ` : "";
@@ -972,11 +982,16 @@ module.exports = {
 
         const formattedHtmlCountries = [];
         for (const c of todayHtmlCountries.sort((a, b) =>
-          a.nom.localeCompare(b.nom)
+          a.nom.localeCompare(b.nom),
         )) {
           console.log("Chef en cours :", c.chef);
           console.log("Pays en cours :", c.nom);
-          const flagEmoji = await getCountryEmoji(guild, serveur, c.nom, config);
+          const flagEmoji = await getCountryEmoji(
+            guild,
+            serveur,
+            c.nom,
+            config,
+          );
           if (flagEmoji) createdEmojis.push(flagEmoji);
 
           console.log("Emoji pays good");
@@ -991,7 +1006,7 @@ module.exports = {
             } catch (err) {
               console.error(
                 `Erreur lors de la création de l'émoji tête pour ${c.chef}:`,
-                err
+                err,
               );
             }
           }
@@ -1025,7 +1040,7 @@ module.exports = {
           } catch (err) {
             console.error(
               `❌ Impossible de supprimer l'émoji ${emoji.name} :`,
-              err
+              err,
             );
           }
         }
@@ -1033,7 +1048,7 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setTitle("🕓 Attente Staff")
           .setDescription(
-            `Le joueur **${interaction.user.displayName}** (<@${interaction.user.id}>) attend dans <#${config.attentestaff[serveur]}>.`
+            `Le joueur **${interaction.user.displayName}** (<@${interaction.user.id}>) attend dans <#${config.attentestaff[serveur]}>.`,
           )
           .setColor(config.couleur[serveur])
           .setFooter({ text: config.footer });
@@ -1047,11 +1062,11 @@ module.exports = {
           .setTitle(
             `Prévisualisation - ${systeme
               .charAt(0)
-              .toUpperCase()}${systeme.slice(1)}`
+              .toUpperCase()}${systeme.slice(1)}`,
           )
           .setColor(config.couleur[serveur])
           .setDescription(
-            "Aucune prévisualisation n'est disponible pour pour ce système."
+            "Aucune prévisualisation n'est disponible pour pour ce système.",
           )
           .setFooter({ text: config.footer });
 
@@ -1060,7 +1075,7 @@ module.exports = {
     } catch (error) {
       console.error(
         "Erreur lors de la gestion de la prévisualisation :",
-        error
+        error,
       );
       return interaction.reply({
         content: `Une erreur est survenue lors de la prévisualisation du module : ${error}`,

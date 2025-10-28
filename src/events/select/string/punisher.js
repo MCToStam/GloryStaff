@@ -7,7 +7,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const PER_PAGE = 7
+    const PER_PAGE = 7;
     const embedColor = interaction.message.embeds[0]?.color;
     const joueur = interaction.message.embeds[0]?.title
       ?.split("- ")[1]
@@ -27,7 +27,7 @@ module.exports = {
       maxPage,
       embedColor,
       config,
-      PER_PAGE
+      PER_PAGE,
     );
 
     return interaction.editReply({

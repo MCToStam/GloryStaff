@@ -16,16 +16,16 @@ module.exports = {
   async execute(client, interaction, config) {
     const serveur = "coral";
 
-    const data = getData(`data/${serveur}/alliance/donnee.json`)
+    const data = getData(`data/${serveur}/alliance/donnee.json`);
 
-    const staffData = getData(`data/${serveur}/staff.json`)
+    const staffData = getData(`data/${serveur}/staff.json`);
 
     const userId = interaction.user.id;
     const isStaff = Object.values(staffData).some((ids) =>
-      ids.includes(userId)
+      ids.includes(userId),
     );
     const allianceChef = data.find(
-      (a) => Array.isArray(a.chef) && a.chef.includes(userId)
+      (a) => Array.isArray(a.chef) && a.chef.includes(userId),
     );
 
     if (!isStaff && !allianceChef) {
@@ -34,7 +34,7 @@ module.exports = {
         .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
-          t.setContent("Tu n'as pas la permission d'éxecuter cette commande.")
+          t.setContent("Tu n'as pas la permission d'éxecuter cette commande."),
         );
 
       return interaction.reply({
@@ -48,8 +48,8 @@ module.exports = {
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
         t.setContent(
-          `## Alliance - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`
-        )
+          `## Alliance - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+        ),
       )
       .addSeparatorComponents((s) => s);
 
@@ -70,8 +70,8 @@ module.exports = {
             allianceChef.listePaysFondateur.join(", ") || "Aucun pays fondateur"
           }\n**🌍 Pays Membre :** ${
             allianceChef.listePaysMembre.join(", ") || "Aucun pays membre"
-          }`
-        )
+          }`,
+        ),
       );
 
       container.addActionRowComponents(
@@ -83,8 +83,8 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId(`ally_remmember_${allianceChef.nom}`)
             .setLabel("Retirer un pays")
-            .setStyle(ButtonStyle.Danger)
-        )
+            .setStyle(ButtonStyle.Danger),
+        ),
       );
     } else {
       for (const alliance of data) {
@@ -104,21 +104,21 @@ module.exports = {
                   "Aucun pays fondateur"
                 }\n**🌍 Pays Membre :** ${
                   alliance.listePaysMembre.join(", ") || "Aucun pays membre"
-                }`
-              )
+                }`,
+              ),
             )
             .setButtonAccessory((button) =>
               button
                 .setCustomId(`alliance_edit_${alliance.nom}`)
                 .setLabel("Modifier")
-                .setStyle(ButtonStyle.Primary)
-            )
+                .setStyle(ButtonStyle.Primary),
+            ),
         );
       }
 
       if (!data || data.length === 0) {
         container.addTextDisplayComponents((t) =>
-          t.setContent("Aucune alliance n’a encore été créée")
+          t.setContent("Aucune alliance n’a encore été créée"),
         );
       }
 
@@ -128,8 +128,8 @@ module.exports = {
           new ButtonBuilder()
             .setCustomId("alliance_create")
             .setLabel("Créer une alliance")
-            .setStyle(ButtonStyle.Success)
-        )
+            .setStyle(ButtonStyle.Success),
+        ),
       );
     }
 

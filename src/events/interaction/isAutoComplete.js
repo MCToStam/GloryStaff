@@ -19,7 +19,7 @@ module.exports = async (client, interaction) => {
           const { timestamp, servers } = serveurCache.get(memberId);
           if (now - timestamp < 10 * 60 * 1000) {
             const filteredServers = config.liste_serveur.filter((server) =>
-              server.toLowerCase().startsWith(value.toLowerCase())
+              server.toLowerCase().startsWith(value.toLowerCase()),
             );
             const choices = filteredServers.slice(0, 25).map((server) => ({
               name: server.charAt(0).toUpperCase() + server.slice(1),
@@ -36,7 +36,7 @@ module.exports = async (client, interaction) => {
         let pseudo;
         try {
           const response = await fetch(
-            `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`
+            `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`,
           );
           if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
           const data = await response.json();
@@ -49,14 +49,14 @@ module.exports = async (client, interaction) => {
         const isDev = memberId === config.developpeur;
 
         const matchedServers = config.liste_serveur.filter((server) =>
-          server.toLowerCase().startsWith(value.toLowerCase())
+          server.toLowerCase().startsWith(value.toLowerCase()),
         );
 
         for (const server of matchedServers) {
           const staffData = getData(`data/${server}/staff.json`);
 
           const isStaff = Object.values(staffData).some((roleMembers) =>
-            roleMembers.includes(memberId)
+            roleMembers.includes(memberId),
           );
 
           if (isStaff || isDev) {
@@ -66,7 +66,7 @@ module.exports = async (client, interaction) => {
 
             const isStaffLinked = Object.entries(staffRolesData).some(
               ([key, roleList]) =>
-                Array.isArray(roleList) && roleList.includes(pseudo)
+                Array.isArray(roleList) && roleList.includes(pseudo),
             );
 
             if (isStaffLinked) {
@@ -99,7 +99,7 @@ module.exports = async (client, interaction) => {
         }
 
         const filteredServers = availableServers.filter((server) =>
-          server.toLowerCase().startsWith(value.toLowerCase())
+          server.toLowerCase().startsWith(value.toLowerCase()),
         );
 
         const choices = filteredServers.slice(0, 25).map((server) => ({
@@ -111,7 +111,7 @@ module.exports = async (client, interaction) => {
       } catch (error) {
         console.error(
           "Erreur lors de la gestion de l'autocomplétion pour les serveurs :",
-          error
+          error,
         );
         await interaction.respond([]);
       }
@@ -141,7 +141,7 @@ module.exports = async (client, interaction) => {
 
         const allGrades = gradeData.grade.map((g) => {
           const categorie = gradeData.categorie.find(
-            (c) => c.id === g.categorie
+            (c) => c.id === g.categorie,
           );
           return {
             id: g.id,
@@ -154,7 +154,7 @@ module.exports = async (client, interaction) => {
         const filteredGrades = allGrades.filter(
           (g) =>
             g.nom.toLowerCase().startsWith(value.toLowerCase()) ||
-            g.categorieNom.toLowerCase().startsWith(value.toLowerCase())
+            g.categorieNom.toLowerCase().startsWith(value.toLowerCase()),
         );
 
         const choices = filteredGrades.slice(0, 25).map((g) => ({
@@ -194,7 +194,7 @@ module.exports = async (client, interaction) => {
           const grades = ["Administrateur", "Super-Modérateur", "Joueur"];
 
           const filteredGrades = grades.filter((grade) =>
-            grade.toLowerCase().startsWith(value.toLowerCase())
+            grade.toLowerCase().startsWith(value.toLowerCase()),
           );
 
           const choices = filteredGrades.slice(0, 25).map((grade) => ({
@@ -208,7 +208,7 @@ module.exports = async (client, interaction) => {
         const staffData = getData(`data/${serveur}/staff.json`);
 
         const isAdmin = staffData["Administrateur"]?.includes(
-          interaction.user.id
+          interaction.user.id,
         );
 
         if (!isAdmin) {
@@ -223,7 +223,7 @@ module.exports = async (client, interaction) => {
         const grades = ["Administrateur", "Super-Modérateur", "Joueur"];
 
         const filteredGrades = grades.filter((grade) =>
-          grade.toLowerCase().startsWith(value.toLowerCase())
+          grade.toLowerCase().startsWith(value.toLowerCase()),
         );
 
         const choices = filteredGrades.slice(0, 25).map((grade) => ({
@@ -235,7 +235,7 @@ module.exports = async (client, interaction) => {
       } catch (error) {
         console.error(
           "Erreur lors de la gestion de l'autocomplétion pour les grades :",
-          error
+          error,
         );
         await interaction.respond([]);
       }
@@ -248,7 +248,7 @@ module.exports = async (client, interaction) => {
 
       try {
         const res = await fetch(
-          `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitizedValue}`
+          `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitizedValue}`,
         );
         const users = await res.json();
 
@@ -277,7 +277,7 @@ module.exports = async (client, interaction) => {
       const staffData = getData(`data/${serveur}/staff.json`);
 
       const isAdmin = staffData["Administrateur"]?.includes(
-        interaction.user.id
+        interaction.user.id,
       );
       const isSM = staffData["Super-Modérateur"]?.includes(interaction.user.id);
 
@@ -306,7 +306,7 @@ module.exports = async (client, interaction) => {
       }
 
       const filteredOptions = staffOptions.filter((option) =>
-        option.value.toLowerCase().startsWith(value.toLowerCase())
+        option.value.toLowerCase().startsWith(value.toLowerCase()),
       );
 
       const limitedOptions = filteredOptions.slice(0, 25);
@@ -333,7 +333,7 @@ module.exports = async (client, interaction) => {
               Authorization: `Bearer ${config.glorybot_token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
         const paysData = await paysRes.json();
 
@@ -359,7 +359,7 @@ module.exports = async (client, interaction) => {
       try {
         if (sanitizedValue && sanitizedValue.length > 0) {
           const res = await fetch(
-            `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitizedValue}`
+            `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitizedValue}`,
           );
           const users = await res.json();
 
@@ -377,7 +377,7 @@ module.exports = async (client, interaction) => {
 
       salaires.forEach((utilisateur) => {
         Object.keys(utilisateur.salaire).forEach((mois) =>
-          moisDisponibles.add(mois)
+          moisDisponibles.add(mois),
         );
       });
 

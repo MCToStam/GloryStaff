@@ -15,10 +15,10 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
-    const botStaffData = getData(`data/${serveur}/staff.json`)
+    const botStaffData = getData(`data/${serveur}/staff.json`);
 
     let description = "";
     for (const [grade, members] of Object.entries(botStaffData)) {
@@ -50,7 +50,7 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("totalstaff_retrait_sm")
           .setLabel("Retirer un Super-Modérateur")
-          .setStyle(ButtonStyle.Danger)
+          .setStyle(ButtonStyle.Danger),
       );
       return interaction.reply({
         embeds: [embed],

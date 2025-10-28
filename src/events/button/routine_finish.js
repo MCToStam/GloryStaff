@@ -24,8 +24,8 @@ module.exports = {
       const updatedEmbed = new EmbedBuilder(embed).setDescription(
         embed.description.replace(
           "**Fin de la routine :**",
-          `**Fin de la routine :** <t:${Math.floor(Date.now() / 1000)}:R>`
-        )
+          `**Fin de la routine :** <t:${Math.floor(Date.now() / 1000)}:R>`,
+        ),
       );
 
       const selectMenu = new StringSelectMenuBuilder()
@@ -89,20 +89,20 @@ module.exports = {
       const embedColor = interaction.message.embeds[0]?.color;
 
       const serveur = Object.keys(config.couleur).find(
-        (key) => config.couleur[key] === embedColor
+        (key) => config.couleur[key] === embedColor,
       );
 
-      const configRoutine = getData(`data/${serveur}/config-routine.json`)
+      const configRoutine = getData(`data/${serveur}/config-routine.json`);
 
       if (configRoutine.routine?.active && configRoutine.routine?.Salon) {
         const salon = await interaction.client.channels.fetch(
-          configRoutine.routine?.Salon
+          configRoutine.routine?.Salon,
         );
         const roleMention = configRoutine.routine?.Role;
 
         let infractionsText = embed.description.replace(
           /\*\*Début de la routine :\*\* <t:\d+:R>\n/,
-          ""
+          "",
         );
         infractionsText = infractionsText
           .split("**Infractions :**\n")[1]
@@ -130,15 +130,15 @@ module.exports = {
 
       const pseudo = embed.title.split(" - ")[1];
       const debutRoutineMatch = embed.description.match(
-        /\*\*Début de la routine :\*\* <t:(\d+):R>/
+        /\*\*Début de la routine :\*\* <t:(\d+):R>/,
       );
       const debutRoutine = debutRoutineMatch
         ? parseInt(debutRoutineMatch[1])
         : null;
-        
+
       let routineData = {};
 
-      routineData = getData(`data/${serveur}/routine.json`)
+      routineData = getData(`data/${serveur}/routine.json`);
 
       if (!routineData[pseudo]) {
         routineData[pseudo] = {
@@ -150,7 +150,7 @@ module.exports = {
       routineData[pseudo].derniere_routine = debutRoutine;
       routineData[pseudo].routine.push(debutRoutine);
 
-      saveData(`data/${serveur}/routine.json`, routineData)
+      saveData(`data/${serveur}/routine.json`, routineData);
     }
   },
 };

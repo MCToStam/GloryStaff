@@ -12,13 +12,13 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const pseudo_mc = interaction.fields.getTextInputValue(
-      "liaisonminecraft-id"
+      "liaisonminecraft-id",
     );
 
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title?.split("- ")[1]?.trim();
@@ -40,7 +40,7 @@ module.exports = {
           pseudo_mc
             ? `**${joueur}** est relié au compte Minecraft **${pseudo_mc}**.`
             : `**${joueur}** n'est pas relié à un compte Minecraft.`
-        }`
+        }`,
       )
       .setColor(config.couleur[serveur])
       .setFooter({ text: config.footer });
@@ -52,14 +52,14 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("gestionstaff_liaisonminecraft_edit")
           .setLabel("Modifier le compte Minecraft")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
     } else {
       actionRow.addComponents(
         new ButtonBuilder()
           .setCustomId("gestionstaff_liaisonminecraft_add")
           .setLabel("Lier le compte Minecraft")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
     }
 

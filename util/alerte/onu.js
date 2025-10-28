@@ -10,7 +10,7 @@ const config = require("../../config");
 
 async function onu(client, server, jour) {
   try {
-    const configData = getData(`data/${server}/config-onu.json`)
+    const configData = getData(`data/${server}/config-onu.json`);
 
     const alerteActive = configData.Alerte.active;
     const heureParts = configData.Alerte.Heure.split(" ");
@@ -54,7 +54,7 @@ async function onu(client, server, jour) {
                 "➤ 25 viewers = 🎟️ 50k RP\n" +
                 "➤ 35 viewers = 🎟️ 100k RP\n" +
                 "➤ 40 viewers = 💳 10€ Boutique\n" +
-                "➤ 50 viewers = 💳 20€ Boutique"
+                "➤ 50 viewers = 💳 20€ Boutique",
             )
             .setImage("attachment://onu.png")
             .setFooter({ text: config.footer });
@@ -67,13 +67,13 @@ async function onu(client, server, jour) {
             new ButtonBuilder()
               .setLabel("Regarder le stream YouTube")
               .setStyle(ButtonStyle.Link)
-              .setURL("https://www.youtube.com/@NationsGloryCoral/streams")
+              .setURL("https://www.youtube.com/@NationsGloryCoral/streams"),
           );
         } else {
           embed = new EmbedBuilder()
             .setColor(config.couleur[server])
             .setTitle(
-              `🌐 ONU ${server.charAt(0).toUpperCase() + server.slice(1)} 🌐`
+              `🌐 ONU ${server.charAt(0).toUpperCase() + server.slice(1)} 🌐`,
             )
             .setDescription(
               `L’ONU est une réunion hebdomadaire entre le staff et les joueurs ! Ce rendez-vous permet de faire des rappels, annoncer les nouveautés, les rank ainsi que de faire des pubs, des demandes de missiles, d’autonuke et de poser toutes les questions qui vous titillent. Afin de participer à l'ONU, il vous suffit de rejoindre le [Discord Global](https://discord.gg/nationsglory) de NationsGlory et rejoindre le salon ${configData.Alerte["Salon NationsGlory"]}.\n\n` +
@@ -82,7 +82,7 @@ async function onu(client, server, jour) {
                 `- Le PvP est désactivé sauf dans les arènes et les warzones\n` +
                 `- Les warzones ne distribuent pas de récompenses\n` +
                 `- La présence des chefs est fortement recommandée\n\n` +
-                `Cette réunion a lieu le **${jourOnu.toLowerCase()}** à **${heureOnu}**.`
+                `Cette réunion a lieu le **${jourOnu.toLowerCase()}** à **${heureOnu}**.`,
             )
             .setImage("attachment://onu.png")
             .setFooter({ text: config.footer });
@@ -91,14 +91,16 @@ async function onu(client, server, jour) {
             new ButtonBuilder()
               .setCustomId("onu_help")
               .setLabel("Je n'arrive pas à accéder au salon")
-              .setStyle(ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Primary),
           );
         }
 
         const channel = await client.channels.fetch(configData.Alerte.Salon);
         let sentMessage;
         if (configData.Alerte.Role) {
-          console.log(`Envoie ONU avec Rôle ${server} : ${configData.Alerte.Role}`)
+          console.log(
+            `Envoie ONU avec Rôle ${server} : ${configData.Alerte.Role}`,
+          );
           sentMessage = await channel.send({
             content: `<@&${configData.Alerte.Role}>`,
             embeds: [embed],
@@ -106,7 +108,7 @@ async function onu(client, server, jour) {
             components: [actionRow],
           });
         } else {
-          console.log(`Envoie ONU sans Rôle ${server}`)
+          console.log(`Envoie ONU sans Rôle ${server}`);
           sentMessage = await channel.send({
             embeds: [embed],
             files: [attachment],
@@ -118,9 +120,9 @@ async function onu(client, server, jour) {
     }
   } catch (error) {
     console.error(
-      `Erreur lors de la vérification de l'heure pour le serveur ${server}: ${error.message}`
+      `Erreur lors de la vérification de l'heure pour le serveur ${server}: ${error.message}`,
     );
   }
 }
 
-module.exports = { onu }
+module.exports = { onu };

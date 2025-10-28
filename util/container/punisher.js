@@ -13,7 +13,7 @@ function getPunisherContainer(
   embedColor,
   config,
   PER_PAGE,
-  serveur = "all"
+  serveur = "all",
 ) {
   const slice = sanctions.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
@@ -27,10 +27,10 @@ function getPunisherContainer(
             s.type === "Warn"
               ? ""
               : s.duree === "Def"
-              ? "définitif "
-              : s.duree
-              ? `pendant ${s.duree} `
-              : "";
+                ? "définitif "
+                : s.duree
+                  ? `pendant ${s.duree} `
+                  : "";
           const emoji = config.emoji_formate[s.serveur] || "";
           return `${emoji} **${s.type}** ${duree}pour **${s.raison}** par **${s.staff}** ${ts}`;
         })
@@ -56,7 +56,7 @@ function getPunisherContainer(
       "",
       ButtonStyle.Primary,
       page <= 1,
-      "◀️"
+      "◀️",
     ),
     makeBtn(`punisher-${page}`, `Page ${page}`, ButtonStyle.Secondary, true),
     makeBtn(
@@ -64,8 +64,8 @@ function getPunisherContainer(
       "",
       ButtonStyle.Primary,
       page >= maxPage,
-      "▶️"
-    )
+      "▶️",
+    ),
   );
 
   return { embed, row };

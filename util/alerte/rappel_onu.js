@@ -9,7 +9,7 @@ const {
 
 async function rappel_onu(client, server, jour) {
   try {
-    const configData = getData(`data/${server}/config-onu.json`)
+    const configData = getData(`data/${server}/config-onu.json`);
 
     for (let i = 1; i <= 3; i++) {
       const rappel = configData[`Rappel ${i}`];
@@ -71,7 +71,7 @@ async function rappel_onu(client, server, jour) {
             new ButtonBuilder()
               .setCustomId("onu_help")
               .setLabel("Qu'est ce que l'ONU ?")
-              .setStyle(ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Primary),
           );
 
           const channel = await client.channels.fetch(rappel.Salon);
@@ -91,16 +91,16 @@ async function rappel_onu(client, server, jour) {
             });
           }
           console.log(
-            `✅ Message de rappel ONU ${i} du serveur ${server} envoyé avec succès`
+            `✅ Message de rappel ONU ${i} du serveur ${server} envoyé avec succès`,
           );
         }
       }
     }
   } catch (error) {
     console.error(
-      `Erreur lors de la vérification des rappels pour le serveur ${server}: ${error.message}`
+      `Erreur lors de la vérification des rappels pour le serveur ${server}: ${error.message}`,
     );
   }
 }
 
-module.exports = { rappel_onu }
+module.exports = { rappel_onu };

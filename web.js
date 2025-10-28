@@ -1,6 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, WebhookClient } = require("discord.js");
+const {
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  WebhookClient,
+} = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 const config = require("./config");
@@ -33,7 +39,7 @@ async function updateAllStaffWebhooks() {
     } catch (err) {
       console.warn(
         `Erreur de lecture du fichier config pour ${serveur} :`,
-        err
+        err,
       );
       continue;
     }
@@ -56,16 +62,16 @@ async function updateAllStaffWebhooks() {
         const normalizedRole = normalizeRoleKey(role);
         replaced = replaced.replace(
           new RegExp(`{${normalizedRole}}`, "gi"),
-          users.map((u) => u.replace(/_/g, "\\_")).join(", ")
+          users.map((u) => u.replace(/_/g, "\\_")).join(", "),
         );
         replaced = replaced.replace(
           new RegExp(`{${normalizedRole}_nombre}`, "gi"),
-          String(users.length)
+          String(users.length),
         );
       });
       replaced = replaced.replace(
         /{timestamp}/gi,
-        lastUpdated ? String(lastUpdated) : ""
+        lastUpdated ? String(lastUpdated) : "",
       );
       return replaced;
     };
@@ -86,8 +92,7 @@ async function updateAllStaffWebhooks() {
 
     const description = replacePlaceholders(rawDescription || "");
 
-    const embed = new EmbedBuilder()
-      .setColor(couleur || "#0099ff");
+    const embed = new EmbedBuilder().setColor(couleur || "#0099ff");
 
     if (titre) embed.setTitle(titre);
     if (description) embed.setDescription(description);
@@ -122,7 +127,7 @@ async function updateAllStaffWebhooks() {
         } catch (editError) {
           console.warn(
             `Erreur modification message (${serveur}), envoi nouveau...`,
-            editError
+            editError,
           );
           const sent = await webhookClient.send({ embeds: [embed] });
           config.messageId = sent.id;
@@ -225,7 +230,7 @@ app.post("/staff", async (req, res) => {
               "data",
               serveur,
               "staff",
-              `${staffName}.json`
+              `${staffName}.json`,
             );
 
             if (!fs.existsSync(filePath)) {
@@ -237,7 +242,7 @@ app.post("/staff", async (req, res) => {
 
             const staffFilePath = path.join(
               staffDirectoryPath,
-              `${staffName}.json`
+              `${staffName}.json`,
             );
             let staffData = {};
 
@@ -285,14 +290,14 @@ app.post("/staff", async (req, res) => {
                 grade: role,
               };
               console.log(
-                `➕ Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`
+                `➕ Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`,
               );
             }
 
             fs.writeFileSync(
               staffFilePath,
               JSON.stringify(staffData, null, 2),
-              "utf8"
+              "utf8",
             );
           }
         });
@@ -313,12 +318,12 @@ app.post("/staff", async (req, res) => {
           console.error("❌ JSON invalide dans", staffFilePath, e.message);
         }
         const dates = Object.keys(staffData).sort(
-          (a, b) => new Date(a) - new Date(b)
+          (a, b) => new Date(a) - new Date(b),
         );
         const lastDate = dates.length > 0 ? dates[dates.length - 1] : null;
 
         const stillInStaff = Object.values(processedData).some((staffList) =>
-          staffList.includes(staffName)
+          staffList.includes(staffName),
         );
 
         if (
@@ -340,13 +345,13 @@ app.post("/staff", async (req, res) => {
           };
 
           console.log(
-            `➖ Déclassement de ${staffName} en "Joueur" sur le serveur ${serveur} le ${formattedDate}`
+            `➖ Déclassement de ${staffName} en "Joueur" sur le serveur ${serveur} le ${formattedDate}`,
           );
 
           fs.writeFileSync(
             staffFilePath,
             JSON.stringify(staffData, null, 2),
-            "utf8"
+            "utf8",
           );
         }
       }
@@ -355,7 +360,7 @@ app.post("/staff", async (req, res) => {
         __dirname,
         "data",
         serveur,
-        `staff-serveur.json`
+        `staff-serveur.json`,
       );
 
       const serverDirectory = path.dirname(serverFilePath);
@@ -368,7 +373,7 @@ app.post("/staff", async (req, res) => {
       fs.writeFileSync(
         serverFilePath,
         JSON.stringify(processedData, null, 2),
-        "utf8"
+        "utf8",
       );
       console.log(`✅ Données sauvegardées pour le serveur ${serveur}`);
 
@@ -376,7 +381,7 @@ app.post("/staff", async (req, res) => {
         __dirname,
         "data",
         serveur,
-        "config-staff.json"
+        "config-staff.json",
       );
       if (fs.existsSync(configFilePath)) {
         const configStaff = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
@@ -387,55 +392,65 @@ app.post("/staff", async (req, res) => {
         ) {
           try {
             const channel = await client.channels.fetch(
-              configStaff["Affichage Staff"].Salon
+              configStaff["Affichage Staff"].Salon,
             );
             if (channel) {
               const message = await channel.messages.fetch(
-                configStaff["Affichage Staff"].Message
+                configStaff["Affichage Staff"].Message,
               );
               if (message) {
                 const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
 
                 const effectifRole = (role) => {
                   const members = processedData[role].filter(
-                    (name) => name.trim() !== ""
+                    (name) => name.trim() !== "",
                   );
                   return members.length;
                 };
 
                 const description = `
                                     **<:administrateur:1319373624439996466> Administrateurs (${effectifRole(
-                                      "Administrateur"
+                                      "Administrateur",
                                     )}) :**\n${
-                  processedData["Administrateur"].join(", ") || "Aucun"
-                }
+                                      processedData["Administrateur"].join(
+                                        ", ",
+                                      ) || "Aucun"
+                                    }
                                     \n**<:supermoderateur:1319373645923225781> Super Modérateurs (${effectifRole(
-                                      "Super-Modérateur"
+                                      "Super-Modérateur",
                                     )}) :**\n${escapeUnderscore(
-                  processedData["Super-Modérateur"].join(", ") || "Aucun"
-                )}
+                                      processedData["Super-Modérateur"].join(
+                                        ", ",
+                                      ) || "Aucun",
+                                    )}
                                     \n**<:moderateurplus:1320087028217548901> Modérateurs Plus (${effectifRole(
-                                      "Modérateur Plus"
+                                      "Modérateur Plus",
                                     )}) :**\n${escapeUnderscore(
-                  processedData["Modérateur Plus"].join(", ") || "Aucun"
-                )}
+                                      processedData["Modérateur Plus"].join(
+                                        ", ",
+                                      ) || "Aucun",
+                                    )}
                                     \n**<:moderateur:1320087126603202681> Modérateurs (${effectifRole(
-                                      "Modérateur"
+                                      "Modérateur",
                                     )}) :**\n${escapeUnderscore(
-                  processedData["Modérateur"].join(", ") || "Aucun"
-                )}
+                                      processedData["Modérateur"].join(", ") ||
+                                        "Aucun",
+                                    )}
                                     \n**<:moderateurtest:1320087193829511260> Modérateurs Tests (${effectifRole(
-                                      "Modérateur Test"
+                                      "Modérateur Test",
                                     )}) :**\n${escapeUnderscore(
-                  processedData["Modérateur Test"].join(", ") || "Aucun"
-                )}
+                                      processedData["Modérateur Test"].join(
+                                        ", ",
+                                      ) || "Aucun",
+                                    )}
                                     \n**<:guide:1320087261198549072> Guides (${effectifRole(
-                                      "Guide"
+                                      "Guide",
                                     )}) :**\n${escapeUnderscore(
-                  processedData["Guide"].join(", ") || "Aucun"
-                )}
+                                      processedData["Guide"].join(", ") ||
+                                        "Aucun",
+                                    )}
                                     \n\n*Dernière mise à jour : <t:${Math.floor(
-                                      Date.now() / 1000
+                                      Date.now() / 1000,
                                     )}:R>*
                                 `;
 
@@ -447,7 +462,7 @@ app.post("/staff", async (req, res) => {
                     url: `https://nationsglory.fr/server/${serveur}/staff`,
                   })
                   .setThumbnail(
-                    `${config.glorybot_url}/api/banniere?serveur=${serveur}`
+                    `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
                   )
                   .setColor(config.couleur[serveur])
                   .setDescription(description)
@@ -457,7 +472,7 @@ app.post("/staff", async (req, res) => {
                 console.log(
                   `✅ Message mis à jour pour le serveur ${
                     serveur.charAt(0).toUpperCase() + serveur.slice(1)
-                  }`
+                  }`,
                 );
               }
             }
@@ -466,20 +481,20 @@ app.post("/staff", async (req, res) => {
               console.log(
                 `🗑️ Le message pour le serveur ${
                   serveur.charAt(0).toUpperCase() + serveur.slice(1)
-                } a été supprimé.`
+                } a été supprimé.`,
               );
               configStaff["Affichage Staff"].Message = false;
               fs.writeFileSync(
                 configFilePath,
                 JSON.stringify(configStaff, null, 2),
-                "utf8"
+                "utf8",
               );
             } else {
               console.error(
                 `❌ Erreur lors de la mise à jour du message pour le serveur ${
                   serveur.charAt(0).toUpperCase() + serveur.slice(1)
                 }:`,
-                error
+                error,
               );
             }
           }
@@ -530,7 +545,7 @@ app.post("/staff_old", async (req, res) => {
           if (staffName) {
             const staffFilePath = path.join(
               staffDirectoryPath,
-              `${staffName}.json`
+              `${staffName}.json`,
             );
             let staffData = {};
 
@@ -547,14 +562,14 @@ app.post("/staff_old", async (req, res) => {
               });
               staffData[role] = formattedDate;
               console.log(
-                `➕Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`
+                `➕Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`,
               );
             }
 
             fs.writeFileSync(
               staffFilePath,
               JSON.stringify(staffData, null, 2),
-              "utf8"
+              "utf8",
             );
           }
         });
@@ -564,7 +579,7 @@ app.post("/staff_old", async (req, res) => {
         __dirname,
         "data",
         serveur,
-        `staff-serveur.json`
+        `staff-serveur.json`,
       );
 
       const serverDirectory = path.dirname(serverFilePath);
@@ -575,7 +590,7 @@ app.post("/staff_old", async (req, res) => {
       fs.writeFileSync(
         serverFilePath,
         JSON.stringify(processedData, null, 2),
-        "utf8"
+        "utf8",
       );
       console.log(`✅ Données sauvegardées pour le serveur ${serveur}`);
 
@@ -583,7 +598,7 @@ app.post("/staff_old", async (req, res) => {
         __dirname,
         "data",
         serveur,
-        "config-staff.json"
+        "config-staff.json",
       );
       if (fs.existsSync(configFilePath)) {
         const configStaff = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
@@ -594,46 +609,56 @@ app.post("/staff_old", async (req, res) => {
         ) {
           try {
             const channel = await client.channels.fetch(
-              configStaff["Affichage Staff"].Salon
+              configStaff["Affichage Staff"].Salon,
             );
             if (channel) {
               const message = await channel.messages.fetch(
-                configStaff["Affichage Staff"].Message
+                configStaff["Affichage Staff"].Message,
               );
               if (message) {
                 const description = `
                                     **<:administrateur:1319373624439996466> Administrateurs (${
                                       processedData["Administrateur"].length
                                     }) :**\n${
-                  processedData["Administrateur"].join(", ") || "Aucun"
-                }
+                                      processedData["Administrateur"].join(
+                                        ", ",
+                                      ) || "Aucun"
+                                    }
                                     \n**<:supermoderateur:1319373645923225781> Super Modérateurs (${
                                       processedData["Super-Modérateur"].length
                                     }) :**\n${
-                  processedData["Super-Modérateur"].join(", ") || "Aucun"
-                }
+                                      processedData["Super-Modérateur"].join(
+                                        ", ",
+                                      ) || "Aucun"
+                                    }
                                     \n**<:moderateurplus:1320087028217548901> Modérateurs Plus (${
                                       processedData["Modérateur Plus"].length
                                     }) :**\n${
-                  processedData["Modérateur Plus"].join(", ") || "Aucun"
-                }
+                                      processedData["Modérateur Plus"].join(
+                                        ", ",
+                                      ) || "Aucun"
+                                    }
                                     \n**<:moderateur:1320087126603202681> Modérateurs (${
                                       processedData["Modérateur"].length
                                     }) :**\n${
-                  processedData["Modérateur"].join(", ") || "Aucun"
-                }
+                                      processedData["Modérateur"].join(", ") ||
+                                      "Aucun"
+                                    }
                                     \n**<:moderateurtest:1320087193829511260> Modérateurs Tests (${
                                       processedData["Modérateur Test"].length
                                     }) :**\n${
-                  processedData["Modérateur Test"].join(", ") || "Aucun"
-                }
+                                      processedData["Modérateur Test"].join(
+                                        ", ",
+                                      ) || "Aucun"
+                                    }
                                     \n**<:guide:1320087261198549072> Guides (${
                                       processedData["Guide"].length
                                     }) :**\n${
-                  processedData["Guide"].join(", ") || "Aucun"
-                }
+                                      processedData["Guide"].join(", ") ||
+                                      "Aucun"
+                                    }
                                     \n\n*Dernière mise à jour : <t:${Math.floor(
-                                      Date.now() / 1000
+                                      Date.now() / 1000,
                                     )}:R>*
                                 `;
 
@@ -643,7 +668,7 @@ app.post("/staff_old", async (req, res) => {
                     url: `https://nationsglory.fr/server/${serveur}/staff`,
                   })
                   .setThumbnail(
-                    `${config.glorybot_url}/api/banniere?serveur=${serveur}`
+                    `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
                   )
                   .setColor(config.couleur[serveur])
                   .setDescription(description)
@@ -651,25 +676,25 @@ app.post("/staff_old", async (req, res) => {
 
                 await message.edit({ embeds: [staffEmbed] });
                 console.log(
-                  `✅ Message mis à jour pour le serveur : ${serveur}`
+                  `✅ Message mis à jour pour le serveur : ${serveur}`,
                 );
               }
             }
           } catch (error) {
             if (error.code === 10008) {
               console.log(
-                `🗑️ Le message pour le serveur ${serveur} a été supprimé.`
+                `🗑️ Le message pour le serveur ${serveur} a été supprimé.`,
               );
               configStaff["Affichage Staff"].Message = false;
               fs.writeFileSync(
                 configFilePath,
                 JSON.stringify(configStaff, null, 2),
-                "utf8"
+                "utf8",
               );
             } else {
               console.error(
                 `Erreur lors de la mise à jour du message pour le serveur ${serveur}:`,
-                error
+                error,
               );
             }
           }
@@ -740,8 +765,8 @@ app.get("/historique", (req, res) => {
       if (serveur) {
         const filteredData = Object.fromEntries(
           Object.entries(jsonData).filter(
-            ([_, value]) => value.serveur === serveur
-          )
+            ([_, value]) => value.serveur === serveur,
+          ),
         );
         return res.json(filteredData);
       }
@@ -834,12 +859,12 @@ app.post("/update-leaders", async (req, res) => {
               __dirname,
               "data",
               serverName,
-              "config-doublelead.json"
+              "config-doublelead.json",
             );
 
             if (fs.existsSync(serverConfigPath)) {
               const serverConfig = JSON.parse(
-                fs.readFileSync(serverConfigPath, "utf8")
+                fs.readFileSync(serverConfigPath, "utf8"),
               );
 
               if (
@@ -852,7 +877,7 @@ app.post("/update-leaders", async (req, res) => {
                     .alerteServeur.includes(serverName)
                 ) {
                   const channel = await client.channels.fetch(
-                    serverConfig.doublelead.Salon
+                    serverConfig.doublelead.Salon,
                   );
                   const embed = new EmbedBuilder()
                     .setColor(config.couleur[serverName.toLowerCase()])
@@ -860,8 +885,13 @@ app.post("/update-leaders", async (req, res) => {
                     .setDescription(message)
                     .setFooter({ text: config.footer });
 
-                  if (Array.isArray(serverConfig.doublelead.Role) && serverConfig.doublelead.Role.length > 0) {
-                    const roleMentions = serverConfig.doublelead.Role.map(roleId => `<@&${roleId}>`).join(', ');
+                  if (
+                    Array.isArray(serverConfig.doublelead.Role) &&
+                    serverConfig.doublelead.Role.length > 0
+                  ) {
+                    const roleMentions = serverConfig.doublelead.Role.map(
+                      (roleId) => `<@&${roleId}>`,
+                    ).join(", ");
                     channel.send({
                       embeds: [embed],
                       content: roleMentions,
@@ -891,9 +921,9 @@ app.post("/update-leaders", async (req, res) => {
             }
 
             res.json({ message: "File updated successfully" });
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -912,13 +942,13 @@ app.post("/tempsdejeu", (req, res) => {
       "data",
       serveur,
       "tempsdejeu",
-      `${date}.json`
+      `${date}.json`,
     );
     fs.writeFileSync(serveurDir, JSON.stringify(joueurs, null, 2), "utf8");
 
     if (!fs.existsSync(staffDir)) {
       console.warn(
-        `Dossier staff introuvable pour le serveur ${serveur}, on passe`
+        `Dossier staff introuvable pour le serveur ${serveur}, on passe`,
       );
       continue;
     }
@@ -942,7 +972,7 @@ app.post("/tempsdejeu", (req, res) => {
         fs.writeFileSync(
           joueurFilePath,
           JSON.stringify(joueurData, null, 2),
-          "utf8"
+          "utf8",
         );
       } catch (err) {
         console.error(`Erreur sur ${pseudo} du serveur ${serveur}:`, err);
@@ -964,7 +994,11 @@ app.get("/api/get-staff", (req, res) => {
   }
 
   try {
-    if (discordId === "261543619557588994" || discordId === "719072181631320145" || discordId === "213743858511642626") {
+    if (
+      discordId === "261543619557588994" ||
+      discordId === "719072181631320145" ||
+      discordId === "213743858511642626"
+    ) {
       return res.status(200).json(config.liste_serveur);
     }
     const availableServers = [];
@@ -977,7 +1011,7 @@ app.get("/api/get-staff", (req, res) => {
         const rawData = fs.readFileSync(staffPath, "utf-8");
         const staffData = JSON.parse(rawData);
         isStaff = Object.values(staffData).some((roleMembers) =>
-          roleMembers.includes(discordId)
+          roleMembers.includes(discordId),
         );
       }
 
@@ -1007,7 +1041,7 @@ app.get("/webhookListeDesStaffs/:serveur", (req, res) => {
     __dirname,
     "data",
     serveur,
-    "webhookListeDesStaffs.json"
+    "webhookListeDesStaffs.json",
   );
 
   fs.readFile(filePath, "utf8", (err, data) => {
@@ -1045,13 +1079,13 @@ app.post("/webhookListeDesStaffs/:serveur", async (req, res) => {
     __dirname,
     "data",
     serveur,
-    "webhookListeDesStaffs.json"
+    "webhookListeDesStaffs.json",
   );
   const staffFilePath = path.join(
     __dirname,
     "data",
     serveur,
-    "staff-serveur.json"
+    "staff-serveur.json",
   );
   const {
     messageId,
@@ -1097,31 +1131,29 @@ app.post("/webhookListeDesStaffs/:serveur", async (req, res) => {
 
       replaced = replaced.replace(
         new RegExp(`{${normalizedRole}}`, "gi"),
-        users.map((u) => u.replace(/_/g, "\\_")).join(", ")
+        users.map((u) => u.replace(/_/g, "\\_")).join(", "),
       );
 
-
-        replaced = replaced.replace(
+      replaced = replaced.replace(
         new RegExp(`{${normalizedRole}_nombre}`, "gi"),
-        String(users.length)
+        String(users.length),
       );
     });
 
     replaced = replaced.replace(
       /{timestamp}/gi,
-      lastUpdated ? String(lastUpdated) : ""
+      lastUpdated ? String(lastUpdated) : "",
     );
 
     return replaced;
   };
 
   const description = replacePlaceholders(rawDescription || "");
-  
-  const embed = new EmbedBuilder()
-    .setColor(couleur || "#0099ff");
+
+  const embed = new EmbedBuilder().setColor(couleur || "#0099ff");
 
   if (titre) embed.setTitle(titre);
-  if (description) embed.setDescription(description || "")
+  if (description) embed.setDescription(description || "");
   if (footerTexte || footerImage) {
     embed.setFooter({
       text: footerTexte || "",
@@ -1175,7 +1207,7 @@ app.post("/webhookListeDesStaffs/:serveur", async (req, res) => {
       } catch (editError) {
         console.warn(
           "Erreur lors de la modification du message, on tente de poster un nouveau :",
-          editError
+          editError,
         );
 
         try {
@@ -1186,7 +1218,7 @@ app.post("/webhookListeDesStaffs/:serveur", async (req, res) => {
         } catch (sendError) {
           console.error(
             "Erreur lors de l'envoi du nouveau message :",
-            sendError
+            sendError,
           );
           req.body.messageId = false;
           return res.status(500).json({
@@ -1211,7 +1243,7 @@ app.post("/webhookListeDesStaffs/:serveur", async (req, res) => {
   } catch (error) {
     console.error(
       "Erreur lors de l'envoi ou modification du message webhook :",
-      error
+      error,
     );
     req.body.messageId = false;
     return res.status(500).json({
@@ -1243,7 +1275,7 @@ app.get("/api/configuration", (req, res) => {
     __dirname,
     "data",
     serveurLower,
-    `config-${systeme}.json`
+    `config-${systeme}.json`,
   );
 
   fs.readFile(dataFilePath, "utf8", (err, data) => {
@@ -1286,7 +1318,7 @@ app.get("/api/staff", (req, res) => {
     __dirname,
     "data",
     serveurLower,
-    "staff-serveur.json"
+    "staff-serveur.json",
   );
 
   fs.readFile(dataFilePath, "utf8", (err, data) => {
@@ -1328,7 +1360,7 @@ app.get("/api/jail", async (req, res) => {
     __dirname,
     "data",
     serveurLower,
-    "config-jail.json"
+    "config-jail.json",
   );
 
   try {
@@ -1378,13 +1410,13 @@ app.get("/api/routine", async (req, res) => {
     __dirname,
     "data",
     serveurLower,
-    "routine.json"
+    "routine.json",
   );
   const configFilePath = path.join(
     __dirname,
     "data",
     serveurLower,
-    "config-routine.json"
+    "config-routine.json",
   );
 
   try {
@@ -1435,7 +1467,7 @@ app.get("/gestionStaff", async (req, res) => {
     "data",
     serveurLower,
     "staff",
-    `${staff}.json`
+    `${staff}.json`,
   );
   const rankFilePath = path.join(__dirname, "data", "staff", `${staff}.json`);
 
@@ -1465,52 +1497,73 @@ app.get("/gestionStaff", async (req, res) => {
   }
 });
 
-app.post('/api/attenteStaff', async (req, res) => {
-    const { serveur, joueur, id, salon } = req.body;
+app.post("/api/attenteStaff", async (req, res) => {
+  const { serveur, joueur, id, salon } = req.body;
 
-    if (!serveur || !joueur || !id || !salon) {
-        return res.status(400).json({ error: 'Champs manquants dans le corps de la requête.' });
+  if (!serveur || !joueur || !id || !salon) {
+    return res
+      .status(400)
+      .json({ error: "Champs manquants dans le corps de la requête." });
+  }
+
+  const configPath = path.join(
+    __dirname,
+    "data",
+    serveur,
+    "config-attentestaff.json",
+  );
+
+  if (!fs.existsSync(configPath)) {
+    return res
+      .status(404)
+      .json({ error: "Fichier de configuration introuvable." });
+  }
+
+  let configData;
+  try {
+    configData = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+  } catch (err) {
+    return res
+      .status(500)
+      .json({
+        error: "Erreur lors de la lecture du fichier de configuration.",
+      });
+  }
+
+  const attenteStaff = configData.attentestaff;
+  if (!attenteStaff?.active || !attenteStaff?.Salon) {
+    return res
+      .status(403)
+      .json({
+        error: "Le système d’attente staff est désactivé ou mal configuré.",
+      });
+  }
+
+  try {
+    const channel = await client.channels.fetch(attenteStaff.Salon);
+    if (!channel) {
+      return res.status(404).json({ error: "Salon cible invalide." });
     }
 
-    const configPath = path.join(__dirname, 'data', serveur, 'config-attentestaff.json');
+    const mentions = Array.isArray(attenteStaff.Role)
+      ? attenteStaff.Role.map((roleId) => `<@&${roleId}>`).join(" ")
+      : "";
+    const embed = new EmbedBuilder()
+      .setTitle("🕓 Attente Staff")
+      .setDescription(
+        `Le joueur **${joueur}** (<@${id}>) attend dans <#${salon}>.`,
+      )
+      .setColor(config.couleur[serveur])
+      .setFooter({ text: config.footer });
 
-    if (!fs.existsSync(configPath)) {
-        return res.status(404).json({ error: 'Fichier de configuration introuvable.' });
-    }
-
-    let configData;
-    try {
-        configData = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-    } catch (err) {
-        return res.status(500).json({ error: 'Erreur lors de la lecture du fichier de configuration.' });
-    }
-
-    const attenteStaff = configData.attentestaff;
-    if (!attenteStaff?.active || !attenteStaff?.Salon) {
-        return res.status(403).json({ error: 'Le système d’attente staff est désactivé ou mal configuré.' });
-    }
-
-    try {
-        const channel = await client.channels.fetch(attenteStaff.Salon);
-        if (!channel) {
-            return res.status(404).json({ error: 'Salon cible invalide.' });
-        }
-
-        const mentions = Array.isArray(attenteStaff.Role)
-          ? attenteStaff.Role.map(roleId => `<@&${roleId}>`).join(' ')
-          : '';
-        const embed = new EmbedBuilder()
-            .setTitle('🕓 Attente Staff')
-            .setDescription(`Le joueur **${joueur}** (<@${id}>) attend dans <#${salon}>.`)
-            .setColor(config.couleur[serveur])
-            .setFooter({ text: config.footer });
-
-        await channel.send({ content: mentions, embeds: [embed] });
-        return res.status(200).json({ message: 'Message envoyé avec succès.' });
-    } catch (err) {
-        console.error('Erreur lors de l’envoi du message :', err);
-        return res.status(500).json({ error: 'Erreur interne lors de l’envoi du message.' });
-    }
+    await channel.send({ content: mentions, embeds: [embed] });
+    return res.status(200).json({ message: "Message envoyé avec succès." });
+  } catch (err) {
+    console.error("Erreur lors de l’envoi du message :", err);
+    return res
+      .status(500)
+      .json({ error: "Erreur interne lors de l’envoi du message." });
+  }
 });
 
 app.post("/api/forumulaire_espilon_rp", async (req, res) => {
@@ -1518,7 +1571,16 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
     const { data } = req.body;
     if (!data) return res.status(400).send("Aucune donnée reçue.");
 
-    const [date, pseudoClient, pseudoCible, nombreAssassin, recupStuff, anonymisationClient, plusInfos, payement] = data.split(" | ");
+    const [
+      date,
+      pseudoClient,
+      pseudoCible,
+      nombreAssassin,
+      recupStuff,
+      anonymisationClient,
+      plusInfos,
+      payement,
+    ] = data.split(" | ");
 
     const channel = await client.channels.fetch("1412115768640012418");
     if (!channel || !channel.isTextBased()) {
@@ -1532,12 +1594,12 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
       .setTitle("📋 Nouvelle demande d'assassinat")
       .setDescription(
         `**Pseudo du Client :** ${pseudoClient}\n` +
-        `**Pseudo de la Cible :** ${pseudoCible}\n` +
-        `**Nombre d'Assassin :** ${nombreAssassin}\n` +
-        `**Récupération du Stuff :** ${recupStuff}\n` +
-        `**Anonymisation du Client :** ${anonymisationClient}\n` +
-        `**Plus d'Informations :** ${plusInfos}\n\n` +
-        `*Prit en charge par personne*`
+          `**Pseudo de la Cible :** ${pseudoCible}\n` +
+          `**Nombre d'Assassin :** ${nombreAssassin}\n` +
+          `**Récupération du Stuff :** ${recupStuff}\n` +
+          `**Anonymisation du Client :** ${anonymisationClient}\n` +
+          `**Plus d'Informations :** ${plusInfos}\n\n` +
+          `*Prit en charge par personne*`,
       )
       .setColor(config.couleur["epsilon"])
       .setFooter({ text: config.footer })
@@ -1552,12 +1614,21 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
         .setCustomId("assassinat_epsilon_kill")
         .setLabel("Kill effectué à 100%")
         .setStyle(ButtonStyle.Success)
-        .setDisabled(true)
+        .setDisabled(true),
     );
 
-    const sentMessage = await channel.send({ embeds: [embed], components: [row] });
-      
-    const filePath = path.join(__dirname, "data", "epsilon", "assassinat", "donnee.json");
+    const sentMessage = await channel.send({
+      embeds: [embed],
+      components: [row],
+    });
+
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "epsilon",
+      "assassinat",
+      "donnee.json",
+    );
 
     let existingData = [];
     if (fs.existsSync(filePath)) {
@@ -1575,7 +1646,7 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
       anonymisationClient,
       plusInfos,
       payement: imageUrl,
-      killEffectue: false
+      killEffectue: false,
     };
 
     existingData.push(newEntry);
@@ -1592,26 +1663,30 @@ app.post("/api/dossierDisband/:serveur", async (req, res) => {
   try {
     const { serveur } = req.params;
     const data = req.body;
-    
+
     if (!serveur) {
       return res.status(400).json({ error: "Paramètre 'serveur' manquant" });
     }
 
     if (!Array.isArray(data)) {
-      return res.status(400).json({ error: "Les données envoyées doivent être un tableau JSON" });
+      return res
+        .status(400)
+        .json({ error: "Les données envoyées doivent être un tableau JSON" });
     }
-    
+
     const dirPath = path.join(__dirname, "data", serveur);
     if (!fs.existsSync(dirPath)) {
       fs.mkdirSync(dirPath, { recursive: true });
     }
-    
+
     const filePath = path.join(dirPath, "dossierDisband.json");
-    
+
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
 
     console.log(`✅ Fichier dossierDisband.json sauvegardé pour ${serveur}`);
-    res.status(200).json({ success: true, message: `Fichier enregistré pour ${serveur}` });
+    res
+      .status(200)
+      .json({ success: true, message: `Fichier enregistré pour ${serveur}` });
   } catch (error) {
     console.error("❌ Erreur lors de la sauvegarde du dossierDisband :", error);
     res.status(500).json({ error: "Erreur interne lors de la sauvegarde" });
@@ -1620,6 +1695,6 @@ app.post("/api/dossierDisband/:serveur", async (req, res) => {
 
 app.listen(port, () => {
   console.log(
-    `Le serveur est en fonctionnement sur http://de3.bot-hosting.net:${port}`
+    `Le serveur est en fonctionnement sur http://de3.bot-hosting.net:${port}`,
   );
 });

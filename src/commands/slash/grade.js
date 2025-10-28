@@ -17,21 +17,21 @@ module.exports = {
       option
         .setName("serveur")
         .setDescription(
-          "Le serveur pour lequel afficher la configuration des grades"
+          "Le serveur pour lequel afficher la configuration des grades",
         )
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
-    const configGrade = getData(`data/${serveur}/grade.json`)
+    const configGrade = getData(`data/${serveur}/grade.json`);
 
     const gradeContainer = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(`## Configuration des Grades`)
+        textDisplay.setContent(`## Configuration des Grades`),
       )
       .addSeparatorComponents((separator) => separator);
 
@@ -42,7 +42,7 @@ module.exports = {
         const nom = cat.nom || "Nom inconnu";
         gradeContainer
           .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(`\n- **${nom}**`)
+            textDisplay.setContent(`\n- **${nom}**`),
           )
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
@@ -53,13 +53,13 @@ module.exports = {
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_delete_${cat.id}`)
                 .setLabel("Supprimer la catégorie")
-                .setStyle(ButtonStyle.Danger)
-            )
+                .setStyle(ButtonStyle.Danger),
+            ),
           );
       });
     } else {
       gradeContainer.addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("Aucune catégorie n'a encore été créée")
+        textDisplay.setContent("Aucune catégorie n'a encore été créée"),
       );
     }
 
@@ -78,8 +78,8 @@ module.exports = {
             new StringSelectMenuBuilder()
               .setCustomId("grade_categorie_manage")
               .setPlaceholder("Gérer une catégorie")
-              .addOptions(options)
-          )
+              .addOptions(options),
+          ),
         );
     }
 
@@ -88,8 +88,8 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("grade_categorie_create")
           .setLabel("Créer une catégorie")
-          .setStyle(ButtonStyle.Success)
-      )
+          .setStyle(ButtonStyle.Success),
+      ),
     );
 
     await interaction.reply({

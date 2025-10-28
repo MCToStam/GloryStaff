@@ -14,10 +14,10 @@ module.exports = async (client, member) => {
 
     if (memberId !== config.developpeur) {
       servers.forEach((server) => {
-        const staffData = getData(`data/${server}/staff.json`)
+        const staffData = getData(`data/${server}/staff.json`);
 
         const hasRole = Object.values(staffData).some((roleMembers) =>
-          roleMembers.includes(memberId)
+          roleMembers.includes(memberId),
         );
 
         if (hasRole) {
@@ -35,7 +35,7 @@ module.exports = async (client, member) => {
     if (rolesToAdd.length > 0) {
       await member.roles.add(rolesToAdd);
       console.log(
-        `Ajout des rôles ${rolesToAdd} à ${member.user.displayName} automatiquement.`
+        `Ajout des rôles ${rolesToAdd} à ${member.user.displayName} automatiquement.`,
       );
       try {
         const embed = new EmbedBuilder()
@@ -43,8 +43,8 @@ module.exports = async (client, member) => {
           .setTitle(`Bienvenue ${member.user.displayName}`)
           .setDescription(
             `Merci d'avoir rejoint le serveur support de GloryBot et de GloryStaff. Le rôle d'opérateur de ton serveur t'a automatiquement été donné en raison de ton implication dans ce(s) serveur(s) : ${availableServers.join(
-              ", "
-            )}.\n\nPour t'aider, voici un petit guide des salons mis à disposition :\n- <#1327555365436653568> : Fait-nous part de l'intégralité de tes envies et demandes d'ajouts\n- <#1327555147785572362> : Remonte-nous les problèmes que tu peux rencontrer\n- <#1327554503846924311> : Tiens-toi au courant des nouveautés qui arrivent\n\nRappelle-toi aussi que si tu as une question, même banale, n'hésite pas à la poser !`
+              ", ",
+            )}.\n\nPour t'aider, voici un petit guide des salons mis à disposition :\n- <#1327555365436653568> : Fait-nous part de l'intégralité de tes envies et demandes d'ajouts\n- <#1327555147785572362> : Remonte-nous les problèmes que tu peux rencontrer\n- <#1327554503846924311> : Tiens-toi au courant des nouveautés qui arrivent\n\nRappelle-toi aussi que si tu as une question, même banale, n'hésite pas à la poser !`,
           )
           .setFooter({ text: config.footer });
 

@@ -10,12 +10,12 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title?.split("- ")[1]?.trim();
-    
-    const data = getData(`data/${serveur}/routine.json`)
+
+    const data = getData(`data/${serveur}/routine.json`);
 
     if (!data[joueur]) {
       return interaction.reply({
@@ -48,10 +48,10 @@ module.exports = {
     const endOfMonth = Math.floor(lastDayOfMonth.getTime() / 1000);
 
     const routinesSemaine = data[joueur].routine.filter(
-      (timestamp) => timestamp >= startOfWeek && timestamp <= endOfWeek
+      (timestamp) => timestamp >= startOfWeek && timestamp <= endOfWeek,
     );
     const routinesMois = data[joueur].routine.filter(
-      (timestamp) => timestamp >= startOfMonth && timestamp <= endOfMonth
+      (timestamp) => timestamp >= startOfMonth && timestamp <= endOfMonth,
     );
 
     const embed = new EmbedBuilder()
@@ -61,7 +61,7 @@ module.exports = {
           data[joueur].derniere_routine
         }:R>\n\n**Routines cette semaine :** ${routinesSemaine.length.toString()}\n**Routines ce mois-ci :** ${routinesMois.length.toString()}\n**Routines totales :** ${
           data[joueur].routine.length
-        }`
+        }`,
       )
       .setColor(config.couleur[serveur])
       .setFooter({ text: config.footer });

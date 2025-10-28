@@ -35,7 +35,7 @@ async function containerMultiple(serveur, file, configData) {
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
-      t.setContent(`## Configuration - ${typeMap[file] || file}`)
+      t.setContent(`## Configuration - ${typeMap[file] || file}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(description))
@@ -50,12 +50,12 @@ async function containerMultiple(serveur, file, configData) {
               label: system,
               description: `Configurer ${system}`,
               value: `config_select-${file}-${system}`,
-            }))
-          )
-      )
+            })),
+          ),
+      ),
     );
 
   return container;
 }
 
-module.exports = { containerMultiple }
+module.exports = { containerMultiple };

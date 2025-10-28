@@ -25,10 +25,10 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
-    const botStaffData = getData(`data/${serveur}/staff.json`)
+    const botStaffData = getData(`data/${serveur}/staff.json`);
 
     botStaffData["Super-Modérateur"].push(id);
     const supportGuild = await client.guilds.fetch(config.support_serveur_id);
@@ -39,12 +39,12 @@ module.exports = {
     if (isInSupportServer) {
       const member = await supportGuild.members.fetch(id);
       const role = supportGuild.roles.cache.get(
-        config.role[serveur.toLowerCase()]
+        config.role[serveur.toLowerCase()],
       );
       await member.roles.add(role);
     }
 
-    saveData(`data/${serveur}/staff.json`, botStaffData)
+    saveData(`data/${serveur}/staff.json`, botStaffData);
 
     let description = "";
     for (const [grade, members] of Object.entries(botStaffData)) {

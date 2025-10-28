@@ -18,7 +18,7 @@ async function radio(client) {
     };
 
     for (const server of config.liste_serveur) {
-      const fileContent = getData(`data/${server}/config-radio.json`)
+      const fileContent = getData(`data/${server}/config-radio.json`);
       const config = JSON.parse(fileContent);
 
       if (config.radio?.active === true && config.radio?.Salon) {
@@ -27,7 +27,7 @@ async function radio(client) {
           .catch(() => null);
         if (!voiceChannel) {
           console.warn(
-            `Impossible de récupérer le salon pour le serveur : ${server}`
+            `Impossible de récupérer le salon pour le serveur : ${server}`,
           );
           continue;
         }
@@ -35,7 +35,7 @@ async function radio(client) {
         const guild = voiceChannel.guild;
         if (!guild) {
           console.warn(
-            `Impossible de récupérer la guilde pour le salon ${config.radio.Salon}`
+            `Impossible de récupérer la guilde pour le salon ${config.radio.Salon}`,
           );
           continue;
         }
@@ -55,7 +55,7 @@ async function radio(client) {
               }
             } catch (err) {
               console.warn(
-                `Impossible de prendre la parole dans ${voiceChannel.name} : ${err.message}`
+                `Impossible de prendre la parole dans ${voiceChannel.name} : ${err.message}`,
               );
             }
           }, 1000);
@@ -75,7 +75,7 @@ async function radio(client) {
             } catch (err) {
               console.error(
                 `Échec de relance du flux sur ${server} :`,
-                err.message
+                err.message,
               );
             }
           }, 3000);
@@ -83,7 +83,7 @@ async function radio(client) {
 
         player.on("idle", () => {
           console.warn(
-            `Flux devenu idle sur ${server}. Tentative de reprise...`
+            `Flux devenu idle sur ${server}. Tentative de reprise...`,
           );
           setTimeout(() => {
             try {
@@ -92,7 +92,7 @@ async function radio(client) {
             } catch (err) {
               console.error(
                 `Erreur lors de la relance après idle sur ${server} :`,
-                err.message
+                err.message,
               );
             }
           }, 3000);
@@ -102,7 +102,7 @@ async function radio(client) {
   } catch (error) {
     console.error(
       "Une erreur est survenue lors de l’exécution du bot :",
-      error
+      error,
     );
   }
 }

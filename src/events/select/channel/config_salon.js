@@ -18,7 +18,7 @@ module.exports = {
       serveur,
       systemName,
       configData[systemName],
-      file
+      file,
     );
 
     await interaction.update({

@@ -16,13 +16,13 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel afficher les dossiers disband")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
-    const data = getData(`data/${serveur}/dossierDisband.json`)
+    const data = getData(`data/${serveur}/dossierDisband.json`);
 
     if (!data.length) {
       return interaction.reply({
@@ -41,8 +41,8 @@ module.exports = {
         t.setContent(
           `## Dossiers Disband - ${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`
-        )
+          }`,
+        ),
       )
       .addSeparatorComponents((s) => s);
 
@@ -52,8 +52,8 @@ module.exports = {
 
       container.addTextDisplayComponents((text) =>
         text.setContent(
-          `[**${pays}**](https://nationsglory.fr/country/${serveur}/${pays}/) créé par [**${chef}**](https://nationsglory.fr/profile/${chef})`
-        )
+          `[**${pays}**](https://nationsglory.fr/country/${serveur}/${pays}/) créé par [**${chef}**](https://nationsglory.fr/profile/${chef})`,
+        ),
       );
     }
 
@@ -68,8 +68,8 @@ module.exports = {
         new StringSelectMenuBuilder()
           .setCustomId("dossierDisbandDetails")
           .setPlaceholder("Sélectionnez un pays")
-          .addOptions(menuOptions)
-      )
+          .addOptions(menuOptions),
+      ),
     );
 
     return await interaction.reply({

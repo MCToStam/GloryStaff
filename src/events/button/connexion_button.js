@@ -16,8 +16,8 @@ module.exports = {
       interaction.customId.split("-");
     const semaineOffset = parseInt(semaineOffsetStr);
 
-    const staffData = getData(`data/${serveur}/staff/${joueur}`)
-    
+    const staffData = getData(`data/${serveur}/staff/${joueur}`);
+
     if (!staffData) {
       const embed = new EmbedBuilder()
         .setTitle(`Connexion - ${joueur}`)
@@ -34,7 +34,7 @@ module.exports = {
       serveur,
       joueur,
       tempsJeu,
-      semaineOffset
+      semaineOffset,
     );
     const files = attachment ? [attachment] : [];
     await interaction.update({

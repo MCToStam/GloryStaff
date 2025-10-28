@@ -70,7 +70,7 @@ async function fetchAllNewSanctions(pseudonyme, lastKnownSanction) {
 
   while (true) {
     const url = `https://apiv2.nationsglory.fr/plugins/api/user/all/${encodeURIComponent(
-      pseudonyme
+      pseudonyme,
     )}/get_punisher/${page}`;
     let response;
 
@@ -79,7 +79,7 @@ async function fetchAllNewSanctions(pseudonyme, lastKnownSanction) {
     } catch (err) {
       console.error(
         `Erreur API sanctions ${pseudonyme} page ${page}:`,
-        err.message
+        err.message,
       );
       break;
     }
@@ -111,7 +111,7 @@ async function findSanctionServer(pseudonyme, sanction) {
     let page = 1;
     while (page <= 5) {
       const url = `https://apiv2.nationsglory.fr/plugins/api/user/${serveur}/${encodeURIComponent(
-        pseudonyme
+        pseudonyme,
       )}/get_punisher/${page}`;
       try {
         const res = await axios.get(url);
@@ -129,7 +129,7 @@ async function findSanctionServer(pseudonyme, sanction) {
       } catch (err) {
         console.error(
           `Erreur API serveur ${serveur} pour ${pseudonyme}:`,
-          err.message
+          err.message,
         );
       }
       page++;
@@ -138,11 +138,17 @@ async function findSanctionServer(pseudonyme, sanction) {
   return null;
 }
 
-async function sendSanctionMessage(channelId, roleIds, message, serveur, client) {
+async function sendSanctionMessage(
+  channelId,
+  roleIds,
+  message,
+  serveur,
+  client,
+) {
   const channel = client.channels.cache.get(channelId);
   if (!channel)
     return console.error(
-      `Salon ${channelId} sanctions introuvable pour ${serveur}`
+      `Salon ${channelId} sanctions introuvable pour ${serveur}`,
     );
 
   let content = "";
@@ -173,6 +179,8 @@ async function sanction(client, serveur) {
   )
     return;
 
+  console.log("[SANCTION] Recherche pour le serveur", serveur);
+
   const staffServer = getData(`data/${serveur}/staff-serveur.json`);
 
   const filteredStaff = Object.entries(staffServer)
@@ -189,7 +197,7 @@ async function sanction(client, serveur) {
     const lastKnownSanction = data.lastSanction || null;
     const newSanctions = await fetchAllNewSanctions(
       pseudonyme,
-      lastKnownSanction
+      lastKnownSanction,
     );
 
     if (newSanctions.length === 0) continue;
@@ -232,7 +240,7 @@ async function sanction(client, serveur) {
       configStaff["Sanction Staff"].Role,
       embedMessage,
       serveur,
-      client
+      client,
     );
 
     data.lastSanction = newSanctions[newSanctions.length - 1];

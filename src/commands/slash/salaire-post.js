@@ -10,7 +10,7 @@ module.exports = {
         .setName("mois")
         .setDescription("Le mois pour lequel vous souhaitez voir les salaires")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
@@ -27,7 +27,7 @@ module.exports = {
       const permEmbed = new EmbedBuilder()
         .setTitle("Erreur")
         .setDescription(
-          `Il te faut être <@&${allowedRoles[0]}> ou <@&${allowedRoles[1]}> afin de pouvoir faire ceci.`
+          `Il te faut être <@&${allowedRoles[0]}> ou <@&${allowedRoles[1]}> afin de pouvoir faire ceci.`,
         )
         .setColor(config.errorcolor)
         .setFooter({ text: config.footer });
@@ -57,7 +57,7 @@ module.exports = {
       const pasMoisEmbed = new EmbedBuilder()
         .setTitle("Erreur")
         .setDescription(
-          `Aucun salaire n'a été trouvé pour le mois "${specifiedMonth}".`
+          `Aucun salaire n'a été trouvé pour le mois "${specifiedMonth}".`,
         )
         .setColor(config.errorcolor)
         .setFooter({ text: config.footer });
@@ -68,7 +68,7 @@ module.exports = {
       .setTitle(
         `Salaires du mois de ${
           specifiedMonth.charAt(0).toUpperCase() + specifiedMonth.slice(1)
-        }`
+        }`,
       )
       .setDescription(description)
       .setColor(config.color)
@@ -95,10 +95,10 @@ module.exports = {
       .setTitle(
         `Salaires du mois de ${
           specifiedMonth.charAt(0).toUpperCase() + specifiedMonth.slice(1)
-        }`
+        }`,
       )
       .setDescription(
-        `Prendre l'argent dans la banque ONU :\n\`\`\`/econ bank take ONU ${salaireTotal}\`\`\`\nDonner l'argent aux RPs :\n${ecoGiveInstructions}`
+        `Prendre l'argent dans la banque ONU :\n\`\`\`/econ bank take ONU ${salaireTotal}\`\`\`\nDonner l'argent aux RPs :\n${ecoGiveInstructions}`,
       )
       .setColor(config.color)
       .setFooter({ text: config.footer });

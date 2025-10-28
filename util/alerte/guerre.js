@@ -69,7 +69,7 @@ function convertirEnTimestamp(dateStr) {
       hour: parseInt(heure),
       minute: parseInt(minute),
     },
-    { zone: "Europe/Paris" }
+    { zone: "Europe/Paris" },
   );
 
   return Math.floor(dateLocale.toSeconds());
@@ -79,7 +79,7 @@ async function guerre(client) {
   for (const server of config.liste_serveur) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
     try {
-      const config_forum = getData(`data/${server}/config-forum.json`)
+      const config_forum = getData(`data/${server}/config-forum.json`);
 
       if (!config_forum.Guerre.Forum) continue;
 
@@ -125,10 +125,10 @@ async function guerre(client) {
         }
       });
 
-      const guerresExistantes = getData(`data/${server}/forum/guerre.json`)
+      const guerresExistantes = getData(`data/${server}/forum/guerre.json`);
 
       const nouvellesGuerres = complaints.filter(
-        (c) => !guerresExistantes.some((p) => p.lien === c.lien)
+        (c) => !guerresExistantes.some((p) => p.lien === c.lien),
       );
 
       if (nouvellesGuerres.length > 0) {
@@ -140,7 +140,7 @@ async function guerre(client) {
           const salon = client.channels.cache.get(config_forum.Guerre.Salon);
           if (!salon) {
             console.warn(
-              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Guerre.Salon})`
+              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Guerre.Salon})`,
             );
           } else {
             let rolePingDone = false;
@@ -149,7 +149,7 @@ async function guerre(client) {
                 .setColor(config.couleur[server.toLowerCase()])
                 .setTitle("Nouvelle Guerre")
                 .setDescription(
-                  `📌 **Titre :** ${guerre.titre}\n✏️ **Auteur :** ${guerre.auteur}\n\n*Cette guerre a été postée <t:${guerre.date}:R>.*`
+                  `📌 **Titre :** ${guerre.titre}\n✏️ **Auteur :** ${guerre.auteur}\n\n*Cette guerre a été postée <t:${guerre.date}:R>.*`,
                 )
                 .setFooter({ text: config.footer });
 
@@ -157,7 +157,7 @@ async function guerre(client) {
                 new ButtonBuilder()
                   .setURL(guerre.lien)
                   .setLabel("Aller sur la guerre")
-                  .setStyle(ButtonStyle.Link)
+                  .setStyle(ButtonStyle.Link),
               );
 
               try {
@@ -191,24 +191,24 @@ async function guerre(client) {
                   messageId: sentMessage.id,
                 });
                 console.log(
-                  `✅ Message envoyé pour une nouvelle guerre dans ${server}`
+                  `✅ Message envoyé pour une nouvelle guerre dans ${server}`,
                 );
                 if (salon.type === "GUILD_NEWS") {
                   try {
                     await sentMessage.crosspost();
                     console.log(
-                      `📣 Message publié dans le salon d’annonce pour ${server}`
+                      `📣 Message publié dans le salon d’annonce pour ${server}`,
                     );
                   } catch (err) {
                     console.warn(
-                      `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`
+                      `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
                     );
                   }
                 }
               } catch (error) {
                 console.error(
                   `❌ Erreur lors de l'envoi du message pour ${server}:`,
-                  error.message
+                  error.message,
                 );
               }
             }
@@ -216,11 +216,11 @@ async function guerre(client) {
         }
 
         console.log(
-          `🆕 ${nouvellesGuerres.length} nouvelle(s) guerre(s) ajoutée(s).`
+          `🆕 ${nouvellesGuerres.length} nouvelle(s) guerre(s) ajoutée(s).`,
         );
         guerresExistantes.push(...nouvellesGuerres);
 
-        saveData(`data/${server}/forum/guerre.json`, guerresExistantes)
+        saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
       }
 
       if (
@@ -229,11 +229,11 @@ async function guerre(client) {
         config_forum["Guerre non traitée"]?.Temps
       ) {
         const salonNonTraitee = client.channels.cache.get(
-          config_forum["Guerre non traitée"].Salon
+          config_forum["Guerre non traitée"].Salon,
         );
         if (!salonNonTraitee) {
           console.warn(
-            `⚠️ Salon introuvable pour les guerres non traitées (${server})`
+            `⚠️ Salon introuvable pour les guerres non traitées (${server})`,
           );
         } else {
           const delaiTimestamp = DateTime.now()
@@ -243,7 +243,7 @@ async function guerre(client) {
             .toSeconds();
 
           const guerresAnciennes = guerresExistantes.filter(
-            (guerre) => guerre.date < delaiTimestamp && !guerre.alerteEnvoyee
+            (guerre) => guerre.date < delaiTimestamp && !guerre.alerteEnvoyee,
           );
 
           let rolePingDone = false;
@@ -252,7 +252,7 @@ async function guerre(client) {
               .setColor(config.couleur[server.toLowerCase()])
               .setTitle("⏳ Guerre non Traitée")
               .setDescription(
-                `📌 **Titre :** ${guerre.titre}\n✏️ **Auteur :** ${guerre.auteur}\n\n*Cette guerre est en attente depuis plus de ${config_forum["Guerre non traitée"].Temps} jours !*`
+                `📌 **Titre :** ${guerre.titre}\n✏️ **Auteur :** ${guerre.auteur}\n\n*Cette guerre est en attente depuis plus de ${config_forum["Guerre non traitée"].Temps} jours !*`,
               )
               .setFooter({ text: config.footer });
 
@@ -260,7 +260,7 @@ async function guerre(client) {
               new ButtonBuilder()
                 .setURL(guerre.lien)
                 .setLabel("Voir la guerre")
-                .setStyle(ButtonStyle.Link)
+                .setStyle(ButtonStyle.Link),
             );
 
             try {
@@ -290,26 +290,26 @@ async function guerre(client) {
 
               guerre.alerteEnvoyee = true;
               console.log(
-                `🚨 Alerte envoyée pour une guerre non traitée dans ${server}`
+                `🚨 Alerte envoyée pour une guerre non traitée dans ${server}`,
               );
             } catch (error) {
               console.error(
                 `❌ Erreur lors de l'envoi de l'alerte pour ${server}:`,
-                error.message
+                error.message,
               );
             }
           }
 
-          saveData(`data/${server}/forum/guerre.json`, guerresExistantes)
+          saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
         }
       }
-      
+
       const guerresMisesAJour = guerresExistantes.filter((p) =>
-        complaints.some((c) => c.lien === p.lien)
+        complaints.some((c) => c.lien === p.lien),
       );
 
       const guerresSupprimees = guerresExistantes.filter(
-        (p) => !complaints.some((c) => c.lien === p.lien)
+        (p) => !complaints.some((c) => c.lien === p.lien),
       );
 
       for (const guerre of guerresSupprimees) {
@@ -321,21 +321,21 @@ async function guerre(client) {
                 const channel = guild.channels.cache.get(msgInfo.channelId);
                 if (channel) {
                   const message = await channel.messages.fetch(
-                    msgInfo.messageId
+                    msgInfo.messageId,
                   );
                   if (message) {
                     if (message?.deletable) {
                       await message.delete();
                     }
                     console.log(
-                      `🗑️ Message supprimé pour une guerre résolue (${guerre.titre})`
+                      `🗑️ Message supprimé pour une guerre résolue (${guerre.titre})`,
                     );
                   }
                 }
               }
             } catch (error) {
               console.warn(
-                `⚠️ Impossible de supprimer un message d'alerte : ${error.message}`
+                `⚠️ Impossible de supprimer un message d'alerte : ${error.message}`,
               );
             }
           }
@@ -345,15 +345,15 @@ async function guerre(client) {
       if (
         JSON.stringify(guerresExistantes) !== JSON.stringify(guerresMisesAJour)
       ) {
-        saveData(`data/${server}/forum/guerre.json`, guerresMisesAJour)
+        saveData(`data/${server}/forum/guerre.json`, guerresMisesAJour);
       }
     } catch (error) {
       console.error(
         `❌ Erreur lors du traitement des guerres pour ${server}:`,
-        error.message
+        error.message,
       );
     }
   }
 }
 
-module.exports = { guerre }
+module.exports = { guerre };

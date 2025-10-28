@@ -16,14 +16,14 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel afficher la liste des staffs")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     )
     .addStringOption((option) =>
       option
         .setName("staff")
         .setDescription("Le membre du staff à configurer")
         .setRequired(false)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
@@ -40,7 +40,7 @@ module.exports = {
         .setTitle(
           `Liste des Staffs du serveur ${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`
+          }`,
         )
         .setColor(config.couleur[serveur] || 0x00ae86)
         .setFooter({ text: config.footer });
@@ -52,7 +52,7 @@ module.exports = {
           const memberNames = members
             .map((name) => {
               const linkedId = Object.keys(linkData).find(
-                (id) => linkData[id] === name
+                (id) => linkData[id] === name,
               );
               const escapedName = name.replace(/_/g, "\\_");
               return linkedId
@@ -130,8 +130,8 @@ module.exports = {
       try {
         const responseLinked = await fetch(
           `${config.glorybot_url}/api/get-ng?pseudo=${encodeURIComponent(
-            joueur
-          )}`
+            joueur,
+          )}`,
         );
         if (!responseLinked.ok)
           throw new Error(`Erreur API: ${responseLinked.status}`);
@@ -183,7 +183,7 @@ module.exports = {
               Accept: "application/json",
             },
             signal: controller.signal,
-          }
+          },
         );
 
         clearTimeout(timeout);
@@ -194,7 +194,7 @@ module.exports = {
         } else {
           console.error(
             "Erreur lors de la récupération des données :",
-            error.message
+            error.message,
           );
         }
       }
@@ -221,7 +221,7 @@ module.exports = {
         const responseLinked = await fetch(
           `${
             config.glorybot_url
-          }/api/get-bedrock?pseudo_ng=${encodeURIComponent(joueur)}`
+          }/api/get-bedrock?pseudo_ng=${encodeURIComponent(joueur)}`,
         );
         if (!responseLinked.ok)
           throw new Error(`Erreur API: ${responseLinked.status}`);
@@ -252,16 +252,16 @@ module.exports = {
                   .toUpperCase()}${serveur.slice(1)} :** <t:${Math.floor(
                   new Date(
                     new Date(
-                      body.servers[serveur].last_connection + " GMT+0200"
-                    ).toISOString()
-                  ).getTime() / 1000
+                      body.servers[serveur].last_connection + " GMT+0200",
+                    ).toISOString(),
+                  ).getTime() / 1000,
                 )}:R>\n**Temps de Jeu ${serveur
                   .charAt(0)
                   .toUpperCase()}${serveur.slice(1)} :** ${convertirTemps(
-                  body.servers[serveur].playtime
+                  body.servers[serveur].playtime,
                 )}\n**Temps de Jeu Total :** ${totalTemps(body)}`
               : ""
-          }`
+          }`,
         )
         .setColor(config.couleur[serveur])
         .setFooter({ text: config.footer })

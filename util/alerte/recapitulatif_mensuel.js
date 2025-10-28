@@ -36,7 +36,7 @@ const generateGraphImage = async (dataParSemaine) => {
   const labels = dataParSemaine.map((entry) => entry.semaine);
   const argentData = dataParSemaine.map((entry) => entry.argentNotation);
   const moyenneConnexionData = dataParSemaine.map(
-    (entry) => entry.moyenneConnexion
+    (entry) => entry.moyenneConnexion,
   );
 
   const configuration = {
@@ -128,7 +128,7 @@ function formatClassement(classement, serveur, key) {
 
 const prepareServerRankings = async () => {
   const files = getFiles("data/classement/semaine").filter(
-    (f) => f.startsWith("classement-") && f.endsWith(".json")
+    (f) => f.startsWith("classement-") && f.endsWith(".json"),
   );
 
   const now = new Date();
@@ -149,7 +149,7 @@ const prepareServerRankings = async () => {
     const fileYear = parseInt(match[2], 10);
     if (fileMonth !== previousMonthName || fileYear !== previousYear) continue;
 
-    const weeklyData = getData(`data/classement/semaine/${file}`)
+    const weeklyData = getData(`data/classement/semaine/${file}`);
     for (const entry of weeklyData) {
       const srv = entry.serveur;
       if (!monthlyStats[srv]) {
@@ -198,7 +198,7 @@ const prepareServerRankings = async () => {
     .filter(
       (file) =>
         file.startsWith("classement-") &&
-        file.endsWith(`-${previousMonthName}-${previousYear}.json`)
+        file.endsWith(`-${previousMonthName}-${previousYear}.json`),
     )
     .map((file) => {
       const match = file.match(/classement-(\d+)-/);
@@ -212,7 +212,7 @@ const prepareServerRankings = async () => {
 
   saveData(
     `data/classement/mois/classement-${nextFileNumber}-${previousMonthName}-${previousYear}.json`,
-    rankings
+    rankings,
   );
   console.log(`Classements mensuels enregistrés avec succès !`);
   return {
@@ -239,22 +239,22 @@ async function recapitulatif_mensuel(client) {
 
       if (channel) {
         const classementData = getData(
-          `data/classement/mois/classement-${id}-${mois}-${annee}.json`
+          `data/classement/mois/classement-${id}-${mois}-${annee}.json`,
         );
 
         const classementArgentFormatted = formatClassement(
           classementData,
           serveur,
-          "argentNotation"
+          "argentNotation",
         );
         const classementMoyenneFormatted = formatClassement(
           classementData,
           serveur,
-          "moyenneConnexion"
+          "moyenneConnexion",
         );
 
         const serverData = classementData.find(
-          (entry) => entry.serveur === serveur
+          (entry) => entry.serveur === serveur,
         );
 
         const argentNotation = serverData ? serverData.argentNotation : 0;
@@ -271,7 +271,7 @@ async function recapitulatif_mensuel(client) {
         const embed = new EmbedBuilder()
           .setTitle(`Récapitulatif Mensuel - ${moisFormatted}`)
           .setThumbnail(
-            `${config.glorybot_url}/api/banniere?serveur=${serveur}`
+            `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
           )
           .addFields([
             {
@@ -312,7 +312,7 @@ async function recapitulatif_mensuel(client) {
           new ButtonBuilder()
             .setCustomId(`classement_mensuel-connexion-${id}`)
             .setLabel("Classement détaillées : Connexion")
-            .setStyle(ButtonStyle.Primary)
+            .setStyle(ButtonStyle.Primary),
         );
 
         const options = {
@@ -333,18 +333,18 @@ async function recapitulatif_mensuel(client) {
           try {
             await sentMessage.crosspost();
             console.log(
-              `📣 Message publié dans le salon d’annonce pour ${serveur}`
+              `📣 Message publié dans le salon d’annonce pour ${serveur}`,
             );
           } catch (err) {
             console.warn(
-              `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`
+              `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
             );
           }
         }
       }
     } else {
       console.log(
-        `Récap mensuel désactivé ou pas de salon configuré pour le serveur ${serveur}`
+        `Récap mensuel désactivé ou pas de salon configuré pour le serveur ${serveur}`,
       );
     }
   }

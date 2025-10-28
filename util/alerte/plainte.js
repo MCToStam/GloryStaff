@@ -69,7 +69,7 @@ function convertirEnTimestamp(dateStr) {
       hour: parseInt(heure),
       minute: parseInt(minute),
     },
-    { zone: "Europe/Paris" }
+    { zone: "Europe/Paris" },
   );
 
   return Math.floor(dateLocale.toSeconds());
@@ -79,8 +79,7 @@ async function plainte(client) {
   for (const server of config.liste_serveur) {
     await new Promise((resolve) => setTimeout(resolve, 5000));
     try {
-      const fileContent = getData(`data/${server}/config-forum.json`)
-      const config_forum = JSON.parse(fileContent);
+      const config_forum = getData(`data/${server}/config-forum.json`);
 
       if (!config_forum.Plainte.Forum) continue;
 
@@ -126,10 +125,10 @@ async function plainte(client) {
         }
       });
 
-      const plaintesExistantes = getData(`data/${server}/forum/plainte.json`)
+      const plaintesExistantes = getData(`data/${server}/forum/plainte.json`);
 
       const nouvellesPlaintes = complaints.filter(
-        (c) => !plaintesExistantes.some((p) => p.lien === c.lien)
+        (c) => !plaintesExistantes.some((p) => p.lien === c.lien),
       );
 
       if (nouvellesPlaintes.length > 0) {
@@ -141,7 +140,7 @@ async function plainte(client) {
           const salon = client.channels.cache.get(config_forum.Plainte.Salon);
           if (!salon) {
             console.warn(
-              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Plainte.Salon})`
+              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Plainte.Salon})`,
             );
           } else {
             let rolePingDone = false;
@@ -150,7 +149,7 @@ async function plainte(client) {
                 .setColor(config.couleur[server.toLowerCase()])
                 .setTitle("Nouvelle Plainte")
                 .setDescription(
-                  `📌 **Titre :** ${plainte.titre}\n✏️ **Auteur :** ${plainte.auteur}\n\n*Cette plainte a été postée <t:${plainte.date}:R>.*`
+                  `📌 **Titre :** ${plainte.titre}\n✏️ **Auteur :** ${plainte.auteur}\n\n*Cette plainte a été postée <t:${plainte.date}:R>.*`,
                 )
                 .setFooter({ text: config.footer });
 
@@ -158,7 +157,7 @@ async function plainte(client) {
                 new ButtonBuilder()
                   .setURL(plainte.lien)
                   .setLabel("Aller sur la plainte")
-                  .setStyle(ButtonStyle.Link)
+                  .setStyle(ButtonStyle.Link),
               );
 
               try {
@@ -192,24 +191,24 @@ async function plainte(client) {
                   messageId: sentMessage.id,
                 });
                 console.log(
-                  `✅ Message envoyé pour une nouvelle plainte dans ${server}`
+                  `✅ Message envoyé pour une nouvelle plainte dans ${server}`,
                 );
                 if (salon.type === "GUILD_NEWS") {
                   try {
                     await sentMessage.crosspost();
                     console.log(
-                      `📣 Message publié dans le salon d’annonce pour ${server}`
+                      `📣 Message publié dans le salon d’annonce pour ${server}`,
                     );
                   } catch (err) {
                     console.warn(
-                      `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`
+                      `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
                     );
                   }
                 }
               } catch (error) {
                 console.error(
                   `❌ Erreur lors de l'envoi du message pour ${server}:`,
-                  error.message
+                  error.message,
                 );
               }
             }
@@ -217,11 +216,11 @@ async function plainte(client) {
         }
 
         console.log(
-          `🆕 ${nouvellesPlaintes.length} nouvelle(s) plainte(s) ajoutée(s).`
+          `🆕 ${nouvellesPlaintes.length} nouvelle(s) plainte(s) ajoutée(s).`,
         );
         plaintesExistantes.push(...nouvellesPlaintes);
 
-        saveData(`data/${server}/forum/plainte.json`, plaintesExistantes)
+        saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
       }
 
       if (
@@ -230,11 +229,11 @@ async function plainte(client) {
         config_forum["Plainte non traitée"]?.Temps
       ) {
         const salonNonTraitee = client.channels.cache.get(
-          config_forum["Plainte non traitée"].Salon
+          config_forum["Plainte non traitée"].Salon,
         );
         if (!salonNonTraitee) {
           console.warn(
-            `⚠️ Salon introuvable pour les plaintes non traitées (${server})`
+            `⚠️ Salon introuvable pour les plaintes non traitées (${server})`,
           );
         } else {
           const delaiTimestamp = DateTime.now()
@@ -244,7 +243,8 @@ async function plainte(client) {
             .toSeconds();
 
           const plaintesAnciennes = plaintesExistantes.filter(
-            (plainte) => plainte.date < delaiTimestamp && !plainte.alerteEnvoyee
+            (plainte) =>
+              plainte.date < delaiTimestamp && !plainte.alerteEnvoyee,
           );
 
           let rolePingDone = false;
@@ -253,7 +253,7 @@ async function plainte(client) {
               .setColor(config.couleur[server.toLowerCase()])
               .setTitle("⏳ Plainte non Traitée")
               .setDescription(
-                `📌 **Titre :** ${plainte.titre}\n✏️ **Auteur :** ${plainte.auteur}\n\n*Cette plainte est en attente depuis plus de ${config_forum["Plainte non traitée"].Temps} jours !*`
+                `📌 **Titre :** ${plainte.titre}\n✏️ **Auteur :** ${plainte.auteur}\n\n*Cette plainte est en attente depuis plus de ${config_forum["Plainte non traitée"].Temps} jours !*`,
               )
               .setFooter({ text: config.footer });
 
@@ -261,7 +261,7 @@ async function plainte(client) {
               new ButtonBuilder()
                 .setURL(plainte.lien)
                 .setLabel("Voir la plainte")
-                .setStyle(ButtonStyle.Link)
+                .setStyle(ButtonStyle.Link),
             );
 
             try {
@@ -291,27 +291,27 @@ async function plainte(client) {
 
               plainte.alerteEnvoyee = true;
               console.log(
-                `🚨 Alerte envoyée pour une plainte non traitée dans ${server}`
+                `🚨 Alerte envoyée pour une plainte non traitée dans ${server}`,
               );
             } catch (error) {
               console.error(
                 `❌ Erreur lors de l'envoi de l'alerte pour ${server}:`,
-                error.message
+                error.message,
               );
             }
           }
 
-          saveData(`data/${server}/forum/plainte.json`, plaintesExistantes)
+          saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
         }
       }
 
       const liensActuels = complaints.map((c) => c.lien);
       const plaintesMisesAJour = plaintesExistantes.filter((p) =>
-        complaints.some((c) => c.lien === p.lien)
+        complaints.some((c) => c.lien === p.lien),
       );
 
       const plaintesSupprimees = plaintesExistantes.filter(
-        (p) => !complaints.some((c) => c.lien === p.lien)
+        (p) => !complaints.some((c) => c.lien === p.lien),
       );
 
       for (const plainte of plaintesSupprimees) {
@@ -323,21 +323,21 @@ async function plainte(client) {
                 const channel = guild.channels.cache.get(msgInfo.channelId);
                 if (channel) {
                   const message = await channel.messages.fetch(
-                    msgInfo.messageId
+                    msgInfo.messageId,
                   );
                   if (message) {
                     if (message?.deletable) {
                       await message.delete();
                     }
                     console.log(
-                      `🗑️ Message supprimé pour une plainte résolue (${plainte.titre})`
+                      `🗑️ Message supprimé pour une plainte résolue (${plainte.titre})`,
                     );
                   }
                 }
               }
             } catch (error) {
               console.warn(
-                `⚠️ Impossible de supprimer un message d'alerte : ${error.message}`
+                `⚠️ Impossible de supprimer un message d'alerte : ${error.message}`,
               );
             }
           }
@@ -348,12 +348,12 @@ async function plainte(client) {
         JSON.stringify(plaintesExistantes) !==
         JSON.stringify(plaintesMisesAJour)
       ) {
-        saveData(`data/${server}/forum/plainte.json`, plaintesMisesAJour)
+        saveData(`data/${server}/forum/plainte.json`, plaintesMisesAJour);
       }
     } catch (error) {
       console.error(
         `❌ Erreur lors du traitement des plaintes pour ${server}:`,
-        error.message
+        error.message,
       );
     }
   }

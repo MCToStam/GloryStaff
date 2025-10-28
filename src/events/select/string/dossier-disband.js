@@ -13,7 +13,7 @@ module.exports = {
     const serveur = match[1];
     const pays = decodeURIComponent(match[2]);
 
-    const data = getData(`data/${serveur}/dossierDisband.json`)
+    const data = getData(`data/${serveur}/dossierDisband.json`);
 
     const entry = data.find((e) => {
       const nom = e.rapport?.informations?.nom_pays || e.pays;

@@ -22,7 +22,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title?.split("- ")[1]?.trim();
@@ -44,7 +44,7 @@ module.exports = {
           id
             ? `**${joueur}** est relié au compte Discord <@${id}>.`
             : `**${joueur}** n'est pas relié à un compte Discord.`
-        }`
+        }`,
       )
       .setColor(config.couleur[serveur])
       .setFooter({ text: config.footer });
@@ -56,14 +56,14 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId("gestionstaff_liaisondiscord_edit")
           .setLabel("Modifier le compte Discord")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
     } else {
       actionRow.addComponents(
         new ButtonBuilder()
           .setCustomId("gestionstaff_liaisondiscord_add")
           .setLabel("Lier le compte Discord")
-          .setStyle(ButtonStyle.Primary)
+          .setStyle(ButtonStyle.Primary),
       );
     }
 

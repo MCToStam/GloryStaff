@@ -18,13 +18,13 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel faire une routine")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
-    const configRoutine = getData(`data/${serveur}/config-routine.json`)
+    const configRoutine = getData(`data/${serveur}/config-routine.json`);
 
     if (!configRoutine.routine?.active) {
       const erreurEmbed = new EmbedBuilder()
@@ -35,7 +35,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`
+          }** !`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -50,7 +50,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`
+          }** !`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -59,7 +59,7 @@ module.exports = {
     let pseudo;
     try {
       const response = await fetch(
-        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`
+        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`,
       );
       if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
       const data = await response.json();
@@ -74,7 +74,7 @@ module.exports = {
         .setTitle("Erreur")
         .setColor(config.errorcolor)
         .setDescription(
-          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.'
+          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.',
         )
         .setFooter({ text: config.footer });
 
@@ -82,7 +82,7 @@ module.exports = {
         new ButtonBuilder()
           .setLabel("💻 Accéder au panel")
           .setStyle(ButtonStyle.Link)
-          .setURL("https://glorybot.fr")
+          .setURL("https://glorybot.fr"),
       );
 
       return interaction.reply({
@@ -92,7 +92,7 @@ module.exports = {
       });
     }
 
-    const staffData = getData(`data/${serveur}/staff-serveur.json`)
+    const staffData = getData(`data/${serveur}/staff-serveur.json`);
     const roleAutorise = configRoutine.routine.Grade;
 
     const gradesHierarchie = [
@@ -120,7 +120,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }**.`
+          }**.`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -148,8 +148,8 @@ module.exports = {
       .setColor(config.couleur[serveur])
       .setDescription(
         `**Début de la routine :** <t:${Math.floor(
-          Date.now() / 1000
-        )}:R>\n**Infractions :**\n**Fin de la routine :**`
+          Date.now() / 1000,
+        )}:R>\n**Infractions :**\n**Fin de la routine :**`,
       )
       .setFooter({ text: config.footer })
       .setThumbnail("attachment://modele.png");

@@ -19,12 +19,14 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title?.split("- ")[1]?.trim();
 
-    const staffData = getData(`data/${serveur}/staff/${joueur.replace(/\\/g, "")}.json`)
+    const staffData = getData(
+      `data/${serveur}/staff/${joueur.replace(/\\/g, "")}.json`,
+    );
 
     if (staffData["Blâme 3"]) {
       delete staffData["Blâme 3"];
@@ -33,7 +35,10 @@ module.exports = {
     } else if (staffData["Blâme 1"]) {
       delete staffData["Blâme 1"];
     }
-    saveData(`data/${serveur}/staff/${joueur.replace(/\\/g, "")}.json`, staffData)
+    saveData(
+      `data/${serveur}/staff/${joueur.replace(/\\/g, "")}.json`,
+      staffData,
+    );
 
     const embed = new EmbedBuilder()
       .setTitle(`Blâme - ${joueur}`)
@@ -50,7 +55,7 @@ module.exports = {
           staffData["Blâme 3"]
             ? ` ${staffData["Blâme 3"].raison}\nDélivré par <@${staffData["Blâme 3"].auteur}> le ${staffData["Blâme 3"].date}.`
             : ""
-        }`
+        }`,
       )
       .setColor(config.couleur[serveur])
       .setFooter({ text: config.footer });
@@ -65,7 +70,7 @@ module.exports = {
         .setCustomId("gestionstaff_blame_add")
         .setLabel("Ajouter un Blâme")
         .setStyle(ButtonStyle.Success)
-        .setDisabled(staffData["Blâme 3"] ? true : false)
+        .setDisabled(staffData["Blâme 3"] ? true : false),
     );
 
     return interaction.update({

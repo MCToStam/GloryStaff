@@ -16,7 +16,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const data =  getData("data/epsilon/assassinat/donnee.json")
+    const data = getData("data/epsilon/assassinat/donnee.json");
 
     const messageId = interaction.message.id;
 
@@ -45,10 +45,10 @@ module.exports = {
       assassinat.listeAssassin.splice(index, 1);
     }
 
-    saveData("data/epsilon/assassinat/donnee.json", data)
+    saveData("data/epsilon/assassinat/donnee.json", data);
 
     const embed = EmbedBuilder.from(
-      interaction.message.embeds[0]
+      interaction.message.embeds[0],
     ).setDescription(
       `**Pseudo du Client :** ${assassinat.pseudoClient}\n` +
         `**Pseudo de la Cible :** ${assassinat.pseudoCible}\n` +
@@ -58,9 +58,9 @@ module.exports = {
         `**Plus d'Informations :** ${assassinat.plusInfos}\n\n` +
         (assassinat.listeAssassin.length > 0
           ? `*Pris en charge par : <@${assassinat.listeAssassin.join(
-              ">, <@"
+              ">, <@",
             )}>*`
-          : `*Pris en charge par personne*`)
+          : `*Pris en charge par personne*`),
     );
 
     const row = new ActionRowBuilder().addComponents(
@@ -72,7 +72,7 @@ module.exports = {
         .setCustomId("assassinat_epsilon_kill")
         .setLabel("Kill effectué")
         .setStyle(ButtonStyle.Success)
-        .setDisabled(assassinat.listeAssassin.length === 0)
+        .setDisabled(assassinat.listeAssassin.length === 0),
     );
 
     await interaction.update({ embeds: [embed], components: [row] });

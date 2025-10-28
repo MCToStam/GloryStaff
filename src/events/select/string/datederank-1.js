@@ -15,7 +15,7 @@ module.exports = {
     const embedColor = interaction.message.embeds[0]?.color;
 
     const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor
+      (key) => config.couleur[key] === embedColor,
     );
 
     const joueur = interaction.message.embeds[0]?.title
@@ -44,8 +44,8 @@ module.exports = {
             `${config.emojigrade[details.grade]} **${
               details.grade
             } ${details.serveur.charAt(0).toUpperCase()}${details.serveur.slice(
-              1
-            )}** : ${date}`
+              1,
+            )}** : ${date}`,
         )
         .join("\n");
     }
@@ -60,7 +60,7 @@ module.exports = {
       new ButtonBuilder()
         .setCustomId("gestionstaff_datederank_edit")
         .setLabel("Modifier les dates de rank")
-        .setStyle(ButtonStyle.Primary)
+        .setStyle(ButtonStyle.Primary),
     );
 
     return interaction.reply({

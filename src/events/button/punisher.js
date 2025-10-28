@@ -11,7 +11,8 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [type, direction, joueur, pageStr, serveur] = interaction.customId.split("-");
+    const [type, direction, joueur, pageStr, serveur] =
+      interaction.customId.split("-");
     if (type !== "punisher") return;
 
     let page = parseInt(pageStr, 10);
@@ -23,7 +24,12 @@ module.exports = {
 
     const serveursCibles = serveur === "all" ? config.liste_serveur : [serveur];
 
-    const sanctions = await ensureSanctions(joueur, neededCount, config, serveursCibles);
+    const sanctions = await ensureSanctions(
+      joueur,
+      neededCount,
+      config,
+      serveursCibles,
+    );
     const maxPage = Math.max(1, Math.ceil(sanctions.length / 7));
 
     const embedColor = interaction.message.embeds[0]?.color;
@@ -35,7 +41,7 @@ module.exports = {
       embedColor,
       config,
       7,
-      serveur
+      serveur,
     );
 
     return interaction.editReply({

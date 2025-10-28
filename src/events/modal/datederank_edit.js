@@ -15,7 +15,7 @@ module.exports = {
       const embedColor = interaction.message.embeds[0]?.color;
 
       const serveur = Object.keys(config.couleur).find(
-        (key) => config.couleur[key] === embedColor
+        (key) => config.couleur[key] === embedColor,
       );
 
       const joueur = interaction.message.embeds[0]?.title
@@ -41,7 +41,7 @@ module.exports = {
       const userEmbed = new EmbedBuilder()
         .setTitle(`Modification Grade - ${joueur}`)
         .setDescription(
-          "Une demande à été faite à l'équipe de GloryStaff afin de modifier manuellement les données que vous m'avez fournit."
+          "Une demande à été faite à l'équipe de GloryStaff afin de modifier manuellement les données que vous m'avez fournit.",
         )
         .setColor(config.couleur[serveur])
         .setFooter({ text: config.footer });

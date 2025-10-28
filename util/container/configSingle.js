@@ -9,7 +9,6 @@ const {
 } = require("discord.js");
 const config = require("../../config");
 
-
 async function containerSingle(serveur, systemName, settings, file) {
   const typeMap = {
     attentestaff: "Attente Staff",
@@ -33,7 +32,7 @@ async function containerSingle(serveur, systemName, settings, file) {
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
-      t.setContent(`## Configuration - ${typeMap[systemName] || systemName}`)
+      t.setContent(`## Configuration - ${typeMap[systemName] || systemName}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(`**Statut :** ${status}`));
@@ -48,10 +47,10 @@ async function containerSingle(serveur, systemName, settings, file) {
             .setCustomId(`config_salon-${file}-${systemName}`)
             .setPlaceholder("Choisit un salon")
             .setChannelTypes(
-              systemName === "radio" ? [2, 13] : [0, 5, 10, 11, 12]
+              systemName === "radio" ? [2, 13] : [0, 5, 10, 11, 12],
             )
-            .setDefaultChannels(settings.Salon ? [settings.Salon] : [])
-        )
+            .setDefaultChannels(settings.Salon ? [settings.Salon] : []),
+        ),
       );
   }
 
@@ -66,8 +65,8 @@ async function containerSingle(serveur, systemName, settings, file) {
             .setPlaceholder("Choisit un rôle")
             .setDefaultRoles(settings.Role || [])
             .setMinValues(0)
-            .setMaxValues(25)
-        )
+            .setMaxValues(25),
+        ),
       );
   }
 
@@ -111,8 +110,8 @@ async function containerSingle(serveur, systemName, settings, file) {
                 value: "config_grade-Guide",
                 default: settings.Grade === "Guide",
               },
-            ])
-        )
+            ]),
+        ),
       );
   }
 
@@ -123,14 +122,14 @@ async function containerSingle(serveur, systemName, settings, file) {
         new ButtonBuilder()
           .setCustomId(`config_toggle-${systemName}-${file}`)
           .setLabel(
-            settings.active ? "Désactiver le module" : "Activer le module"
+            settings.active ? "Désactiver le module" : "Activer le module",
           )
           .setStyle(settings.active ? ButtonStyle.Danger : ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId(`informations_supplementaires-${systemName}`)
           .setLabel("Informations Supplémentaires")
-          .setStyle(ButtonStyle.Secondary)
-      )
+          .setStyle(ButtonStyle.Secondary),
+      ),
     );
 
   return container;

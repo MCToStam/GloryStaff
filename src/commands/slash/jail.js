@@ -18,26 +18,26 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel faire un jail")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     )
     .addStringOption((option) =>
       option
         .setName("criminel")
         .setDescription("Joueur qui doit subir le jail")
         .setRequired(true)
-        .setAutocomplete(true)
+        .setAutocomplete(true),
     )
     .addStringOption((option) =>
       option
         .setName("durée")
         .setDescription("Durée du jail (ex: 1h, 30m)")
-        .setRequired(true)
+        .setRequired(true),
     )
     .addStringOption((option) =>
       option
         .setName("lien_raison")
         .setDescription("Lien ou raison du jail")
-        .setRequired(true)
+        .setRequired(true),
     ),
 
   async execute(client, interaction, config) {
@@ -47,7 +47,7 @@ module.exports = {
     const lien_raison = interaction.options.getString("lien_raison");
 
     const isLienValide = lien_raison.startsWith(
-      "https://nationsglory.fr/forums/thread/"
+      "https://nationsglory.fr/forums/thread/",
     );
 
     const dureeRegex = /^(\d+)([hmdb])$/;
@@ -58,7 +58,7 @@ module.exports = {
         .setTitle("Durée invalide")
         .setColor(config.errorcolor)
         .setDescription(
-          "La durée doit être au format suivant :\n`1h` (1 heure), `30m` (30 minutes), `2d` (2 jours), etc.\n Elle peut aussi être du format `100b` dans le cas d'un jailblock."
+          "La durée doit être au format suivant :\n`1h` (1 heure), `30m` (30 minutes), `2d` (2 jours), etc.\n Elle peut aussi être du format `100b` dans le cas d'un jailblock.",
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -85,12 +85,12 @@ module.exports = {
     }
 
     const searchRes = await fetch(
-      `https://apiv2.nationsglory.fr/forums/userSearch?search=${criminelPotentiel}`
+      `https://apiv2.nationsglory.fr/forums/userSearch?search=${criminelPotentiel}`,
     );
     const similarUsers = await searchRes.json();
 
     const foundUser = similarUsers.find(
-      (user) => user.username.toLowerCase() === criminelPotentiel.toLowerCase()
+      (user) => user.username.toLowerCase() === criminelPotentiel.toLowerCase(),
     );
 
     if (!foundUser) {
@@ -117,7 +117,7 @@ module.exports = {
 
     const criminel = foundUser.username;
 
-    const configJail = getData(`data/${serveur}/config-jail.json`)
+    const configJail = getData(`data/${serveur}/config-jail.json`);
 
     if (!configJail.jail?.active) {
       const erreurEmbed = new EmbedBuilder()
@@ -128,7 +128,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`
+          }** !`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -143,7 +143,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`
+          }** !`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -152,7 +152,7 @@ module.exports = {
     let pseudo;
     try {
       const response = await fetch(
-        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`
+        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`,
       );
       if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
       const data = await response.json();
@@ -167,7 +167,7 @@ module.exports = {
         .setTitle("Erreur")
         .setColor(config.errorcolor)
         .setDescription(
-          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.'
+          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.',
         )
         .setFooter({ text: config.footer });
 
@@ -175,7 +175,7 @@ module.exports = {
         new ButtonBuilder()
           .setLabel("💻 Accéder au panel")
           .setStyle(ButtonStyle.Link)
-          .setURL("https://glorybot.fr")
+          .setURL("https://glorybot.fr"),
       );
 
       return interaction.reply({
@@ -185,7 +185,7 @@ module.exports = {
       });
     }
 
-    const staffData = getData(`data/${serveur}/staff-serveur.json`)
+    const staffData = getData(`data/${serveur}/staff-serveur.json`);
     const roleAutorise = configJail.jail.Grade;
 
     const gradesHierarchie = [
@@ -213,7 +213,7 @@ module.exports = {
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }:${config.emoji[serveur.toLowerCase()]}> **${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }**.`
+          }**.`,
         )
         .setFooter({ text: config.footer });
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
@@ -273,11 +273,11 @@ module.exports = {
     }
 
     const actionRow = new ActionRowBuilder().addComponents(
-      isLienValide ? [buttonFinish, buttonLink] : [buttonFinish]
+      isLienValide ? [buttonFinish, buttonLink] : [buttonFinish],
     );
 
     const salon = await interaction.client.channels.fetch(
-      configJail.jail?.Salon
+      configJail.jail?.Salon,
     );
 
     const files = imageBuffer
@@ -300,13 +300,13 @@ module.exports = {
       .setTitle(`🔎 Connexion de ${criminel}`)
       .setColor(config.couleur[serveur])
       .setDescription(
-        "Vous serez avertis dès lors que le joueur se connectera dans ce fil."
+        "Vous serez avertis dès lors que le joueur se connectera dans ce fil.",
       )
       .setFooter({ text: config.footer });
 
     await thread.send({ embeds: [introEmbed] });
 
-    let jailData = getData(`data/${serveur}/jail.json`)
+    let jailData = getData(`data/${serveur}/jail.json`);
 
     if (!jailData[criminel]) {
       jailData[criminel] = [];
@@ -322,7 +322,7 @@ module.exports = {
       jailed: false,
     });
 
-    saveData(`data/${serveur}/jail.json`, jailData)
+    saveData(`data/${serveur}/jail.json`, jailData);
 
     const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
 

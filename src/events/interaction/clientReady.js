@@ -33,7 +33,7 @@ const { sanction } = require("../../../util/alerte/sanction");
 async function getPlayerCount(server) {
   try {
     const response = await axios.get(
-      `${config.glorybot_url}/api/joueurConnecte?serveur=${server}&administrator=true`
+      `${config.glorybot_url}/api/joueurConnecte?serveur=${server}&administrator=true`,
     );
     if (
       Array.isArray(response.data) &&
@@ -75,10 +75,10 @@ module.exports = async (client, interaction) => {
 
   log(
     `${client.user.username} est pret en ${latence.toFixed(
-      1
+      1,
     )}s, sur ${guilds} serveurs et ${usersCount} utilisateurs.`,
     "READY",
-    "green"
+    "green",
   );
 
   await cycleStatus(client);
@@ -90,7 +90,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -100,7 +100,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -110,7 +110,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -120,7 +120,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -132,7 +132,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -142,7 +142,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -152,7 +152,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -162,7 +162,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -173,7 +173,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -183,7 +183,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -196,7 +196,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   cron.schedule(
@@ -209,7 +209,7 @@ module.exports = async (client, interaction) => {
     },
     {
       timezone: "Europe/Paris",
-    }
+    },
   );
 
   process.on("unhandledRejection", (reason, p) => {

@@ -1,73 +1,130 @@
-const Canvas = require("canvas");
+const fs = require("node:fs");
+const path = require("node:path");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const { AttachmentBuilder } = require("discord.js");
+const Canvas = require("canvas");
+const config = require("../../config");
 
+const cachePath = path.join(__dirname, "..", "..", "data", "emojisCache.json");
 let emojisCache = getData("data/emojisCache.json");
 
-let guildCache = null;
+async function saveCache() {
+  await fs.promises
+    .writeFile(cachePath, JSON.stringify(emojisCache, null, 2))
+    .catch(console.error);
+}
+
+async function scheduleDeleteEmoji(
+  client,
+  key,
+  emojiId,
+  delay = 60 * 60 * 1000,
+) {
+  setTimeout(async () => {
+    try {
+      if (!client.application) await client.application.fetch();
+      const emoji = await client.application.emojis.fetch(emojiId);
+      if (emoji) await emoji.delete();
+      console.log(`🗑️ Emoji ${key} supprimé (planifié)`);
+    } catch (e) {
+      console.warn(`⚠️ Erreur suppression emoji ${key}:`, e.message);
+    } finally {
+      delete emojisCache[key];
+      await saveCache();
+    }
+  }, delay);
+}
+
+async function getEmojiDrapeau(client, serveur, pays) {
+  const key = `${serveur.toLowerCase()}_${pays.toLowerCase()}`;
+  const now = Date.now();
+
+  if (!client.application) await client.application.fetch();
+
+  if (emojisCache[key]) {
+    try {
+      const emoji = await client.application.emojis.fetch(
+        emojisCache[key].emojiId,
+      );
+      if (emoji) return emoji;
+    } catch {
+      delete emojisCache[key];
+      await saveCache();
+    }
+  }
+
+  const url = `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${pays}`;
+  const response = await fetch(url);
+  if (!response.ok)
+    throw new Error(
+      `Impossible de récupérer l'image pour ${pays} et ${serveur}`,
+    );
+  const buffer = Buffer.from(await response.arrayBuffer());
+
+  const emoji = await client.application.emojis.create({
+    name: key.slice(0, 32),
+    attachment: buffer,
+  });
+
+  emojisCache[key] = { emojiId: emoji.id, nom: key, createdAt: now };
+  await saveCache();
+
+  scheduleDeleteEmoji(client, key, emoji.id);
+
+  return emoji;
+}
 
 async function getEmojiTete(client, joueur) {
   const key = joueur.toLowerCase();
   const now = Date.now();
 
-  if (!guildCache) {
-    guildCache = await client.guilds.fetch("1430498144436879492");
-  }
-  const guild = guildCache;
+  if (!client.application) await client.application.fetch();
 
   if (emojisCache[key]) {
-    const cached = guild.emojis.cache.get(emojisCache[key].emojiId);
-    if (cached) return cached;
+    try {
+      const emoji = await client.application.emojis.fetch(
+        emojisCache[key].emojiId,
+      );
+      if (emoji) return emoji;
+    } catch {
+      delete emojisCache[key];
+      await saveCache();
+    }
   }
 
   const url = `https://skins.nationsglory.fr/face/${joueur}/3d/4`;
   const response = await fetch(url);
   if (!response.ok)
     throw new Error(`Impossible de récupérer l'image pour ${joueur}`);
+  const buffer = Buffer.from(await response.arrayBuffer());
 
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  const attachment = new AttachmentBuilder(buffer, { name: `${key}.png` });
-
-  const emoji = await guild.emojis.create({
-    attachment: attachment.attachment,
+  const emoji = await client.application.emojis.create({
     name: key.slice(0, 32),
+    attachment: buffer,
   });
 
-  emojisCache[key] = {
-    emojiId: emoji.id,
-    nom: joueur,
-    createdAt: now,
-  };
-  saveData("data/emojisCache.json", emojisCache);
+  emojisCache[key] = { emojiId: emoji.id, nom: joueur, createdAt: now };
+  await saveCache();
+
+  scheduleDeleteEmoji(client, key, emoji.id);
 
   return emoji;
 }
 
 async function getHexEmoji(client, hexColor) {
+  const key = hexColor.toLowerCase().replace(/[^a-z0-9_]/g, "_");
   const now = Date.now();
-  const key = hexColor.toLowerCase();
-  const colorKey = hexColor.toLowerCase();
 
-  if (!guildCache) {
-    guildCache = await client.guilds.fetch("1349379748576366633");
-  }
-  const guild = guildCache;
+  if (!client.application) await client.application.fetch();
 
-  const existingColorEmoji = Object.values(emojisCache).find(
-    (e) => e.color === colorKey,
-  );
-  if (existingColorEmoji) {
-    const emoji = guild.emojis.cache.get(existingColorEmoji.emojiId);
-    if (emoji) {
-      emojisCache[hexColor] = {
-        emojiId: emoji.id,
-        color: colorKey,
-        createdAt: now,
-      };
-      saveData("data/emojisCache.json", emojisCache);
-      return emoji;
+  if (emojisCache[key]) {
+    try {
+      const emoji = await client.application.emojis.fetch(
+        emojisCache[key].emojiId,
+      );
+      if (emoji) return emoji;
+    } catch {
+      delete emojisCache[key];
+      await saveCache();
     }
   }
 
@@ -78,91 +135,46 @@ async function getHexEmoji(client, hexColor) {
   ctx.arc(16, 16, 16, 0, Math.PI * 2);
   ctx.fill();
 
-  const safeKey = key.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  const buffer = canvas.toBuffer("image/png");
 
-  const attachment = new AttachmentBuilder(canvas.toBuffer("image/png"), {
-    name: `${safeKey}.png`,
-  });
-  const emoji = await guild.emojis.create({
-    attachment: attachment.attachment,
-    name: colorKey.replace(/[^a-z0-9_]/gi, "_").slice(0, 32),
+  const emoji = await client.application.emojis.create({
+    name: key.slice(0, 32),
+    attachment: buffer,
   });
 
-  emojisCache[key] = {
-    emojiId: emoji.id,
-    color: colorKey,
-    createdAt: now,
-  };
-  saveData("data/emojisCache.json", emojisCache);
+  emojisCache[key] = { emojiId: emoji.id, color: hexColor, createdAt: now };
+  await saveCache();
 
-  setTimeout(
-    async () => {
-      try {
-        const stillHere = guild.emojis.cache.get(emoji.id);
-        if (stillHere) await stillHere.delete();
-        delete emojisCache[key];
-        saveData("data/emojisCache.json", emojisCache);
-      } catch (e) {
-        console.warn(`Erreur suppression emoji ${emoji.id}:`, e.message);
-      }
-    },
-    60 * 60 * 1000,
-  );
+  scheduleDeleteEmoji(client, key, emoji.id);
 
   return emoji;
 }
 
 async function checkEmojiCache(client) {
-  if (!guildCache) {
-    guildCache = await client.guilds.fetch("1430498144436879492");
-  }
-  const guild = guildCache;
+  if (!client.application) await client.application.fetch();
+  const now = Date.now();
 
-  try {
-    const now = Date.now();
+  for (const [key, { emojiId, createdAt }] of Object.entries(emojisCache)) {
+    const age = now - createdAt;
+    const oneHour = 60 * 60 * 1000;
 
-    for (const [key, { emojiId, createdAt }] of Object.entries(emojisCache)) {
-      const emoji = guild.emojis.cache.get(emojiId);
-
-      if (!emoji) {
-        delete emojisCache[key];
-        continue;
-      }
-
-      const age = now - createdAt;
-      const oneHour = 60 * 60 * 1000;
-
-      if (age >= oneHour) {
-        try {
-          await emoji.delete();
-          console.log(`🗑️ Emoji ${emoji.name} supprimé (expiré)`);
-        } catch (e) {
-          console.warn(
-            `⚠️ Impossible de supprimer l'emoji ${emojiId}:`,
-            e.message,
-          );
-        }
-        delete emojisCache[key];
-      } else {
-        const timeLeft = oneHour - age;
-        setTimeout(async () => {
-          try {
-            const stillHere = guild.emojis.cache.get(emojiId);
-            if (stillHere) {
-              await stillHere.delete();
-              console.log(`🗑️ Emoji ${stillHere.name} supprimé (planifié)`);
-            }
-            delete emojisCache[key];
-            saveData("data/emojisCache.json", emojisCache);
-          } catch (e) {
-            console.warn(`⚠️ Erreur suppression emoji ${emojiId}:`, e.message);
-          }
-        }, timeLeft);
-      }
+    if (age >= oneHour) {
+      try {
+        const emoji = await client.application.emojis.fetch(emojiId);
+        if (emoji) await emoji.delete();
+        console.log(`🗑️ Emoji ${key} supprimé (expiré)`);
+      } catch {}
+      delete emojisCache[key];
+      await saveCache();
+    } else {
+      scheduleDeleteEmoji(client, key, emojiId, oneHour - age);
     }
-
-    saveData("data/emojisCache.json", emojisCache);
-  } catch (e) {}
+  }
 }
 
-module.exports = { checkEmojiCache, getEmojiTete, getHexEmoji };
+module.exports = {
+  getEmojiDrapeau,
+  getEmojiTete,
+  getHexEmoji,
+  checkEmojiCache,
+};

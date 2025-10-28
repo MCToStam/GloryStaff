@@ -20,7 +20,7 @@ function formatDuree(duree = "") {
 
 async function fetchSanctionsServeur(serveur, joueur, page) {
   const res = await fetch(
-    `https://apiv2.nationsglory.fr/plugins/api/user/${serveur}/${joueur}/get_punisher/${page}`
+    `https://apiv2.nationsglory.fr/plugins/api/user/${serveur}/${joueur}/get_punisher/${page}`,
   );
   const text = await res.text();
   if (text.includes("No sanction registered")) return [];
@@ -31,16 +31,18 @@ async function fetchSanctionsServeur(serveur, joueur, page) {
     .map((entry) => {
       const clean = entry.replace(/&[0-9a-fklmnor]/gi, "").trim();
       const match = clean.match(
-        /\[Punisher\] \[(\w+) · (.+?)\] '(.+?)' by (.+?) on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/
+        /\[Punisher\] \[(\w+) · (.+?)\] '(.+?)' by (.+?) on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
       );
-      return match && {
-        serveur,
-        type: match[1],
-        duree: formatDuree(match[2]),
-        raison: match[3],
-        staff: match[4],
-        date: new Date(match[5]),
-      };
+      return (
+        match && {
+          serveur,
+          type: match[1],
+          duree: formatDuree(match[2]),
+          raison: match[3],
+          staff: match[4],
+          date: new Date(match[5]),
+        }
+      );
     })
     .filter(Boolean);
 }
@@ -57,7 +59,12 @@ function getCache(joueur, serveur) {
   });
 }
 
-async function ensureSanctions(joueur, neededCount, config, serveurs = config.liste_serveur) {
+async function ensureSanctions(
+  joueur,
+  neededCount,
+  config,
+  serveurs = config.liste_serveur,
+) {
   const allSanctions = [];
 
   for (const serveur of serveurs) {

@@ -10,7 +10,7 @@ async function getServeur(interaction) {
     return decimalValue === color;
   });
 
-  return serveur
+  return serveur;
 }
 
-module.exports = { getServeur }
+module.exports = { getServeur };
