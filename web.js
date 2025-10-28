@@ -1523,20 +1523,16 @@ app.post("/api/attenteStaff", async (req, res) => {
   try {
     configData = JSON.parse(fs.readFileSync(configPath, "utf-8"));
   } catch (err) {
-    return res
-      .status(500)
-      .json({
-        error: "Erreur lors de la lecture du fichier de configuration.",
-      });
+    return res.status(500).json({
+      error: "Erreur lors de la lecture du fichier de configuration.",
+    });
   }
 
   const attenteStaff = configData.attentestaff;
   if (!attenteStaff?.active || !attenteStaff?.Salon) {
-    return res
-      .status(403)
-      .json({
-        error: "Le système d’attente staff est désactivé ou mal configuré.",
-      });
+    return res.status(403).json({
+      error: "Le système d’attente staff est désactivé ou mal configuré.",
+    });
   }
 
   try {

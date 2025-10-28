@@ -1,3 +1,4 @@
+
 const fs = require("fs");
 const path = require("path");
 const Canvas = require("canvas");
@@ -125,11 +126,11 @@ async function generateContainer(serveur) {
         .addActionRowComponents(
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-              .setCustomId(`grade_categorie_edit_${cat.id}`)
+              .setCustomId(`grade_categorie_edit-${cat.id}`)
               .setLabel("Modifier")
               .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
-              .setCustomId(`grade_categorie_delete_${cat.id}`)
+              .setCustomId(`grade_categorie_delete-${cat.id}`)
               .setLabel("Supprimer")
               .setStyle(ButtonStyle.Danger),
           ),
@@ -185,15 +186,15 @@ async function generateGradesContainer(client, serveur, idCat) {
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((td) =>
-      td.setContent(`## Gestion des Grades - ${categorie.nom}`),
+      td.setContent(`## Gestion des Grades - ${categorie ? categorie.nom : idCat}`),
     )
     .addSeparatorComponents((sep) => sep);
 
-  const guild = await client.guilds.fetch("1349379748576366633");
+  const guild = client ? await client.guilds.fetch("1349379748576366633") : null;
 
   if (grades.length > 0) {
     for (const g of grades) {
-      const emoji = await getGradeEmoji(serveur, guild, idCat, g);
+      const emoji = guild ? await getGradeEmoji(serveur, guild, idCat, g) : null;
 
       container
         .addTextDisplayComponents((td) =>
@@ -202,11 +203,11 @@ async function generateGradesContainer(client, serveur, idCat) {
         .addActionRowComponents(
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-              .setCustomId(`grade_edit_${idCat}_${g.id}`)
+              .setCustomId(`grade_edit-${idCat}-${g.id}`)
               .setLabel("Modifier")
               .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
-              .setCustomId(`grade_delete_${idCat}_${g.id}`)
+              .setCustomId(`grade_delete-${idCat}-${g.id}`)
               .setLabel("Supprimer")
               .setStyle(ButtonStyle.Danger),
           ),
@@ -227,7 +228,7 @@ async function generateGradesContainer(client, serveur, idCat) {
           .setLabel("Retour aux catégories")
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
-          .setCustomId(`grade_create_${idCat}`)
+          .setCustomId(`grade_create-${idCat}`)
           .setLabel("Créer un grade")
           .setStyle(ButtonStyle.Success),
       ),
@@ -236,9 +237,10 @@ async function generateGradesContainer(client, serveur, idCat) {
   return { container };
 }
 
-module.exports = {
-  name: "interactionCreate",
-  async execute(interaction) {
+async function handleInteraction(interaction, client, config) {
+  // This function centralizes the logic extracted from the original grade.js.
+  // It mirrors the behavior: detect serveur from message accent color, load roleData, and handle buttons/selects/modals.
+  try {
     const color = interaction.message?.components?.[0]?.data?.accent_color;
     const serveur = Object.keys(config.couleur).find((key) => {
       const hexValue = config.couleur[key];
@@ -284,7 +286,7 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      if (id.startsWith("grade_categorie_delete_")) {
+      if (id.startsWith("grade_categorie_delete-")) {
         const idCat = id.replace("grade_categorie_delete_", "");
         roleData.categorie =
           roleData.categorie?.filter((c) => c.id !== idCat) || [];
@@ -300,8 +302,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_categorie_edit_")) {
-        const idCat = id.replace("grade_categorie_edit_", "");
+      if (id.startsWith("grade_categorie_edit-")) {
+        const idCat = id.replace("grade_categorie_edit-", "");
         const categorie = roleData.categorie.find((c) => c.id === idCat);
 
         const container = new ContainerBuilder()
@@ -316,7 +318,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_rename_${idCat}`)
+                .setCustomId(`grade_categorie_rename-${idCat}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -330,7 +332,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_categorie_role_${idCat}`)
+                .setCustomId(`grade_categorie_role-${idCat}`)
                 .setPlaceholder(
                   categorie.role && categorie.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -349,7 +351,7 @@ module.exports = {
                 .setLabel("Retour aux catégories")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_delete_${idCat}`)
+                .setCustomId(`grade_categorie_delete-${idCat}`)
                 .setLabel("Supprimer la catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -362,8 +364,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_categorie_role_")) {
-        const idCat = id.replace("grade_categorie_role_", "");
+      if (id.startsWith("grade_categorie_role-")) {
+        const idCat = id.replace("grade_categorie_role-", "");
         const roleIds = [...interaction.roles.keys()];
         const categorie = roleData.categorie.find((c) => c.id === idCat);
         categorie.role = roleIds;
@@ -382,7 +384,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_rename_${idCat}`)
+                .setCustomId(`grade_categorie_rename-${idCat}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -396,7 +398,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_categorie_role_${idCat}`)
+                .setCustomId(`grade_categorie_role-${idCat}`)
                 .setPlaceholder(
                   categorie.role && categorie.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -415,7 +417,7 @@ module.exports = {
                 .setLabel("Retour aux catégories")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_delete_${idCat}`)
+                .setCustomId(`grade_categorie_delete-${idCat}`)
                 .setLabel("Supprimer la catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -427,11 +429,11 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_categorie_rename_")) {
-        const idCat = id.replace("grade_categorie_rename_", "");
+      if (id.startsWith("grade_categorie_rename-")) {
+        const idCat = id.replace("grade_categorie_rename-", "");
         const categorie = roleData.categorie.find((c) => c.id === idCat);
         const modal = new ModalBuilder()
-          .setCustomId(`modal_edit_categorie_${idCat}`)
+          .setCustomId(`modal_edit_categorie-${idCat}`)
           .setTitle(`Modifier ${categorie.nom}`)
           .addComponents(
             new ActionRowBuilder().addComponents(
@@ -461,11 +463,11 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_create_")) {
-        const idCat = id.replace("grade_create_", "");
+      if (id.startsWith("grade_create-")) {
+        const idCat = id.replace("grade_create-", "");
         const categorie = roleData.categorie.find((c) => c.id === idCat);
         const modal = new ModalBuilder()
-          .setCustomId(`modal_create_grade_${idCat}`)
+          .setCustomId(`modal_create_grade-${idCat}`)
           .setTitle(`Créer un grade dans ${categorie.nom}`)
           .addComponents(
             new ActionRowBuilder().addComponents(
@@ -486,8 +488,8 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      if (id.startsWith("grade_edit_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_edit-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
@@ -511,7 +513,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${idGrade}`)
+                .setCustomId(`grade_rename-${idCat}-${idGrade}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -524,7 +526,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${idGrade}`)
+                .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -537,7 +539,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -550,7 +552,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -564,7 +566,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${idGrade}`)
+                .setCustomId(`grade_role-${idCat}-${idGrade}`)
                 .setPlaceholder(
                   grade.role && grade.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -579,11 +581,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${idGrade}`)
+                .setCustomId(`grade_delete-${idCat}-${idGrade}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -596,8 +598,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_back_")) {
-        const [_, idCat] = id.split("_").slice(1);
+      if (id.startsWith("grade_back-")) {
+        const [_, idCat] = id.split("-");
         await interaction.deferUpdate({ ephemeral: true });
         const { container } = await generateGradesContainer(
           interaction.client,
@@ -611,8 +613,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_role_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_role-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
@@ -642,7 +644,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${idGrade}`)
+                .setCustomId(`grade_rename-${idCat}-${idGrade}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -655,7 +657,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${idGrade}`)
+                .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -668,7 +670,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -681,7 +683,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -695,7 +697,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${idGrade}`)
+                .setCustomId(`grade_role-${idCat}-${idGrade}`)
                 .setPlaceholder(
                   grade.role && grade.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -710,11 +712,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${idGrade}`)
+                .setCustomId(`grade_delete-${idCat}-${idGrade}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -726,15 +728,15 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("grade_rename_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_rename-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
         if (!grade) return;
 
         const modal = new ModalBuilder()
-          .setCustomId(`modal_nom_grade_${idCat}_${idGrade}`)
+          .setCustomId(`modal_nom_grade-${idCat}-${idGrade}`)
           .setTitle(`Modifier le nom de ${grade.nom}`)
           .addComponents(
             new ActionRowBuilder().addComponents(
@@ -749,15 +751,15 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      if (id.startsWith("grade_couleur_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_couleur-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
         if (!grade) return;
 
         const modal = new ModalBuilder()
-          .setCustomId(`modal_couleur_grade_${idCat}_${idGrade}`)
+          .setCustomId(`modal_couleur_grade-${idCat}-${idGrade}`)
           .setTitle(`Modifier la couleur de ${grade.nom}`)
           .addComponents(
             new ActionRowBuilder().addComponents(
@@ -772,8 +774,8 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      if (id.startsWith("grade_subtitlerank_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_subtitlerank-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
@@ -784,7 +786,7 @@ module.exports = {
         }
 
         const modal = new ModalBuilder()
-          .setCustomId(`modal_subtitlerank_grade_${idCat}_${idGrade}`)
+          .setCustomId(`modal_subtitlerank_grade-${idCat}-${idGrade}`)
           .setTitle(truncate(`Modifier la description rank de ${grade.nom}`))
           .addComponents(
             new ActionRowBuilder().addComponents(
@@ -799,8 +801,8 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      if (id.startsWith("grade_subtitlederank_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_subtitlederank-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
@@ -811,7 +813,7 @@ module.exports = {
         }
 
         const modal = new ModalBuilder()
-          .setCustomId(`modal_subtitlederank_grade_${idCat}_${idGrade}`)
+          .setCustomId(`modal_subtitlederank_grade-${idCat}-${idGrade}`)
           .setTitle(truncate(`Modifier la description dérank de ${grade.nom}`))
           .addComponents(
             new ActionRowBuilder().addComponents(
@@ -826,8 +828,8 @@ module.exports = {
         return interaction.showModal(modal);
       }
 
-      if (id.startsWith("grade_delete_")) {
-        const [_, idCat, idGrade] = id.split("_").slice(1);
+      if (id.startsWith("grade_delete-")) {
+        const [_, idCat, idGrade] = id.split("-");
         roleData.grade = roleData.grade.filter(
           (g) => !(g.id === idGrade && g.categorie === idCat),
         );
@@ -885,8 +887,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("modal_edit_categorie_")) {
-        const idCat = id.replace("modal_edit_categorie_", "");
+      if (id.startsWith("modal_edit_categorie-")) {
+        const idCat = id.replace("modal_edit_categorie-", "");
         const nouveauNom =
           interaction.fields.getTextInputValue("categorie_name");
         if (roleData.categorie.find((c) => c.nom === nouveauNom)) {
@@ -924,7 +926,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_rename_${idCat}`)
+                .setCustomId(`grade_categorie_rename-${idCat}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -938,7 +940,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_categorie_role_${idCat}`)
+                .setCustomId(`grade_categorie_role-${idCat}`)
                 .setPlaceholder(
                   categorie.role && categorie.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -957,7 +959,7 @@ module.exports = {
                 .setLabel("Retour aux catégories")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_delete_${idCat}`)
+                .setCustomId(`grade_categorie_delete-${idCat}`)
                 .setLabel("Supprimer la catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -969,8 +971,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("modal_create_grade_")) {
-        const idCat = id.replace("modal_create_grade_", "");
+      if (id.startsWith("modal_create_grade-")) {
+        const idCat = id.replace("modal_create_grade-", "");
         const nom = interaction.fields.getTextInputValue("grade_nom");
         let couleur = interaction.fields.getTextInputValue("grade_couleur");
         couleur = formatHexColor(couleur);
@@ -997,7 +999,7 @@ module.exports = {
             .setAccentColor(config.errorcolor)
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
-                `Le grade **${nom}** existe déjà dans la catégorie **${categorie}**.`,
+                `Le grade **${nom}** existe déjà dans la catégorie ayant l'ID **${idCat}**.`,
               ),
             );
           return interaction.reply({
@@ -1047,7 +1049,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${newGradeId}`)
+                .setCustomId(`grade_rename-${idCat}-${newGradeId}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1058,7 +1060,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${newGradeId}`)
+                .setCustomId(`grade_couleur-${idCat}-${newGradeId}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1071,7 +1073,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${newGradeId}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${newGradeId}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1084,7 +1086,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${newGradeId}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${newGradeId}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1098,7 +1100,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${newGradeId}`)
+                .setCustomId(`grade_role-${idCat}-${newGradeId}`)
                 .setPlaceholder("Aucun rôle")
                 .setDefaultRoles([])
                 .setMinValues(0)
@@ -1109,11 +1111,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${newGradeId}`)
+                .setCustomId(`grade_delete-${idCat}-${newGradeId}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -1125,8 +1127,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("modal_nom_grade_")) {
-        const [idCat, idGrade] = id.replace("modal_nom_grade_", "").split("_");
+      if (id.startsWith("modal_nom_grade-")) {
+        const [_, idCat, idGrade] = id.split("-");
         const nom = interaction.fields.getTextInputValue("grade_nom");
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
@@ -1179,7 +1181,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${idGrade}`)
+                .setCustomId(`grade_rename-${idCat}-${idGrade}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1192,7 +1194,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${idGrade}`)
+                .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1205,7 +1207,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1218,7 +1220,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1232,7 +1234,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${idGrade}`)
+                .setCustomId(`grade_role-${idCat}-${idGrade}`)
                 .setPlaceholder(
                   grade.role && grade.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -1247,11 +1249,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${idGrade}`)
+                .setCustomId(`grade_delete-${idCat}-${idGrade}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -1263,10 +1265,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("modal_couleur_grade_")) {
-        const [idCat, idGrade] = id
-          .replace("modal_couleur_grade_", "")
-          .split("_");
+      if (id.startsWith("modal_couleur_grade-")) {
+        const [_, idCat, idGrade] = id.split("-");
         let couleur =
           interaction.fields.getTextInputValue("grade_couleur") || "";
         couleur = formatHexColor(couleur);
@@ -1303,7 +1303,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${idGrade}`)
+                .setCustomId(`grade_rename-${idCat}-${idGrade}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1314,7 +1314,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${idGrade}`)
+                .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1327,7 +1327,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1340,7 +1340,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1354,7 +1354,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${idGrade}`)
+                .setCustomId(`grade_role-${idCat}-${idGrade}`)
                 .setPlaceholder(
                   grade.role && grade.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -1369,11 +1369,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${idGrade}`)
+                .setCustomId(`grade_delete-${idCat}-${idGrade}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -1385,10 +1385,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("modal_subtitlerank_grade_")) {
-        const [idCat, idGrade] = id
-          .replace("modal_subtitlerank_grade_", "")
-          .split("_");
+      if (id.startsWith("modal_subtitlerank_grade-")) {
+        const [_, idCat, idGrade] = id.split("-");
         let subtitle_rank =
           interaction.fields.getTextInputValue("grade_subtitlerank") || "";
 
@@ -1412,14 +1410,16 @@ module.exports = {
           .addTextDisplayComponents((td) =>
             td.setContent(`## Édition du Grade`),
           )
-          .addSeparatorComponents((sep) => sep)
+          .
+
+          addSeparatorComponents((sep) => sep)
           .addTextDisplayComponents((td) =>
             td.setContent(`**Nom du grade :** ${grade.nom}`),
           )
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${idGrade}`)
+                .setCustomId(`grade_rename-${idCat}-${idGrade}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1432,7 +1432,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${idGrade}}`)
+                .setCustomId(`grade_couleur-${idCat}-${idGrade}}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1445,7 +1445,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1458,7 +1458,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1472,7 +1472,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${idGrade}`)
+                .setCustomId(`grade_role-${idCat}-${idGrade}`)
                 .setPlaceholder(
                   grade.role && grade.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -1487,11 +1487,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${idGrade}`)
+                .setCustomId(`grade_delete-${idCat}-${idGrade}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -1503,10 +1503,8 @@ module.exports = {
         });
       }
 
-      if (id.startsWith("modal_subtitlederank_grade_")) {
-        const [idCat, idGrade] = id
-          .replace("modal_subtitlederank_grade_", "")
-          .split("_");
+      if (id.startsWith("modal_subtitlederank_grade-")) {
+        const [_, idCat, idGrade] = id.split("-");
         let subtitle_derank =
           interaction.fields.getTextInputValue("grade_subtitlederank") || "";
 
@@ -1537,7 +1535,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_rename_${idCat}_${idGrade}`)
+                .setCustomId(`grade_rename-${idCat}-${idGrade}`)
                 .setLabel("Modifier le nom")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1550,7 +1548,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_couleur_${idCat}_${idGrade}`)
+                .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
                 .setLabel("Modifier la couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1563,7 +1561,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlerank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de rank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1576,7 +1574,7 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_subtitlederank_${idCat}_${idGrade}`)
+                .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
                 .setLabel("Modifier la description de dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
@@ -1590,7 +1588,7 @@ module.exports = {
             actionRow.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(false)
-                .setCustomId(`grade_role_${idCat}_${idGrade}`)
+                .setCustomId(`grade_role-${idCat}-${idGrade}`)
                 .setPlaceholder(
                   grade.role && grade.role.length > 0
                     ? "Choisit un ou plusieurs rôles"
@@ -1605,11 +1603,11 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_back_${idCat}`)
+                .setCustomId(`grade_back-${idCat}`)
                 .setLabel("Retour à la catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
-                .setCustomId(`grade_delete_${idCat}_${idGrade}`)
+                .setCustomId(`grade_delete-${idCat}-${idGrade}`)
                 .setLabel("Supprimer le grade")
                 .setStyle(ButtonStyle.Danger),
             ),
@@ -1621,5 +1619,15 @@ module.exports = {
         });
       }
     }
-  },
+  } catch (e) {
+    console.error("Erreur dans handleInteraction:", e);
+  }
+}
+
+module.exports = {
+  handleInteraction,
+  getGradeEmoji,
+  formatHexColor,
+  generateContainer,
+  generateGradesContainer,
 };
