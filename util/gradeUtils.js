@@ -1,4 +1,3 @@
-
 const fs = require("fs");
 const path = require("path");
 const Canvas = require("canvas");
@@ -186,15 +185,21 @@ async function generateGradesContainer(client, serveur, idCat) {
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((td) =>
-      td.setContent(`## Gestion des Grades - ${categorie ? categorie.nom : idCat}`),
+      td.setContent(
+        `## Gestion des Grades - ${categorie ? categorie.nom : idCat}`,
+      ),
     )
     .addSeparatorComponents((sep) => sep);
 
-  const guild = client ? await client.guilds.fetch("1349379748576366633") : null;
+  const guild = client
+    ? await client.guilds.fetch("1349379748576366633")
+    : null;
 
   if (grades.length > 0) {
     for (const g of grades) {
-      const emoji = guild ? await getGradeEmoji(serveur, guild, idCat, g) : null;
+      const emoji = guild
+        ? await getGradeEmoji(serveur, guild, idCat, g)
+        : null;
 
       container
         .addTextDisplayComponents((td) =>
@@ -1410,9 +1415,7 @@ async function handleInteraction(interaction, client, config) {
           .addTextDisplayComponents((td) =>
             td.setContent(`## Édition du Grade`),
           )
-          .
-
-          addSeparatorComponents((sep) => sep)
+          .addSeparatorComponents((sep) => sep)
           .addTextDisplayComponents((td) =>
             td.setContent(`**Nom du grade :** ${grade.nom}`),
           )

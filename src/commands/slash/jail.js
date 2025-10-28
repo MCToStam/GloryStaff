@@ -42,6 +42,7 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
+
     const criminelPotentiel = interaction.options.getString("criminel");
     const duree = interaction.options.getString("durée");
     const lien_raison = interaction.options.getString("lien_raison");
