@@ -1,0 +1,229 @@
+const config = require("../../../config");
+const { ActivityType } = require("discord.js");
+const axios = require("axios");
+const log = require("../../../util/module/log");
+const { botLaunch } = require("../../../main.js");
+const { checkEmojiCache } = require("../../../util/module/emoji");
+const cron = require("node-cron");
+
+const {
+  classement_notation,
+} = require("../../../util/alerte/classement_notation");
+const {
+  disband_14h00,
+  disband_17h59,
+  disband_18h15,
+} = require("../../../util/alerte/disband");
+const { guerre } = require("../../../util/alerte/guerre");
+const { jail } = require("../../../util/alerte/jail");
+const { onu } = require("../../../util/alerte/onu");
+const { plainte } = require("../../../util/alerte/plainte");
+const { rappel_onu } = require("../../../util/alerte/rappel_onu");
+const {
+  recapitulatif_hebdomadaire,
+} = require("../../../util/alerte/recapitulatif_hebdomadaire");
+const {
+  recapitulatif_mensuel,
+} = require("../../../util/alerte/recapitulatif_mensuel");
+const {
+  repartition_notation,
+} = require("../../../util/alerte/repartition_notation");
+const { sanction } = require("../../../util/alerte/sanction");
+
+async function getPlayerCount(server) {
+  try {
+    const response = await axios.get(
+      `${config.glorybot_url}/api/joueurConnecte?serveur=${server}&administrator=true`
+    );
+    if (
+      Array.isArray(response.data) &&
+      response.data.length > 0 &&
+      response.data[0].nombre !== undefined
+    ) {
+      return response.data[0].nombre;
+    }
+  } catch (error) {}
+  return null;
+}
+
+async function cycleStatus(client, index = 0) {
+  const server = config.liste_serveur[index];
+  const playerCount = await getPlayerCount(server);
+
+  const statusName =
+    playerCount !== null
+      ? `${playerCount} joueurs connectés sur NationsGlory ${server.toUpperCase()}`
+      : `NationsGlory ${server.toUpperCase()}`;
+
+  client.user.setPresence({
+    activities: [{ name: statusName, type: ActivityType.Watching }],
+    status: "online",
+  });
+
+  setTimeout(() => {
+    const nextIndex = (index + 1) % config.liste_serveur.length;
+    cycleStatus(client, nextIndex);
+  }, 30 * 1000);
+}
+
+module.exports = async (client, interaction) => {
+  const botStart = new Date();
+  const latence = (botStart.getTime() - botLaunch[0].getTime()) / 1000;
+
+  const guilds = client.guilds.cache.size;
+  const usersCount = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+
+  log(
+    `${client.user.username} est pret en ${latence.toFixed(
+      1
+    )}s, sur ${guilds} serveurs et ${usersCount} utilisateurs.`,
+    "READY",
+    "green"
+  );
+
+  await cycleStatus(client);
+
+  cron.schedule(
+    "0 10 * * 1",
+    async () => {
+      await classement_notation(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "0 14 * * 3,6",
+    async () => {
+      await disband_14h00(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "59 17 * * 3,6",
+    async () => {
+      await disband_17h59(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "15 18 * * 3,6",
+    async () => {
+      await disband_18h15(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "0 0/12 * * *",
+    async () => {
+      for (const serveur of config.liste_serveur) {
+        await sanction(client, serveur);
+      }
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "15 10 * * 1",
+    async () => {
+      await recapitulatif_hebdomadaire(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "15 10 1 * *",
+    async () => {
+      await recapitulatif_mensuel(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "0 21 * * 5",
+    async () => {
+      await repartition_notation(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "*/30 * * * *",
+    async () => {
+      await plainte(client);
+      await guerre(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "*/2 * * * *",
+    async () => {
+      await jail(client);
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "*/10 * * * 6",
+    async () => {
+      for (const serveur of config.liste_serveur) {
+        await onu(client, serveur, "Samedi");
+        await rappel_onu(client, serveur, "Samedi");
+      }
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  cron.schedule(
+    "*/10 * * * 0",
+    async () => {
+      for (const serveur of config.liste_serveur) {
+        await onu(client, serveur, "Dimanche");
+        await rappel_onu(client, serveur, "Dimanche");
+      }
+    },
+    {
+      timezone: "Europe/Paris",
+    }
+  );
+
+  process.on("unhandledRejection", (reason, p) => {
+    console.log(" [antiCrash] :: Unhandled Rejection/Catch");
+    console.log(reason, p);
+  });
+  process.on("uncaughtException", (err, origin) => {
+    console.log(" [antiCrash] :: Uncaught Exception/Catch");
+    console.log(err, origin);
+  });
+  process.on("uncaughtExceptionMonitor", (err, origin) => {
+    console.log(" [antiCrash] :: Uncaught Exception/Catch (MONITOR)");
+    console.log(err, origin);
+  });
+
+  await checkEmojiCache(client);
+};

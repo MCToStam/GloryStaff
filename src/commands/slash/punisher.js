@@ -1,0 +1,92 @@
+const { SlashCommandBuilder } = require("discord.js");
+const { serveurs } = require("../../../util/option-serveur.js");
+const { ensureSanctions } = require("../../../util/punisher");
+const { getPunisherContainer } = require("../../../util/container/punisher");
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName("punisher")
+    .setDescription("Affiche le punisher d'un joueur")
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription(
+          "Le serveur pour lequel afficher la liste des doubles lead"
+        )
+        .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("type")
+        .setDescription("Le type de configuration à afficher")
+        .setRequired(true)
+        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("joueur")
+        .setDescription("Le joueur pour lequel afficher le punisher")
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
+
+  async execute(client, interaction, config) {
+    const serveurOpt = interaction.options.getString("serveur").toLowerCase();
+    const pseudo = interaction.options.getString("joueur");
+
+    await interaction.deferReply({ ephemeral: true });
+
+    const searchRes = await fetch(
+      `https://apiv2.nationsglory.fr/forums/userSearch?search=${pseudo}`
+    );
+    const similarUsers = await searchRes.json();
+
+    const foundUser = similarUsers.find(
+      (user) => user.username.toLowerCase() === pseudo.toLowerCase()
+    );
+
+    if (!foundUser) {
+      let suggestions = similarUsers
+        .map((user) => `- ${user.username.replace(/_/g, "\\_")}`)
+        .join("\n");
+      let description;
+
+      if (similarUsers.length === 0) {
+        description = "L'utilisateur que vous recherchez n'existe pas.";
+      } else {
+        description = `L'utilisateur que vous recherchez n'existe pas, il s'agit peut-être de\n\n${suggestions}`;
+      }
+
+      const errorembed = {
+        author: { name: "Erreur" },
+        footer: { text: config.footer },
+        color: config.errorcolor,
+        thumbnail: { url: `https://i.imgur.com/ZB0yLME.png` },
+        description: description,
+      };
+      return interaction.editReply({ embeds: [errorembed], ephemeral: false });
+    }
+
+    const joueur = foundUser.username;
+
+    const serveursCibles =
+      serveurOpt !== "all" ? [serveurOpt] : config.liste_serveur;
+
+    const sanctions = await ensureSanctions(joueur, 7, config, serveursCibles);
+    const maxPage = Math.max(1, Math.ceil(sanctions.length / 7));
+
+    const { embed, row } = getPunisherContainer(
+      joueur,
+      sanctions,
+      1,
+      maxPage,
+      config.couleur[serveurOpt] || config.color,
+      config,
+      7,
+      serveurOpt
+    );
+
+    await interaction.editReply({ embeds: [embed], components: [row] });
+  },
+};
