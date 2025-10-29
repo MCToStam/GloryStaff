@@ -10,7 +10,7 @@ const {
 const fs = require("fs");
 const path = require("path");
 const config = require("./config");
-const client = require("./main");
+const { client } = require("./main");
 const attentestaff = require("./util/attentestaff");
 const rank = require("./util/rank");
 const os = require("os");
