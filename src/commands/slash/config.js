@@ -1,4 +1,11 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  MessageFlags,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
 const { getData } = require("../../../util/module/getAndSaveData");
 const { containerSingle } = require("../../../util/container/configSingle");
 const { containerMultiple } = require("../../../util/container/configMultiple");

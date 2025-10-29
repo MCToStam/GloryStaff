@@ -10,6 +10,8 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  ButtonBuilder,
+  ButtonStyle,
 } = require("discord.js");
 
 function getContrastTextColor(colorNumber) {

@@ -7,6 +7,7 @@ const {
   ButtonStyle,
   MessageFlags,
   StringSelectMenuBuilder,
+  EmbedBuilder,
 } = require("discord.js");
 
 module.exports = {
