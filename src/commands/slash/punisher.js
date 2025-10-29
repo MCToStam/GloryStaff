@@ -91,18 +91,29 @@ module.exports = {
       return interaction.reply({ embeds: [permissionEmbed], ephemeral: true });
     }
 
-    const staffData = getData(`data/${serveur}/staff.json`);
+    let staffData = {};
 
-    const isAdmin = staffData["Administrateur"]?.includes(interaction.user.id);
-    const isSM = staffData["Super-Modérateur"]?.includes(interaction.user.id);
-    if (!isAdmin && !isSM && interaction.user.id != config.developpeur) {
-      const permissionEmbed = {
-        title: "Erreur",
-        description: `Tu n'as pas la permission d'effectuer cette commande !`,
-        color: config.errorcolor,
-        footer: { text: config.footer },
-      };
-      return interaction.reply({ embeds: [permissionEmbed], ephemeral: true });
+    if (serveur === "all") {
+      for (const srv of config.liste_serveur) {
+        const filePath = path.join(__dirname, "data", srv, "staff.json");
+        if (fs.existsSync(filePath)) {
+          const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+          for (const rank in data) {
+            if (!staffData[rank]) staffData[rank] = [];
+            staffData[rank] = [...new Set([...staffData[rank], ...data[rank]])];
+          }
+        }
+      }
+    } else {
+      const staffFilePath = path.join(__dirname, "data", serveur, "staff.json");
+      if (fs.existsSync(staffFilePath)) {
+        staffData = JSON.parse(fs.readFileSync(staffFilePath, "utf8"));
+      } else {
+        fs.mkdirSync(path.join(__dirname, "data", serveur), {
+          recursive: true,
+        });
+        staffData = {};
+      }
     }
 
     const pseudo = interaction.options.getString("joueur");
