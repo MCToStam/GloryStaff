@@ -95,25 +95,14 @@ module.exports = {
 
     if (serveur === "all") {
       for (const srv of config.liste_serveur) {
-        const filePath = path.join(__dirname, "data", srv, "staff.json");
-        if (fs.existsSync(filePath)) {
-          const data = JSON.parse(fs.readFileSync(filePath, "utf8"));
+          const data = getData(`data/${srv}/staff.json`)
           for (const rank in data) {
             if (!staffData[rank]) staffData[rank] = [];
             staffData[rank] = [...new Set([...staffData[rank], ...data[rank]])];
           }
-        }
       }
     } else {
-      const staffFilePath = path.join(__dirname, "data", serveur, "staff.json");
-      if (fs.existsSync(staffFilePath)) {
-        staffData = JSON.parse(fs.readFileSync(staffFilePath, "utf8"));
-      } else {
-        fs.mkdirSync(path.join(__dirname, "data", serveur), {
-          recursive: true,
-        });
-        staffData = {};
-      }
+      staffData = getData(`data/${serveur}/staff.json`)
     }
 
     const pseudo = interaction.options.getString("joueur");
