@@ -1,4 +1,5 @@
 const express = require("express");
+const { getData } = require("./util/module/getAndSaveData");
 const bodyParser = require("body-parser");
 const {
   EmbedBuilder,
@@ -1578,7 +1579,8 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
       payement,
     ] = data.split(" | ");
 
-    const channel = await client.channels.fetch("1412115768640012418");
+    const configData = getData("data/epsilon/assassinat/config.json");
+    const channel = await client.channels.fetch(configData.channelAssassinat);
     if (!channel || !channel.isTextBased()) {
       return res.status(400).send("Salon introuvable ou non textuel.");
     }
@@ -1591,7 +1593,7 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
       .setDescription(
         `**Pseudo du Client :** ${pseudoClient}\n` +
           `**Pseudo de la Cible :** ${pseudoCible}\n` +
-          `**Nombre d'Assassin :** ${nombreAssassin}\n` +
+          `**Nombre d'Assassin :** ${nombreAssassin.split(" ")[0]}\n` +
           `**Récupération du Stuff :** ${recupStuff}\n` +
           `**Anonymisation du Client :** ${anonymisationClient}\n` +
           `**Plus d'Informations :** ${plusInfos}\n\n` +
@@ -1609,6 +1611,11 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
       new ButtonBuilder()
         .setCustomId("assassinat_epsilon_kill")
         .setLabel("Kill effectué à 100%")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId("assassinat_epsilon_fin-echouee")
+        .setLabel("Mission Echouée")
         .setStyle(ButtonStyle.Success)
         .setDisabled(true),
     );
@@ -1636,12 +1643,93 @@ app.post("/api/forumulaire_espilon_rp", async (req, res) => {
       date,
       pseudoClient,
       pseudoCible,
-      nombreAssassin,
+      nombreAssassin: nombreAssassin.split(" ")[0],
       listeAssassin: [],
       recupStuff,
       anonymisationClient,
       plusInfos,
       payement: imageUrl,
+      killEffectue: false,
+    };
+
+    existingData.push(newEntry);
+    fs.writeFileSync(filePath, JSON.stringify(existingData, null, 2), "utf8");
+
+    res.status(200).send("Embed envoyé avec succès !");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erreur lors de l'envoi de l'embed.");
+  }
+});
+
+app.post("/api/forumulaire_espilon_rp2", async (req, res) => {
+  try {
+    const { data } = req.body;
+    if (!data) return res.status(400).send("Aucune donnée reçue.");
+
+    const [date, pseudoClient, nombreDefenseur, fournirStuff, recupStuff] =
+      data.split(" | ");
+
+    const configData = getData("data/epsilon/assassinat/config.json");
+    const channel = await client.channels.fetch(configData.channelAssassinat2);
+    if (!channel || !channel.isTextBased()) {
+      return res.status(400).send("Salon introuvable ou non textuel.");
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle("📋 Nouvelle demande d'assassinat")
+      .setDescription(
+        `**Pseudo du Client :** ${pseudoClient}\n` +
+          `**Nombre de Defenseur :** ${nombreDefenseur.split(" ")[0]}\n` +
+          `**Fournir le Stuff :** ${fournirStuff}\n` +
+          `**Récupération du Stuff :** ${recupStuff}\n` +
+          `*Prit en charge par personne*`,
+      )
+      .setColor(config.couleur["epsilon"])
+      .setFooter({ text: config.footer });
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("assassinat_epsilon_prendre2")
+        .setLabel("Prendre en charge l'assassinat")
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId("assassinat_epsilon_fin2-kill")
+        .setLabel("Kill effectué à 100%")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId("assassinat_epsilon_fin2-echouee")
+        .setLabel("Mission Echouée")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(true),
+    );
+
+    const sentMessage = await channel.send({
+      embeds: [embed],
+      components: [row],
+    });
+
+    const filePath = path.join(
+      __dirname,
+      "data",
+      "epsilon",
+      "assassinat",
+      "donnee2.json",
+    );
+
+    let existingData = [];
+    if (fs.existsSync(filePath)) {
+      existingData = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    }
+
+    const newEntry = {
+      messageId: sentMessage.id,
+      date,
+      pseudoClient,
+      nombreDefenseur,
+      fournirStuff,
+      recupStuff,
       killEffectue: false,
     };
 

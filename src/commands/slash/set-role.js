@@ -1,10 +1,4 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const {
   errorStaffContainer,
@@ -76,6 +70,10 @@ module.exports = {
     const couleur = config.couleur[serveur.toLowerCase()];
     const role = supportGuild.roles.cache.get(roleId);
 
+    const capitalizedServeur =
+      serveur.charAt(0).toUpperCase() + serveur.slice(1);
+    const emojiId = config.emoji[serveur.toLowerCase()];
+
     if (member.roles.cache.has(roleId) && grade != "Joueur") {
       const RoleEmbed = {
         title: "Erreur",
@@ -100,6 +98,8 @@ module.exports = {
         ephemeral: true,
       });
     }
+
+    const staffData = getData(`data/${serveur}/staff.json`);
 
     if (!staffData[grade] && grade !== "Joueur") {
       staffData[grade] = [];

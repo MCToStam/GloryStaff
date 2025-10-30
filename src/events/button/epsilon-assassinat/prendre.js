@@ -4,7 +4,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { getData, saveData } = require("../../../util/module/getAndSaveData");
+const { getData, saveData } = require("../../../../util/module/getAndSaveData");
 
 module.exports = {
   data: {
@@ -69,8 +69,13 @@ module.exports = {
         .setLabel("Prendre en charge l'assassinat")
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
-        .setCustomId("assassinat_epsilon_kill")
-        .setLabel("Kill effectué")
+        .setCustomId("assassinat_epsilon_fin-kill")
+        .setLabel("Kill effectué à 100%")
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(assassinat.listeAssassin.length === 0),
+      new ButtonBuilder()
+        .setCustomId("assassinat_epsilon_fin-echouee")
+        .setLabel("Mission Echouée")
         .setStyle(ButtonStyle.Success)
         .setDisabled(assassinat.listeAssassin.length === 0),
     );
