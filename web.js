@@ -1,5 +1,6 @@
 const express = require("express");
 const { getData } = require("./util/module/getAndSaveData");
+const { discordStaff } = require("./util/module/discordLink");
 const bodyParser = require("body-parser");
 const {
   EmbedBuilder,
@@ -987,7 +988,7 @@ app.post("/tempsdejeu", (req, res) => {
     .json({ message: "Données de temps de jeu traitées avec succès." });
 });
 
-app.get("/api/get-staff", (req, res) => {
+app.get("/api/get-staff", async (req, res) => {
   const discordId = req.query.discordId;
 
   if (!discordId || typeof discordId !== "string") {
@@ -1002,26 +1003,9 @@ app.get("/api/get-staff", (req, res) => {
     ) {
       return res.status(200).json(config.liste_serveur);
     }
-    const availableServers = [];
+    const { pseudonym, servers, container } = await discordStaff(discordId);
 
-    for (const server of config.liste_serveur) {
-      let isStaff = false;
-
-      const staffPath = path.join(__dirname, "data", server, "staff.json");
-      if (fs.existsSync(staffPath)) {
-        const rawData = fs.readFileSync(staffPath, "utf-8");
-        const staffData = JSON.parse(rawData);
-        isStaff = Object.values(staffData).some((roleMembers) =>
-          roleMembers.includes(discordId),
-        );
-      }
-
-      if (isStaff) {
-        availableServers.push(server);
-      }
-    }
-
-    return res.status(200).json(availableServers);
+    return res.status(200).json(servers);
   } catch (error) {
     console.error("Error in /api/get-staff:", error);
     return res.status(500).json({ error: "Internal server error" });
