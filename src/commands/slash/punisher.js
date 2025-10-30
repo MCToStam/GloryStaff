@@ -1,14 +1,11 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ActionRowBuilder,
-} = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, Message } = require("discord.js");
 const { serveurs } = require("../../../util/option-serveur.js");
 const { ensureSanctions } = require("../../../util/punisher");
 const { getPunisherContainer } = require("../../../util/container/punisher");
-const { getData } = require("../../../util/module/getAndSaveData.js");
+const {
+  errorStaffContainer,
+  discordStaff,
+} = require("../../../util/module/discordLink");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -41,68 +38,25 @@ module.exports = {
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
-    if (serveur === "non-lie") {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.',
-        )
-        .setFooter({ text: config.footer });
+    const { errorContainer } = await errorStaffContainer(serveur);
 
-      const panelButton = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setLabel("💻 Accéder au panel")
-          .setStyle(ButtonStyle.Link)
-          .setURL("https://glorybot.fr"),
-      );
-
+    if (errorContainer) {
       return interaction.reply({
-        embeds: [erreurEmbed],
-        components: [panelButton],
-        ephemeral: true,
+        components: [errorContainer],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
 
-    if (serveur !== "all" && !config.liste_serveur.includes(serveur)) {
-      const unknownServerEmbed = {
-        title: "Erreur",
-        description: `Le serveur **${serveur}** n'est pas un serveur reconnu. Veuillez fournir un serveur valide.`,
-        color: config.errorcolor,
-        footer: { text: config.footer },
-      };
+    const { pseudonym, servers, container } = await discordStaff(
+      interaction.user.id,
+      serveur,
+    );
+
+    if (container) {
       return interaction.reply({
-        embeds: [unknownServerEmbed],
-        ephemeral: true,
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
-    }
-
-    const capitalizedServeur =
-      serveur.charAt(0).toUpperCase() + serveur.slice(1);
-    const emojiId = config.emoji[serveur.toLowerCase()];
-
-    if (serveur === "permission") {
-      const permissionEmbed = {
-        title: "Erreur",
-        description: `Tu n'as pas la permission d'effectuer cette commande pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** !`,
-        color: config.errorcolor,
-        footer: { text: config.footer },
-      };
-      return interaction.reply({ embeds: [permissionEmbed], ephemeral: true });
-    }
-
-    let staffData = {};
-
-    if (serveur === "all") {
-      for (const srv of config.liste_serveur) {
-          const data = getData(`data/${srv}/staff.json`)
-          for (const rank in data) {
-            if (!staffData[rank]) staffData[rank] = [];
-            staffData[rank] = [...new Set([...staffData[rank], ...data[rank]])];
-          }
-      }
-    } else {
-      staffData = getData(`data/${serveur}/staff.json`)
     }
 
     const pseudo = interaction.options.getString("joueur");

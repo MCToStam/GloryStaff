@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const { getData } = require("../../../util/module/getAndSaveData");
+const { errorStaffContainer } = require("../../../util/module/discordLink");
 
 module.exports = {
   data: new SlashCommandBuilder()

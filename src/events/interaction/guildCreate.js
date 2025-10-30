@@ -40,7 +40,7 @@ module.exports = async (client, guild) => {
       }
     }
 
-    if (inviter?.id === config.developpeur || isAuthorized) {
+    if (config.developpeur.includes(inviter?.id) || isAuthorized) {
       const embed = {
         title: "Nouveau Serveur - Accès Autorisé",
         description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,

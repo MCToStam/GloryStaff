@@ -39,7 +39,7 @@ module.exports = {
 
     if (
       botStaffData.Administrateur.includes(interaction.user.id) ||
-      interaction.user.id == config.developpeur
+      config.developpeur.includes(interaction.user.id)
     ) {
       const actionRow = new ActionRowBuilder();
       actionRow.addComponents(

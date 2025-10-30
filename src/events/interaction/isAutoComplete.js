@@ -1,5 +1,6 @@
 const log = require("../../../util/module/log");
 const { getData } = require("../../../util/module/getAndSaveData");
+const { discordStaff } = require("../../../util/module/discordLink");
 const config = require("../../../config");
 
 module.exports = async (client, interaction) => {
@@ -46,26 +47,21 @@ module.exports = async (client, interaction) => {
           pseudo = null;
         }
 
-        const isDev = memberId === config.developpeur;
+        const isDev = config.developpeur.includes(memberId);
 
         const matchedServers = config.liste_serveur.filter((server) =>
           server.toLowerCase().startsWith(value.toLowerCase()),
         );
 
-        for (const server of matchedServers) {
-          const staffData = getData(`data/${server}/staff.json`);
+        const staffInfo = await discordStaff(memberId, matchedServers);
 
-          const isStaff = Object.values(staffData).some((roleMembers) =>
-            roleMembers.includes(memberId),
-          );
-
-          if (isStaff || isDev) {
-            availableServers.push(server);
-          } else if (pseudo) {
+        if (staffInfo.servers.length > 0 || isDev) {
+          availableServers.push(...staffInfo.servers);
+        } else if (pseudo) {
+          for (const server of matchedServers) {
             const staffRolesData = getData(`data/${server}/staff-serveur.json`);
-
             const isStaffLinked = Object.entries(staffRolesData).some(
-              ([key, roleList]) =>
+              ([, roleList]) =>
                 Array.isArray(roleList) && roleList.includes(pseudo),
             );
 
@@ -190,7 +186,7 @@ module.exports = async (client, interaction) => {
           ]);
         }
 
-        if (memberId === config.developpeur) {
+        if (config.developpeur.includes(memberId)) {
           const grades = ["Administrateur", "Super-Modérateur", "Joueur"];
 
           const filteredGrades = grades.filter((grade) =>
@@ -281,7 +277,11 @@ module.exports = async (client, interaction) => {
       );
       const isSM = staffData["Super-Modérateur"]?.includes(interaction.user.id);
 
-      if (!isAdmin && !isSM && interaction.user.id != config.developpeur) {
+      if (
+        !isAdmin &&
+        !isSM &&
+        !config.developpeur.includes(interaction.user.id)
+      ) {
         return interaction.respond([
           {
             name: "Tu n'effectuer n'a pas le droit d'effectuer ceci !",

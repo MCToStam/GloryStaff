@@ -12,7 +12,7 @@ module.exports = async (client, member) => {
 
     const servers = Object.keys(config.role);
 
-    if (memberId !== config.developpeur) {
+    if (config.developpeur.includes(memberId)) {
       servers.forEach((server) => {
         const staffData = getData(`data/${server}/staff.json`);
 

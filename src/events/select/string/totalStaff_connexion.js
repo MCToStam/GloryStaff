@@ -1,7 +1,4 @@
-const {
-  getAbsolutePath,
-  getData,
-} = require("../../../../util/module/getAndSaveData");
+const { getData } = require("../../../../util/module/getAndSaveData");
 const {
   EmbedBuilder,
   ActionRowBuilder,
@@ -13,37 +10,20 @@ const { generateTableImage } = require("../../../../util/connexionTableImage");
 const { getTotalConnexionTable } = require("../../../../util/totalConnexion");
 
 module.exports = {
-  name: "interactionCreate",
-  async execute(client, interaction, config) {
-    const isStaffMenu =
-      interaction.isSelectMenu() &&
-      interaction.values[0] === "totalstaff_connexion";
-    const isStaffButton =
-      interaction.isButton() &&
-      interaction.customId.startsWith("staff/weektotal/");
+  data: {
+    name: "totalstaff_connexion",
+  },
 
-    if (!isStaffMenu && !isStaffButton) return;
+  async execute(client, interaction, config) {
+    const embedColor = interaction.message.embeds[0]?.color;
+    const serveur = Object.keys(config.couleur).find(
+      (key) => config.couleur[key] === embedColor,
+    );
 
     let semaineOffset = 0;
-    let serveur = null;
-
-    if (isStaffMenu) {
-      const embedColor = interaction.message.embeds[0]?.color;
-
-      serveur = Object.keys(config.couleur).find(
-        (key) => config.couleur[key] === embedColor,
-      );
-
-      const today = new Date();
-      if (today.getDay() === 1) {
-        semaineOffset = -1;
-      }
-    }
-
-    if (isStaffButton) {
-      const parts = interaction.customId.split("/");
-      serveur = parts[2];
-      semaineOffset = parseInt(parts[3]);
+    const today = new Date();
+    if (today.getDay() === 1) {
+      semaineOffset = -1;
     }
 
     const staffRaw = getData(`data/${serveur}/staff-serveur.json`);
@@ -69,29 +49,21 @@ module.exports = {
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`staff/weektotal/${serveur}/${semaineOffset - 1}`)
+        .setCustomId(`staff_weektotal-${serveur}/${semaineOffset - 1}`)
         .setLabel("⬅️ Semaine précédente")
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`staff/weektotal/${serveur}/${semaineOffset + 1}`)
+        .setCustomId(`staff_weektotal-${serveur}/${semaineOffset + 1}`)
         .setLabel("Semaine suivante ➡️")
         .setStyle(ButtonStyle.Primary)
         .setDisabled(semaineOffset >= 0),
     );
 
-    if (interaction.isSelectMenu()) {
-      await interaction.reply({
-        embeds: [embed],
-        components: [row],
-        files: [attachment],
-        ephemeral: true,
-      });
-    } else {
-      await interaction.update({
-        embeds: [embed],
-        components: [row],
-        files: [attachment],
-      });
-    }
+    await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      files: [attachment],
+      ephemeral: true,
+    });
   },
 };
