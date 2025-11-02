@@ -1,4 +1,4 @@
-const { getData } = require("../../../util/module/getAndSaveData");
+const { discordStaff } = require("../../../util/module/discordLink");
 const { EmbedBuilder } = require("discord.js");
 const config = require("../../../config");
 
@@ -8,25 +8,9 @@ module.exports = async (client, member) => {
     if (guildId !== config.support_serveur_id) return;
 
     const memberId = member.user.id;
-    let availableServers = [];
 
-    const servers = Object.keys(config.role);
-
-    if (config.developpeur.includes(memberId)) {
-      servers.forEach((server) => {
-        const staffData = getData(`data/${server}/staff.json`);
-
-        const hasRole = Object.values(staffData).some((roleMembers) =>
-          roleMembers.includes(memberId),
-        );
-
-        if (hasRole) {
-          availableServers.push(server);
-        }
-      });
-    } else {
-      availableServers = servers;
-    }
+    const { pseudonym, availableServers, container } =
+      await discordStaff(memberId);
 
     const rolesToAdd = availableServers
       .map((server) => config.role[server])
