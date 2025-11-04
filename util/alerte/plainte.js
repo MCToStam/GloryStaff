@@ -350,12 +350,7 @@ async function plainte(client) {
       ) {
         saveData(`data/${server}/forum/plainte.json`, plaintesMisesAJour);
       }
-    } catch (error) {
-      console.error(
-        `❌ Erreur lors du traitement des plaintes pour ${server}:`,
-        error.message,
-      );
-    }
+    } catch (error) {}
   }
 }
 

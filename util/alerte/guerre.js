@@ -347,12 +347,7 @@ async function guerre(client) {
       ) {
         saveData(`data/${server}/forum/guerre.json`, guerresMisesAJour);
       }
-    } catch (error) {
-      console.error(
-        `❌ Erreur lors du traitement des guerres pour ${server}:`,
-        error.message,
-      );
-    }
+    } catch (error) {}
   }
 }
 

@@ -8,6 +8,7 @@ const config = require("../../config");
 async function containerMultiple(serveur, file, configData) {
   const typeMap = {
     attentestaff: "Attente Staff",
+    candidature: "Candidature",
     disband: "Disband",
     doublelead: "Double Lead",
     expansionterritoriale: "Expansion Territoriale",

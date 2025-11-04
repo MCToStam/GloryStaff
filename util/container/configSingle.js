@@ -12,6 +12,7 @@ const config = require("../../config");
 async function containerSingle(serveur, systemName, settings, file) {
   const typeMap = {
     attentestaff: "Attente Staff",
+    candidature: "Candidature",
     disband: "Disband",
     doublelead: "Double Lead",
     expansionterritoriale: "Expansion Territoriale",
@@ -47,7 +48,11 @@ async function containerSingle(serveur, systemName, settings, file) {
             .setCustomId(`config_salon-${file}-${systemName}`)
             .setPlaceholder("Choisit un salon")
             .setChannelTypes(
-              systemName === "radio" ? [2, 13] : [0, 5, 10, 11, 12],
+              systemName === "radio"
+                ? [2, 13]
+                : systemName === "candidature"
+                  ? [0, 5, 10, 11, 12, 15]
+                  : [0, 5, 10, 11, 12],
             )
             .setDefaultChannels(settings.Salon ? [settings.Salon] : []),
         ),

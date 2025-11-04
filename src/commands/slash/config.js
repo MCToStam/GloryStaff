@@ -25,6 +25,7 @@ module.exports = {
         .setRequired(true)
         .addChoices(
           { name: "Attente Staff", value: "attentestaff" },
+          { name: "Candidature", value: "candidature" },
           { name: "Disband", value: "disband" },
           { name: "Double Lead", value: "doublelead" },
           { name: "Expansion Territoriale", value: "expansionterritoriale" },
@@ -67,6 +68,7 @@ module.exports = {
 
     const typeMap = {
       attentestaff: "Attente Staff",
+      candidature: "Candidature",
       disband: "Disband",
       doublelead: "Double Lead",
       expansionterritoriale: "Expansion Territoriale",

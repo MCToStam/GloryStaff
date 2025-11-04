@@ -11,7 +11,7 @@ module.exports = {
   },
 
   conf: {
-    type: "Button",
+    type: "User",
   },
 
   async execute(client, interaction, config) {

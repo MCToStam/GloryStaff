@@ -4,7 +4,7 @@ const { generateConnexionEmbed } = require("../../../util/connexion");
 
 module.exports = {
   data: {
-    name: "config_toggle",
+    name: "staff_week",
   },
 
   conf: {
