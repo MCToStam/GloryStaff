@@ -77,11 +77,11 @@ module.exports = {
       container.addActionRowComponents(
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId(`ally_addmember_${allianceChef.nom}`)
+            .setCustomId(`ally_addmember-${allianceChef.nom}`)
             .setLabel("Ajouter un pays")
             .setStyle(ButtonStyle.Success),
           new ButtonBuilder()
-            .setCustomId(`ally_remmember_${allianceChef.nom}`)
+            .setCustomId(`ally_remmember-${allianceChef.nom}`)
             .setLabel("Retirer un pays")
             .setStyle(ButtonStyle.Danger),
         ),
@@ -109,7 +109,7 @@ module.exports = {
             )
             .setButtonAccessory((button) =>
               button
-                .setCustomId(`alliance_edit_${alliance.nom}`)
+                .setCustomId(`alliance_edit-${alliance.nom}`)
                 .setLabel("Modifier")
                 .setStyle(ButtonStyle.Primary),
             ),

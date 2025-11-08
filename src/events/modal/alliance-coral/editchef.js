@@ -11,7 +11,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const data = getData("data/coral/alliance.donnee.json");
+    const data = getData("data/coral/alliance/donnee.json");
     const allianceNom = interaction.customId.replace(
       "modal_ally_editchef-",
       "",
@@ -41,7 +41,7 @@ module.exports = {
     alliance.chef = [];
     if (chef1) alliance.chef.push(chef1);
     if (chef2) alliance.chef.push(chef2);
-    saveData("data/coral/alliance.donnee.json", data);
+    saveData("data/coral/alliance/donnee.json", data);
 
     await updateAllianceMessage(interaction.client, alliance, "coral");
 

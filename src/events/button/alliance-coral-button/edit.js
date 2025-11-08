@@ -11,7 +11,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const data = getData("data/coral/alliance.donnee.json");
+    const data = getData("data/coral/alliance/donnee.json");
     const allianceNom = interaction.customId.replace("alliance_edit-", "");
     return await showAlliancePage(
       interaction,

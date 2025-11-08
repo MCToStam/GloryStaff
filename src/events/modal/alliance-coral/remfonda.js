@@ -11,7 +11,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const data = getData("data/coral/alliance.donnee.json");
+    const data = getData("data/coral/alliance/donnee.json");
     const allianceNom = interaction.customId.replace(
       "modal_ally_remfonda-",
       "",
@@ -56,7 +56,7 @@ module.exports = {
     alliance.listePaysFondateur = alliance.listePaysFondateur.filter(
       (p) => p !== pays,
     );
-    saveData("data/coral/alliance.donnee.json", data);
+    saveData("data/coral/alliance/donnee.json", data);
 
     await updateAllianceMessage(interaction.client, alliance, "coral");
     return await showAlliancePage(

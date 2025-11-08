@@ -191,8 +191,8 @@ module.exports = async (client, interaction) => {
     "*/10 * * * 6",
     async () => {
       for (const serveur of config.liste_serveur) {
-        await onu(client, serveur, "Samedi");
-        await rappel_onu(client, serveur, "Samedi");
+        // await onu(client, serveur, "Samedi");
+        // await rappel_onu(client, serveur, "Samedi");
       }
     },
     {
@@ -204,15 +204,15 @@ module.exports = async (client, interaction) => {
     "*/10 * * * 0",
     async () => {
       for (const serveur of config.liste_serveur) {
-        await onu(client, serveur, "Dimanche");
-        await rappel_onu(client, serveur, "Dimanche");
+        // await onu(client, serveur, "Dimanche");
+        // await rappel_onu(client, serveur, "Dimanche");
       }
     },
     {
       timezone: "Europe/Paris",
     },
   );
-  
+
   cron.schedule(
     "*/30 * * * *",
     async () => {

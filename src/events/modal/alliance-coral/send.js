@@ -8,7 +8,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const data = getData("data/coral/alliance.donnee.json");
+    const data = getData("data/coral/alliance/donnee.json");
     const allianceNom = interaction.customId.replace(
       "modal_alliance_send-",
       "",
@@ -85,7 +85,7 @@ module.exports = {
 
     alliance.channelId = channelId;
     alliance.messageId = msg.id;
-    saveData("data/coral/alliance.donnee.json", data);
+    saveData("data/coral/alliance/donnee.json", data);
 
     return await showAlliancePage(
       interaction,

@@ -8,7 +8,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const data = getData("data/coral/alliance.donnee.json");
+    const data = getData("data/coral/alliance/donnee.json");
     const nom = interaction.fields.getTextInputValue("nom");
     const chef1 =
       interaction.fields.getSelectedUsers("chef1")?.first()?.id || false;
@@ -42,7 +42,7 @@ module.exports = {
       listePaysFondateur: [],
     });
 
-    saveData("data/coral/alliance.donnee.json", data);
+    saveData("data/coral/alliance/donnee.json", data);
 
     return await showAlliancePage(interaction, "coral", data, nom, true);
   },
