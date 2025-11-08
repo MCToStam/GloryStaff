@@ -156,7 +156,7 @@ async function sendCandidatures(client, AllCandidatures) {
         `https://publicapi.nationsglory.fr/user/${candidature.auteur}`,
         {
           headers: {
-            Authorization: `Bearer ${config.ng_token}`,
+            Authorization: `Bearer ${config.apitoken_backup}`,
             accept: "application/json",
           },
         },
@@ -188,7 +188,7 @@ async function sendCandidatures(client, AllCandidatures) {
         },
       ];
 
-      if (data && data.servers[serveur]) {
+      if (data && data.servers && data.servers[serveur]) {
         const lastConnectionDate = new Date(
           `${data.servers[serveur].last_connection} UTC`,
         );
@@ -224,6 +224,7 @@ async function sendCandidatures(client, AllCandidatures) {
         const playtimeFormatted = parts.length ? parts.join(" ") : "0s";
 
         components.push(
+          { type: 14, spacing: SeparatorSpacingSize.Small },
           {
             type: 10,
             content: `⏱️ **Temps de Jeu ${
@@ -399,18 +400,13 @@ async function fetchNewCandidatures() {
 
   for (const serveur of config.liste_serveur) {
     const data = getData(`data/${serveur}/config-candidature.json`);
-
     const roles = ["Guide", "Modérateur", "Builder"];
-    const hasValidRole = roles.some(
-      (role) => data[role]?.active && !data[role]?.Salon,
-    );
-    if (!hasValidRole) continue;
 
     let modified = false;
 
     for (const roleName of roles) {
       const roleData = data[roleName];
-      if (!roleData?.active || !roleData.lien || roleData.Salon) continue;
+      if (!roleData?.active || !roleData.lien || !roleData.Salon) continue;
 
       try {
         const response = await fetch(roleData.lien);

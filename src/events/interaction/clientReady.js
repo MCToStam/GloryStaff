@@ -29,6 +29,7 @@ const {
   repartition_notation,
 } = require("../../../util/alerte/repartition_notation");
 const { sanction } = require("../../../util/alerte/sanction");
+const { checkCandidature } = require("../../../util/alerte/candidature");
 
 async function getPlayerCount(server) {
   try {
@@ -206,6 +207,16 @@ module.exports = async (client, interaction) => {
         await onu(client, serveur, "Dimanche");
         await rappel_onu(client, serveur, "Dimanche");
       }
+    },
+    {
+      timezone: "Europe/Paris",
+    },
+  );
+  
+  cron.schedule(
+    "*/30 * * * *",
+    async () => {
+      await checkCandidature(client);
     },
     {
       timezone: "Europe/Paris",

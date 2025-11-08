@@ -1,5 +1,3 @@
-const moment = require("moment");
-
 const colors = {
   reset: 0,
   bold: 1,
@@ -47,7 +45,18 @@ const colors = {
 function log(content, type, color) {
   const logType = type === "error" ? "error" : "log";
   const code = colors[color];
-  const timestamp = `\x1b[36m${moment(new Date()).format("DD-MM-YYYY HH:mm:ss")}\x1b[0m`;
+
+  const timestamp = `\x1b[36m${new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(new Date())}\x1b[0m`;
+
   if (type === "RUNNING") {
     return `[${timestamp}] \x1b[${code}m${type}\x1b[0m ${content}`;
   } else {
