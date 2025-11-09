@@ -2,6 +2,7 @@ const config = require("../../../config");
 const { ActivityType } = require("discord.js");
 const axios = require("axios");
 const log = require("../../../util/module/log");
+const { updateLogo } = require("../../../util/updateLogo");
 const { botLaunch } = require("../../../main.js");
 const { checkEmojiCache } = require("../../../util/module/emoji");
 const cron = require("node-cron");
@@ -222,6 +223,10 @@ module.exports = async (client, interaction) => {
       timezone: "Europe/Paris",
     },
   );
+
+  cron.schedule("0 0 * * *", async () => {
+    await updateLogo(client, config);
+  });
 
   process.on("unhandledRejection", (reason, p) => {
     console.log(" [antiCrash] :: Unhandled Rejection/Catch");
