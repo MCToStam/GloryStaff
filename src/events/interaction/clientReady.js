@@ -166,7 +166,6 @@ module.exports = async (client, interaction) => {
       timezone: "Europe/Paris",
     },
   );
-  await repartition_notation(client);
 
   cron.schedule(
     "*/30 * * * *",
