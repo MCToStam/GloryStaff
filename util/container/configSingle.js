@@ -120,6 +120,23 @@ async function containerSingle(serveur, systemName, settings, file) {
       );
   }
 
+  if (systemName === "répartition") {
+    container
+      .addSeparatorComponents((s) => s)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("notation_module-automatique")
+            .setLabel("Mélanger aléatoirement")
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId("notation_module-manual")
+            .setLabel("Définir manuellement")
+            .setStyle(ButtonStyle.Primary),
+        ),
+      );
+  }
+
   container
     .addSeparatorComponents((s) => s)
     .addActionRowComponents(

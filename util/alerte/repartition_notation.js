@@ -20,7 +20,9 @@ async function repartition_notation(client) {
     try {
       const repartitionData = getData(`data/${server}/config-notation.json`);
       const keys = Object.keys(repartitionData["répartition"]);
-      const hasNumberKey = keys.some((key) => /^\d+$/.test(key));
+      const hasNumberKey = keys.some(
+        (key) => key !== "active" && key !== "Salon" && key !== "Role",
+      );
       if (
         repartitionData["répartition"].active &&
         repartitionData["répartition"].Salon &&
@@ -43,33 +45,21 @@ async function repartition_notation(client) {
           );
         }
 
-        const emojiMap = {};
+        const numberKeys = keys.filter(
+          (key) => !["active", "Salon", "Role"].includes(key),
+        );
 
-        for (const key of keys.filter((k) => /^\d+$/.test(k))) {
-          const username = linkData[key] || false;
-          if (username) {
-            try {
-              const emoji = await getEmojiTete(client, username);
-
-              emojiMap[key] = emoji ? `<:${emoji.name}:${emoji.id}>` : "";
-            } catch (err) {
-              console.log(
-                `Erreur lors de la création ou récupération de l'émoji pour ${username}:`,
-                err,
-              );
-              emojiMap[key] = "";
-            }
-          }
-        }
-
-        const numberKeysValues = keys
-          .filter((key) => /^\d+$/.test(key))
-          .map((key) => {
-            const username = linkData[key] || "Utilisateur inconnu";
-            const emoji = emojiMap[key] || "";
-            return `${emoji} <@${key}> : ${repartitionData["répartition"][key]}`;
-          })
-          .join("\n");
+        const numberKeysValues = (
+          await Promise.all(
+            numberKeys.map(async (key) => {
+              const emoji = await getEmojiTete(client, key);
+              const emojiText = emoji.id
+                ? `<:${emoji.name}:${emoji.id}>`
+                : emoji.name;
+              return `${emojiText} ${key} : ${repartitionData["répartition"][key]}`;
+            }),
+          )
+        ).join("\n");
 
         const imagePath = config.liste_serveur_bedrock.includes(server)
           ? getAbsolutePath("data/ordredesnotations_bedrock.png")
