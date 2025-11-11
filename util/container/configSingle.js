@@ -50,7 +50,7 @@ async function containerSingle(serveur, systemName, settings, file) {
             .setChannelTypes(
               systemName === "radio"
                 ? [2, 13]
-                : systemName === "candidature"
+                : systemName === "Guide" || systemName === "Modérateur" || systemName === "Builder"
                   ? [0, 5, 10, 11, 12, 15]
                   : [0, 5, 10, 11, 12],
             )
