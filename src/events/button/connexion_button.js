@@ -12,11 +12,12 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [_, serveur, joueur, semaineOffsetStr] =
-      interaction.customId.split("-");
-    const semaineOffset = parseInt(semaineOffsetStr);
+    const parts = interaction.customId.split("/");
+    const semaineOffsetStr = parts[1];
+    const [_, serveur, joueur] = parts[0].split("-");
+    const semaineOffset = parseInt(semaineOffsetStr, 10);
 
-    const staffData = getData(`data/${serveur}/staff/${joueur}`);
+    const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
 
     if (!staffData) {
       const embed = new EmbedBuilder()

@@ -76,6 +76,39 @@ async function updateLogo(client, config) {
   const allGuilds = await client.guilds.fetch();
 
   for (const [guildId] of allGuilds) {
+    if (guildId === config.support_serveur_id) {
+      if (cache[guildId]) {
+        try {
+          const res = await fetch(
+            `https://discord.com/api/v10/guilds/${guildId}/members/@me`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bot ${token}`,
+                "Content-Type": "application/json",
+                "X-Audit-Log-Reason":
+                  "Suppression de l’avatar pour le serveur de support",
+              },
+              body: JSON.stringify({ avatar: null }),
+            },
+          );
+
+          if (!res.ok) {
+            const err = await res.text();
+            console.error(`Erreur suppression logo support → ${guildId}:`, err);
+            continue;
+          }
+
+          delete cache[guildId];
+          saveData("data/logo/serveur.json", cache);
+          await new Promise((r) => setTimeout(r, 1500));
+        } catch (err) {
+          console.error(`Erreur suppression logo support → ${guildId}:`, err);
+        }
+      }
+      continue;
+    }
+
     if (!guildsToKeep.has(guildId) && cache[guildId]) {
       try {
         const res = await fetch(

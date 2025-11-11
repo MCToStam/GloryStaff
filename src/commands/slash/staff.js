@@ -101,11 +101,6 @@ module.exports = {
         .setPlaceholder("Sélectionnez une option")
         .addOptions([
           {
-            label: "Liaison des OPs",
-            value: "totalstaff_liaisonop",
-            emoji: "1333877538946285739",
-          },
-          {
             label: "Connexion",
             value: "totalstaff_connexion",
             emoji: "1363956750704709642",
@@ -197,7 +192,7 @@ module.exports = {
       }
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 2000);
+      const timeout = setTimeout(() => controller.abort(), 5000);
 
       let body = null;
 
@@ -206,7 +201,7 @@ module.exports = {
           `https://publicapi.nationsglory.fr/user/${joueur}`,
           {
             headers: {
-              Authorization: `Bearer ${config.apitoken}`,
+              Authorization: `Bearer ${config.apitoken_backup}`,
               Accept: "application/json",
             },
             signal: controller.signal,

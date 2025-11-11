@@ -6,13 +6,13 @@ module.exports = async (client, interaction) => {
   const btn = client.container.buttons.get(interaction.customId.split("-")[0]);
 
   if (!btn) return;
-  const originalMessage = interaction.message.reference
-    ? await interaction.channel.messages.fetch(
-        interaction.message.reference.messageId,
-      )
-    : interaction.message;
-
   if (btn.conf.type === "User") {
+    const originalMessage = interaction.message.reference
+      ? await interaction.channel.messages.fetch(
+          interaction.message.reference.messageId,
+        )
+      : interaction.message;
+
     const authorId = originalMessage.interaction?.user?.id;
     if (!authorId || interaction.user.id !== authorId) {
       const permissionContainer = {

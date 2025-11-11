@@ -24,7 +24,8 @@ function getTotalConnexionTable(serveur, staffList, semaineOffset = 0) {
     const dateString = `${day}-${month}-${year}`;
     dates.push(dateString);
 
-    const dayData = getData(`data/${serveur}/tempsdejeu/${dateString}.json`);
+    const dayData =
+      getData(`data/${serveur}/tempsdejeu/${dateString}.json`) || {};
 
     for (const pseudo of staffList) {
       data[pseudo].push(dayData[pseudo] || 0);

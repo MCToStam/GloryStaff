@@ -71,11 +71,11 @@ async function generateConnexionEmbed(
 
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId(`staff_week-${serveur}-${joueur}-${semaineOffset - 1}`)
+      .setCustomId(`staff_week-${serveur}-${joueur}/${semaineOffset - 1}`)
       .setLabel("⬅️ Semaine précédente")
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
-      .setCustomId(`staff_week-${serveur}-${joueur}-${semaineOffset + 1}`)
+      .setCustomId(`staff_week-${serveur}-${joueur}/${semaineOffset + 1}`)
       .setLabel("Semaine suivante ➡️")
       .setStyle(ButtonStyle.Primary)
       .setDisabled(semaineOffset >= 0),
