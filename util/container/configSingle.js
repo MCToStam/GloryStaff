@@ -9,7 +9,9 @@ const {
 } = require("discord.js");
 const config = require("../../config");
 
-async function containerSingle(serveur, systemName, settings, file) {
+async function containerSingle(serveur, systemName, configData, file) {
+  const settings = configData[systemName];
+
   const typeMap = {
     attentestaff: "Attente Staff",
     candidature: "Candidature",
@@ -50,7 +52,9 @@ async function containerSingle(serveur, systemName, settings, file) {
             .setChannelTypes(
               systemName === "radio"
                 ? [2, 13]
-                : systemName === "Guide" || systemName === "Modérateur" || systemName === "Builder"
+                : systemName === "Guide" ||
+                    systemName === "Modérateur" ||
+                    systemName === "Builder"
                   ? [0, 5, 10, 11, 12, 15]
                   : [0, 5, 10, 11, 12],
             )
@@ -141,6 +145,14 @@ async function containerSingle(serveur, systemName, settings, file) {
     .addSeparatorComponents((s) => s)
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
+        ...(Object.keys(configData).length > 1
+          ? [
+              new ButtonBuilder()
+                .setCustomId(`config_retour-${file}`)
+                .setLabel("🚪 Retour")
+                .setStyle(ButtonStyle.Secondary),
+            ]
+          : []),
         new ButtonBuilder()
           .setCustomId(`config_toggle-${systemName}-${file}`)
           .setLabel(
@@ -149,7 +161,7 @@ async function containerSingle(serveur, systemName, settings, file) {
           .setStyle(settings.active ? ButtonStyle.Danger : ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId(`informations_supplementaires-${systemName}`)
-          .setLabel("Informations Supplémentaires")
+          .setLabel("❓ Informations Supplémentaires")
           .setStyle(ButtonStyle.Secondary),
       ),
     );

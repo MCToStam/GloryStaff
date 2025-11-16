@@ -29,6 +29,34 @@ module.exports = {
 
     const r = entry.rapport;
 
+    let changementChefDetails = "";
+
+    if (
+      Array.isArray(r.activite.changement_chef_30d) &&
+      r.activite.changement_chef_30d.length > 0
+    ) {
+      const now = Date.now();
+      const thirtyOneDays = 31 * 24 * 60 * 60 * 1000;
+
+      const changements = r.activite.changement_chef_30d
+        .filter((c) => now - c.date * 1000 <= thirtyOneDays) // uniquement < 31j
+        .map((c) => {
+          const date = new Date(c.date * 1000);
+          const dateFormat = new Intl.DateTimeFormat("fr-FR", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          }).format(date);
+
+          return `${dateFormat} : ${c.ancien} → ${c.nouveau}`;
+        });
+
+      changementChefDetails =
+        changements.length > 0 ? changements.join(", ") : "Non";
+    } else {
+      changementChefDetails = "Non";
+    }
+
     const nbGuerres = Array.isArray(r.pvp.nb_guerres)
       ? r.pvp.nb_guerres.length
       : 0;
@@ -89,9 +117,7 @@ Absences en Cours (Chef ou Officiers) : ${
         ? r.activite.absences_chef_ou_officiers
         : ""
     }
-Changement de Chef {-30d} : ${
-      r.activite.changement_chef_30d ? r.activite.changement_chef_30d : ""
-    }
+Changement de Chef {-30d} : ${changementChefDetails}
 Nb d'invitations à des joueurs différents {-30d} : ${
       r.activite.invitations_joueurs_30d
         ? r.activite.invitations_joueurs_30d

@@ -17,7 +17,7 @@ module.exports = {
     const container = await containerSingle(
       serveur,
       systemName,
-      configData[systemName],
+      configData,
       file,
     );
 

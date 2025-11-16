@@ -87,11 +87,10 @@ module.exports = {
 
     if (keys.length === 1) {
       const systemName = keys[0];
-      const settings = configData[systemName];
       const container = await containerSingle(
         serveur,
         systemName,
-        settings,
+        configData,
         type,
       );
 
