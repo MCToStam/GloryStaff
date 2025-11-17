@@ -134,13 +134,15 @@ async function plainte(client) {
       if (nouvellesPlaintes.length > 0) {
         if (
           config_forum.Plainte?.active &&
-          config_forum.Plainte?.Salon &&
+          config_forum.Plainte?.Salon.valeur &&
           config_forum.Plainte?.Forum
         ) {
-          const salon = client.channels.cache.get(config_forum.Plainte.Salon);
+          const salon = client.channels.cache.get(
+            config_forum.Plainte.Salon.valeur,
+          );
           if (!salon) {
             console.warn(
-              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Plainte.Salon})`,
+              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Plainte.Salon.valeur})`,
             );
           } else {
             let rolePingDone = false;
@@ -162,7 +164,7 @@ async function plainte(client) {
 
               try {
                 let sentMessage;
-                const plainteRoles = config_forum.Plainte?.Role;
+                const plainteRoles = config_forum.Plainte?.Role.valeur;
 
                 if (
                   Array.isArray(plainteRoles) &&
@@ -225,11 +227,11 @@ async function plainte(client) {
 
       if (
         config_forum["Plainte non traitée"]?.active &&
-        config_forum["Plainte non traitée"]?.Salon &&
+        config_forum["Plainte non traitée"]?.Salon.valeur &&
         config_forum["Plainte non traitée"]?.Temps
       ) {
         const salonNonTraitee = client.channels.cache.get(
-          config_forum["Plainte non traitée"].Salon,
+          config_forum["Plainte non traitée"].Salon.valeur,
         );
         if (!salonNonTraitee) {
           console.warn(
@@ -267,13 +269,17 @@ async function plainte(client) {
             try {
               let sentMessage;
               if (
-                Array.isArray(config_forum["Plainte non traitée"]?.Role) &&
-                config_forum["Plainte non traitée"].Role.length > 0 &&
+                Array.isArray(
+                  config_forum["Plainte non traitée"]?.Role.valeur,
+                ) &&
+                config_forum["Plainte non traitée"].Role.valeur.length > 0 &&
                 !rolePingDone
               ) {
                 const roleMentions = config_forum[
                   "Plainte non traitée"
-                ].Role.map((roleId) => `<@&${roleId}>`).join(", ");
+                ].Role.valeur
+                  .map((roleId) => `<@&${roleId}>`)
+                  .join(", ");
 
                 sentMessage = await salonNonTraitee.send({
                   embeds: [embedAlerte],

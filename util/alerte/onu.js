@@ -15,7 +15,11 @@ async function onu(client, server, jour) {
     const alerteActive = configData.Alerte.active;
     const heureParts = configData.Alerte.Heure.split(" ");
 
-    if (alerteActive && heureParts[0] === jour && configData.Alerte.Salon) {
+    if (
+      alerteActive &&
+      heureParts[0] === jour &&
+      configData.Alerte.Salon.valeur
+    ) {
       const currentTime = new Date();
       const timeZone = "Europe/Paris";
       const options = {
@@ -95,14 +99,16 @@ async function onu(client, server, jour) {
           );
         }
 
-        const channel = await client.channels.fetch(configData.Alerte.Salon);
+        const channel = await client.channels.fetch(
+          configData.Alerte.Salon.valeur,
+        );
         let sentMessage;
         if (configData.Alerte.Role) {
           console.log(
-            `Envoie ONU avec Rôle ${server} : ${configData.Alerte.Role}`,
+            `Envoie ONU avec Rôle ${server} : ${configData.Alerte.Role.valeur}`,
           );
           sentMessage = await channel.send({
-            content: `<@&${configData.Alerte.Role}>`,
+            content: `<@&${configData.Alerte.Role.valeur}>`,
             embeds: [embed],
             files: [attachment],
             components: [actionRow],

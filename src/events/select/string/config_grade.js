@@ -13,7 +13,7 @@ module.exports = {
 
     const serveur = await getServeur(interaction);
     const configData = getData(`data/${serveur}/config-${file}.json`);
-    configData[systemName].Grade = grade;
+    configData[systemName].Grade.valeur = grade;
     saveData(`data/${serveur}/config-${file}.json`, configData);
     const container = await containerSingle(
       serveur,

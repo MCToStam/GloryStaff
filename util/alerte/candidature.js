@@ -134,7 +134,7 @@ async function sendCandidatures(client, AllCandidatures) {
     const roleData = data[role];
     if (!roleData) continue;
 
-    const channelId = roleData.Salon;
+    const channelId = roleData.Salon.valeur;
     let channel;
     try {
       channel = await client.channels.fetch(channelId);
@@ -269,8 +269,8 @@ async function sendCandidatures(client, AllCandidatures) {
         );
 
         const roleMention =
-          roleData.Role && Array.isArray(roleData.Role)
-            ? roleData.Role.map((r) => `<@&${r}>`).join(" ")
+          roleData.Role.valeur && Array.isArray(roleData.Role.valeur)
+            ? roleData.Role.valeur.map((r) => `<@&${r}>`).join(" ")
             : null;
 
         const headerComponents = roleMention
@@ -406,7 +406,8 @@ async function fetchNewCandidatures() {
 
     for (const roleName of roles) {
       const roleData = data[roleName];
-      if (!roleData?.active || !roleData.lien || !roleData.Salon) continue;
+      if (!roleData?.active || !roleData.lien || !roleData.Salon.valeur)
+        continue;
 
       try {
         const response = await fetch(roleData.lien);

@@ -164,10 +164,10 @@ async function recapitulatif_hebdomadaire(client) {
 
     if (
       serverConfig["Récapitulatif Hebdomadaire"].active &&
-      serverConfig["Récapitulatif Hebdomadaire"].Salon
+      serverConfig["Récapitulatif Hebdomadaire"].Salon.valeur
     ) {
       const channel = await client.channels
-        .fetch(serverConfig["Récapitulatif Hebdomadaire"].Salon)
+        .fetch(serverConfig["Récapitulatif Hebdomadaire"].Salon.valeur)
         .catch(() => null);
 
       if (channel) {
@@ -384,7 +384,7 @@ async function recapitulatif_hebdomadaire(client) {
           components: [actionRow],
         };
 
-        const roles = serverConfig["Récapitulatif Hebdomadaire"].Role;
+        const roles = serverConfig["Récapitulatif Hebdomadaire"].Role.valeur;
 
         if (Array.isArray(roles) && roles.length > 0) {
           options.content = roles.map((roleId) => `<@&${roleId}>`).join(" ");

@@ -175,7 +175,7 @@ async function sanction(client, serveur) {
 
   if (
     !configStaff["Sanction Staff"].active ||
-    !configStaff["Sanction Staff"].Salon
+    !configStaff["Sanction Staff"].Salon.valeur
   )
     return;
 
@@ -236,8 +236,8 @@ async function sanction(client, serveur) {
     } :\n\n${lignes.join("\n")}`;
 
     await sendSanctionMessage(
-      configStaff["Sanction Staff"].Salon,
-      configStaff["Sanction Staff"].Role,
+      configStaff["Sanction Staff"].Salon.valeur,
+      configStaff["Sanction Staff"].Role.valeur,
       embedMessage,
       serveur,
       client,

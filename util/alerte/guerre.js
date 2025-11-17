@@ -134,13 +134,15 @@ async function guerre(client) {
       if (nouvellesGuerres.length > 0) {
         if (
           config_forum.Guerre?.active &&
-          config_forum.Guerre?.Salon &&
+          config_forum.Guerre?.Salon.valeur &&
           config_forum.Guerre?.Forum
         ) {
-          const salon = client.channels.cache.get(config_forum.Guerre.Salon);
+          const salon = client.channels.cache.get(
+            config_forum.Guerre.Salon.valeur,
+          );
           if (!salon) {
             console.warn(
-              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Guerre.Salon})`,
+              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Guerre.Salon.valeur})`,
             );
           } else {
             let rolePingDone = false;
@@ -162,7 +164,7 @@ async function guerre(client) {
 
               try {
                 let sentMessage;
-                const guerreRoles = config_forum.Guerre?.Role;
+                const guerreRoles = config_forum.Guerre?.Role.valeur;
 
                 if (
                   Array.isArray(guerreRoles) &&
@@ -225,11 +227,11 @@ async function guerre(client) {
 
       if (
         config_forum["Guerre non traitée"]?.active &&
-        config_forum["Guerre non traitée"]?.Salon &&
+        config_forum["Guerre non traitée"]?.Salon.valeur &&
         config_forum["Guerre non traitée"]?.Temps
       ) {
         const salonNonTraitee = client.channels.cache.get(
-          config_forum["Guerre non traitée"].Salon,
+          config_forum["Guerre non traitée"].Salon.valeur,
         );
         if (!salonNonTraitee) {
           console.warn(
@@ -266,13 +268,17 @@ async function guerre(client) {
             try {
               let sentMessage;
               if (
-                Array.isArray(config_forum["Guerre non traitée"]?.Role) &&
-                config_forum["Guerre non traitée"].Role.length > 0 &&
+                Array.isArray(
+                  config_forum["Guerre non traitée"]?.Role.valeur,
+                ) &&
+                config_forum["Guerre non traitée"].Role.valeur.length > 0 &&
                 !rolePingDone
               ) {
                 const roleMentions = config_forum[
                   "Guerre non traitée"
-                ].Role.map((roleId) => `<@&${roleId}>`).join(", ");
+                ].Role.valeur
+                  .map((roleId) => `<@&${roleId}>`)
+                  .join(", ");
 
                 sentMessage = await salonNonTraitee.send({
                   embeds: [embedAlerte],

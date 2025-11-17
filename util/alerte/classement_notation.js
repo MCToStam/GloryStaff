@@ -34,8 +34,8 @@ async function classement_notation(client) {
     const configuration = getData(`data/${serveur}/config-notation.json`);
     const classementConfig = configuration.classement;
 
-    if (classementConfig?.active && classementConfig.Salon) {
-      const channelId = classementConfig.Salon;
+    if (classementConfig?.active && classementConfig.Salon.valeur) {
+      const channelId = classementConfig.Salon.valeur;
       const channel = await client.channels.fetch(channelId);
 
       if (channel) {
@@ -125,10 +125,10 @@ async function classement_notation(client) {
             );
 
           let sentMessage;
-          if (classementConfig.Role) {
-            const roleMentions = classementConfig.Role.map(
-              (roleId) => `<@&${roleId}>`,
-            ).join(", ");
+          if (classementConfig.Role.valeur) {
+            const roleMentions = classementConfig.Role.valeur
+              .map((roleId) => `<@&${roleId}>`)
+              .join(", ");
 
             const roleTextDisplay = new TextDisplayBuilder().setContent(
               roleMentions,

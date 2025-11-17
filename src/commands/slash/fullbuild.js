@@ -81,7 +81,7 @@ module.exports = {
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
     }
 
-    if (!configExpansion["Full Build"]?.Salon) {
+    if (!configExpansion["Full Build"]?.Salon.valeur) {
       const erreurEmbed = new EmbedBuilder()
         .setTitle("Erreur")
         .setColor(config.errorcolor)
@@ -108,10 +108,10 @@ module.exports = {
       );
 
     const salon = interaction.client.channels.fetch(
-      configExpansion["Full Build"]?.Salon,
+      configExpansion["Full Build"]?.Salon.valeur,
     );
 
-    const roleIds = configExpansion["Full Build"]?.Role;
+    const roleIds = configExpansion["Full Build"]?.Role.valeur;
 
     const roleMentions =
       Array.isArray(roleIds) && roleIds.length > 0

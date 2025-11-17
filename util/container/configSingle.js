@@ -40,105 +40,92 @@ async function containerSingle(serveur, systemName, configData, file) {
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(`**Statut :** ${status}`));
 
-  if ("Salon" in settings) {
-    container
-      .addTextDisplayComponents((t) => t.setContent("\n\n**Salon :**"))
-      .addActionRowComponents((row) =>
-        row.setComponents(
-          new ChannelSelectMenuBuilder()
-            .setDisabled(!settings.active)
-            .setCustomId(`config_salon-${file}-${systemName}`)
-            .setPlaceholder("Choisit un salon")
-            .setChannelTypes(
-              systemName === "radio"
-                ? [2, 13]
-                : systemName === "Guide" ||
-                    systemName === "Modérateur" ||
-                    systemName === "Builder"
-                  ? [0, 5, 10, 11, 12, 15]
-                  : [0, 5, 10, 11, 12],
-            )
-            .setDefaultChannels(settings.Salon ? [settings.Salon] : []),
-        ),
-      );
-  }
+  const pendingButtons = [];
 
-  if ("Role" in settings) {
-    container
-      .addTextDisplayComponents((t) => t.setContent("\n**Rôle :**"))
-      .addActionRowComponents((row) =>
-        row.setComponents(
-          new RoleSelectMenuBuilder()
-            .setDisabled(!settings.active)
-            .setCustomId(`config_role-${file}-${systemName}`)
-            .setPlaceholder("Choisit un rôle")
-            .setDefaultRoles(settings.Role || [])
-            .setMinValues(0)
-            .setMaxValues(25),
-        ),
-      );
-  }
+  for (const key of Object.keys(settings)) {
+    const item = settings[key];
 
-  if ("Grade" in settings) {
-    container
-      .addTextDisplayComponents((t) => t.setContent("\n\n**Grade :**"))
-      .addActionRowComponents((row) =>
-        row.setComponents(
-          new StringSelectMenuBuilder()
-            .setDisabled(!settings.active)
-            .setCustomId(`config_grade-${file}-${systemName}`)
-            .setPlaceholder("Choisit un grade")
-            .setOptions([
-              {
-                label: "Administrateur",
-                value: "config_grade-Administrateur",
-                default: settings.Grade === "Administrateur",
-              },
-              {
-                label: "Super-Modérateur",
-                value: "config_grade-Super-Modérateur",
-                default: settings.Grade === "Super-Modérateur",
-              },
-              {
-                label: "Modérateur Plus",
-                value: "config_grade-Modérateur Plus",
-                default: settings.Grade === "Modérateur Plus",
-              },
-              {
-                label: "Modérateur",
-                value: "config_grade-Modérateur",
-                default: settings.Grade === "Modérateur",
-              },
-              {
-                label: "Modérateur Test",
-                value: "config_grade-Modérateur Test",
-                default: settings.Grade === "Modérateur Test",
-              },
-              {
-                label: "Guide",
-                value: "config_grade-Guide",
-                default: settings.Grade === "Guide",
-              },
-            ]),
-        ),
-      );
-  }
+    if (key === "active") continue;
+    if (!item || typeof item !== "object" || !item.type) continue;
 
-  if (systemName === "répartition") {
-    container
-      .addSeparatorComponents((s) => s)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
+    switch (item.type) {
+      case "channel":
+        container
+          .addTextDisplayComponents((t) => t.setContent(`\n\n**${key} :**`))
+          .addActionRowComponents((row) =>
+            row.setComponents(
+              new ChannelSelectMenuBuilder()
+                .setDisabled(!settings.active)
+                .setCustomId(`config_${key}-${file}-${systemName}`)
+                .setPlaceholder("Choisit un salon")
+                .setChannelTypes(item.salonAutorise || [])
+                .setDefaultChannels(item.valeur ? [item.valeur] : []),
+            ),
+          );
+        break;
+
+      case "role":
+        container
+          .addTextDisplayComponents((t) => t.setContent(`\n\n**${key} :**`))
+          .addActionRowComponents((row) =>
+            row.setComponents(
+              new RoleSelectMenuBuilder()
+                .setDisabled(!settings.active)
+                .setCustomId(`config_${key}-${file}-${systemName}`)
+                .setPlaceholder("Choisit un rôle")
+                .setDefaultRoles(item.valeur ? item.valeur : [])
+                .setMinValues(0)
+                .setMaxValues(25),
+            ),
+          );
+        break;
+
+      case "grade":
+        container
+          .addTextDisplayComponents((t) => t.setContent(`\n\n**${key} :**`))
+          .addActionRowComponents((row) =>
+            row.setComponents(
+              new StringSelectMenuBuilder()
+                .setDisabled(!settings.active)
+                .setCustomId(`config_${key}-${file}-${systemName}`)
+                .setPlaceholder("Choisit un grade")
+                .setOptions(
+                  [
+                    "Administrateur",
+                    "Super-Modérateur",
+                    "Modérateur Plus",
+                    "Modérateur",
+                    "Modérateur Test",
+                    "Guide",
+                  ].map((g) => ({
+                    label: g,
+                    value: `config_grade-${g}`,
+                    default: item.valeur === g,
+                  })),
+                ),
+            ),
+          );
+        break;
+
+      case "button":
+        pendingButtons.push(
           new ButtonBuilder()
-            .setCustomId("notation_module-automatique")
-            .setLabel("Mélanger aléatoirement")
-            .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-            .setCustomId("notation_module-manual")
-            .setLabel("Définir manuellement")
-            .setStyle(ButtonStyle.Primary),
-        ),
+            .setCustomId(item.customId)
+            .setLabel(key)
+            .setStyle(ButtonStyle[item.style] ?? ButtonStyle.Secondary),
+        );
+        break;
+    }
+  }
+
+  if (pendingButtons.length > 0) {
+    container.addSeparatorComponents((s) => s);
+
+    for (let i = 0; i < pendingButtons.length; i += 5) {
+      container.addActionRowComponents(
+        new ActionRowBuilder().addComponents(...pendingButtons.slice(i, i + 5)),
       );
+    }
   }
 
   container
@@ -170,3 +157,5 @@ async function containerSingle(serveur, systemName, configData, file) {
 }
 
 module.exports = { containerSingle };
+
+/*.setChannelTypes( systemName === "radio" ? [2, 13] : systemName === "Guide" || systemName === "Modérateur" || systemName === "Builder" ? [0, 5, 10, 11, 12, 15] : [0, 5, 10, 11, 12], )*/

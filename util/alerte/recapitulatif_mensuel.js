@@ -231,10 +231,10 @@ async function recapitulatif_mensuel(client) {
 
     if (
       serverConfig["Récapitulatif Mensuel"].active &&
-      serverConfig["Récapitulatif Mensuel"].Salon
+      serverConfig["Récapitulatif Mensuel"].Salon.valeur
     ) {
       const channel = await client.channels
-        .fetch(serverConfig["Récapitulatif Mensuel"].Salon)
+        .fetch(serverConfig["Récapitulatif Mensuel"].Salon.valeur)
         .catch(() => null);
 
       if (channel) {
@@ -321,7 +321,7 @@ async function recapitulatif_mensuel(client) {
           components: [actionRow],
         };
 
-        const roles = serverConfig["Récapitulatif Mensuel"].Role;
+        const roles = serverConfig["Récapitulatif Mensuel"].Role.valeur;
 
         if (Array.isArray(roles) && roles.length > 0) {
           options.content = roles.map((roleId) => `<@&${roleId}>`).join(" ");

@@ -47,8 +47,8 @@ async function disband_14h00(client) {
     const configuration = getData(`data/${serveur}/config-disband.json`);
     const messageConfig = configuration["Pays Pillable ( 14h )"];
 
-    if (messageConfig?.active && messageConfig?.Salon) {
-      const channelId = messageConfig.Salon;
+    if (messageConfig?.active && messageConfig?.Salon.valeur) {
+      const channelId = messageConfig.Salon.valeur;
       const channel = await client.channels.fetch(channelId);
 
       if (channel) {
@@ -85,13 +85,13 @@ async function disband_14h00(client) {
             };
 
             if (
-              messageConfig.Role &&
-              Array.isArray(messageConfig.Role) &&
-              messageConfig.Role.length > 0
+              messageConfig.Role.valeur &&
+              Array.isArray(messageConfig.Role.valeur) &&
+              messageConfig.Role.valeur.length > 0
             ) {
-              options.content = messageConfig.Role.map(
-                (roleId) => `<@&${roleId}>`,
-              ).join(", ");
+              options.content = messageConfig.Role.valeur
+                .map((roleId) => `<@&${roleId}>`)
+                .join(", ");
             }
             const sentMessage = await channel.send(options);
             if (channel.type === "GUILD_NEWS") {
@@ -235,13 +235,13 @@ async function disband_14h00(client) {
             };
 
             if (
-              messageConfig.Role &&
-              Array.isArray(messageConfig.Role) &&
-              messageConfig.Role.length > 0
+              messageConfig.Role.valeur &&
+              Array.isArray(messageConfig.Role.valeur) &&
+              messageConfig.Role.valeur.length > 0
             ) {
-              options.content = messageConfig.Role.map(
-                (roleId) => `<@&${roleId}>`,
-              ).join(", ");
+              options.content = messageConfig.Role.valeur
+                .map((roleId) => `<@&${roleId}>`)
+                .join(", ");
             }
             const sentMessage = await channel.send(options);
             if (channel.type === "GUILD_NEWS") {
@@ -297,8 +297,8 @@ async function disband_18h15(client) {
     const configuration = getData(`data/${serveur}/config-disband.json`);
     const messageConfig = configuration["Pays Disband ( 18h15 )"];
 
-    if (messageConfig?.active && messageConfig?.Salon) {
-      const channelId = messageConfig.Salon;
+    if (messageConfig?.active && messageConfig?.Salon.valeur) {
+      const channelId = messageConfig.Salon.valeur;
       const channel = await client.channels.fetch(channelId);
 
       if (channel) {
@@ -439,13 +439,13 @@ async function disband_18h15(client) {
             components: [actionRow],
           };
           if (
-            messageConfig.Role &&
-            Array.isArray(messageConfig.Role) &&
-            messageConfig.Role.length > 0
+            messageConfig.Role.valeur &&
+            Array.isArray(messageConfig.Role.valeur) &&
+            messageConfig.Role.valeur.length > 0
           ) {
-            options.content = messageConfig.Role.map(
-              (roleId) => `<@&${roleId}>`,
-            ).join(", ");
+            options.content = messageConfig.Role.valeur
+              .map((roleId) => `<@&${roleId}>`)
+              .join(", ");
           }
           const sentMessage = await channel.send(options);
           if (channel.type === "GUILD_NEWS") {

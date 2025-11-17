@@ -12,7 +12,7 @@ module.exports = {
 
     const serveur = await getServeur(interaction);
     const configData = getData(`data/${serveur}/config-${file}.json`);
-    configData[systemName].Salon = interaction.values[0];
+    configData[systemName].Salon.valeur = interaction.values[0];
     saveData(`data/${serveur}/config-${file}.json`, configData);
     const container = await containerSingle(
       serveur,

@@ -14,7 +14,7 @@ async function rappel_onu(client, server, jour) {
     for (let i = 1; i <= 3; i++) {
       const rappel = configData[`Rappel ${i}`];
 
-      if (rappel.active && rappel.Salon && rappel.Temps) {
+      if (rappel.active && rappel.Salon.valeur && rappel.Temps) {
         const currentTime = new Date();
         const timeZone = "Europe/Paris";
         const options = {
@@ -74,11 +74,11 @@ async function rappel_onu(client, server, jour) {
               .setStyle(ButtonStyle.Primary),
           );
 
-          const channel = await client.channels.fetch(rappel.Salon);
+          const channel = await client.channels.fetch(rappel.Salon.valeur);
           let sentMessage;
-          if (rappel.Role) {
+          if (rappel.Role.valeur) {
             sentMessage = await channel.send({
-              content: `<@&${rappel.Role}>`,
+              content: `<@&${rappel.Role.valeur}>`,
               embeds: [embed],
               files: [attachment],
               components: [actionRow],

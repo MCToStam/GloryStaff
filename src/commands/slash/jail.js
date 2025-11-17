@@ -135,7 +135,7 @@ module.exports = {
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
     }
 
-    if (!configJail.jail?.Salon || !configJail.jail?.Grade) {
+    if (!configJail.jail?.Salon.valeur || !configJail.jail?.Grade.valeur) {
       const erreurEmbed = new EmbedBuilder()
         .setTitle("Erreur")
         .setColor(config.errorcolor)
@@ -187,7 +187,7 @@ module.exports = {
     }
 
     const staffData = getData(`data/${serveur}/staff-serveur.json`);
-    const roleAutorise = configJail.jail.Grade;
+    const roleAutorise = configJail.jail.Grade.valeur;
 
     const gradesHierarchie = [
       "Administrateur",
@@ -278,7 +278,7 @@ module.exports = {
     );
 
     const salon = await interaction.client.channels.fetch(
-      configJail.jail?.Salon,
+      configJail.jail?.Salon.valeur,
     );
 
     const files = imageBuffer

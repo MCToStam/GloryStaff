@@ -83,7 +83,7 @@ module.exports = {
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
     }
 
-    if (!configExpansion["Conquête Territoriale"]?.Salon) {
+    if (!configExpansion["Conquête Territoriale"]?.Salon.valeur) {
       const erreurEmbed = new EmbedBuilder()
         .setTitle("Erreur")
         .setColor(config.errorcolor)
@@ -110,10 +110,10 @@ module.exports = {
       );
 
     const salon = interaction.client.channels.fetch(
-      configExpansion["Conquête Territoriale"]?.Salon,
+      configExpansion["Conquête Territoriale"]?.Salon.valeur,
     );
 
-    const roleIds = configExpansion["Conquête Territoriale"]?.Role;
+    const roleIds = configExpansion["Conquête Territoriale"]?.Role.valeur;
 
     const roleMentions =
       Array.isArray(roleIds) && roleIds.length > 0

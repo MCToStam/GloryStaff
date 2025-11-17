@@ -18,12 +18,11 @@ async function radio(client) {
     };
 
     for (const server of config.liste_serveur) {
-      const fileContent = getData(`data/${server}/config-radio.json`);
-      const config = JSON.parse(fileContent);
+      const config = getData(`data/${server}/config-radio.json`);
 
-      if (config.radio?.active === true && config.radio?.Salon) {
+      if (config.radio?.active === true && config.radio?.Salon.valeur) {
         const voiceChannel = await client.channels
-          .fetch(config.radio.Salon)
+          .fetch(config.radio.Salon.valeur)
           .catch(() => null);
         if (!voiceChannel) {
           console.warn(
@@ -35,7 +34,7 @@ async function radio(client) {
         const guild = voiceChannel.guild;
         if (!guild) {
           console.warn(
-            `Impossible de récupérer la guilde pour le salon ${config.radio.Salon}`,
+            `Impossible de récupérer la guilde pour le salon ${config.radio.Salon.valeur}`,
           );
           continue;
         }

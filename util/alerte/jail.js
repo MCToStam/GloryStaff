@@ -11,7 +11,10 @@ async function jail(client) {
   for (const server of config.liste_serveur) {
     try {
       const jailConfigData = getData(`data/${server}/config-jail.json`);
-      if (jailConfigData["jail"].active && jailConfigData["jail"].Salon) {
+      if (
+        jailConfigData["jail"].active &&
+        jailConfigData["jail"].Salon.valeur
+      ) {
         const jailData = getData(`data/${server}/jail.json`);
 
         const hasJailedPlayers = Object.values(jailData).some((groupEntries) =>
@@ -66,7 +69,7 @@ async function jail(client) {
                       jailEntry.threadId,
                     );
                     if (channel.isThread()) {
-                      const jailRoles = jailConfigData.jail?.Role;
+                      const jailRoles = jailConfigData.jail?.Role.valeur;
 
                       if (jailRoles) {
                         const roleMentions = jailRoles

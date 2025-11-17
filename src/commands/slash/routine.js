@@ -42,7 +42,10 @@ module.exports = {
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
     }
 
-    if (!configRoutine.routine?.Salon || !configRoutine.routine?.Grade) {
+    if (
+      !configRoutine.routine?.Salon.valeur ||
+      !configRoutine.routine?.Grade.valeur
+    ) {
       const erreurEmbed = new EmbedBuilder()
         .setTitle("Erreur")
         .setColor(config.errorcolor)
@@ -94,7 +97,7 @@ module.exports = {
     }
 
     const staffData = getData(`data/${serveur}/staff-serveur.json`);
-    const roleAutorise = configRoutine.routine.Grade;
+    const roleAutorise = configRoutine.routine.Grade.valeur;
 
     const gradesHierarchie = [
       "Administrateur",

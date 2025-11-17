@@ -25,7 +25,7 @@ async function repartition_notation(client) {
       );
       if (
         repartitionData["répartition"].active &&
-        repartitionData["répartition"].Salon &&
+        repartitionData["répartition"].Salon.valeur &&
         hasNumberKey
       ) {
         let linkData;
@@ -107,12 +107,12 @@ async function repartition_notation(client) {
           );
 
         const salon = client.channels.cache.get(
-          repartitionData["répartition"].Salon,
+          repartitionData["répartition"].Salon.valeur,
         );
-        if (repartitionData["répartition"]?.Role) {
-          const roleMentions = repartitionData["répartition"].Role.map(
-            (roleId) => `<@&${roleId}>`,
-          ).join(", ");
+        if (repartitionData["répartition"]?.Role.valeur) {
+          const roleMentions = repartitionData["répartition"].Role.valeur
+            .map((roleId) => `<@&${roleId}>`)
+            .join(", ");
 
           const roleTextDisplay = new TextDisplayBuilder().setContent(
             roleMentions,
