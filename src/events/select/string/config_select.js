@@ -1,4 +1,4 @@
-const { getData } = require("../../../../util/module/getAndSaveData");
+const { getData, saveData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
 const { containerSingle } = require("../../../../util/container/configSingle");
 
@@ -8,10 +8,13 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [_, file, systemName] = interaction.values[0].split("-");
+    const [_, file, systemName, param] = interaction.customId.split("-");
+    const valeur = interaction.values[0].replace("config_select-", "");
 
     const serveur = await getServeur(interaction);
     const configData = getData(`data/${serveur}/config-${file}.json`);
+    configData[systemName][param].valeur = valeur;
+    saveData(`data/${serveur}/config-${file}.json`, configData);
     const container = await containerSingle(
       serveur,
       systemName,

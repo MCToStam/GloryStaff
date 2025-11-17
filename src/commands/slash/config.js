@@ -43,7 +43,7 @@ module.exports = {
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
-    /*const { errorContainer } = await errorStaffContainer(serveur);
+    const { errorContainer } = await errorStaffContainer(serveur);
 
     if (errorContainer) {
       return interaction.reply({
@@ -62,7 +62,7 @@ module.exports = {
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
-    }*/
+    }
 
     const type = interaction.options.getString("type").toLowerCase();
 

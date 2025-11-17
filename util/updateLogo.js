@@ -16,14 +16,30 @@ async function updateLogo(client, config) {
       const files = getFiles(`data/${serveur}`);
 
       const channelIds = [];
+
       for (const file of files) {
         if (!file.startsWith("config-") || !file.endsWith(".json")) continue;
 
         const data = getData(`data/${serveur}/${file}`);
+
         for (const key in data) {
           const entry = data[key];
-          if (entry && entry.Salon) {
-            channelIds.push(entry.Salon);
+          for (const param in entry) {
+            const paramValue = entry[param];
+            if (
+              paramValue &&
+              typeof paramValue === "object" &&
+              paramValue.type === "channel"
+            ) {
+              const valeur = paramValue.valeur;
+              if (Array.isArray(valeur)) {
+                for (const salon of valeur) {
+                  channelIds.push(salon);
+                }
+              } else if (typeof valeur === "string") {
+                channelIds.push(valeur);
+              }
+            }
           }
         }
       }

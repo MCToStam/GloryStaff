@@ -369,11 +369,11 @@ async function recapitulatif_hebdomadaire(client) {
 
         const actionRow = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId(`notation-recap-${id}`)
+            .setCustomId(`classement_hebdomadaire-notation-${id}`)
             .setLabel("Classement détaillées : Notations")
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
-            .setCustomId(`connexion-recap-${id}`)
+            .setCustomId(`classement_hebdomadaire-connexion-${id}`)
             .setLabel("Classement détaillées : Connexion")
             .setStyle(ButtonStyle.Primary),
         );

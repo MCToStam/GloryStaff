@@ -53,7 +53,7 @@ async function disband_14h00(client) {
 
       if (channel) {
         try {
-          if (messageConfig.Prévisualisation !== "Oui") {
+          if (messageConfig.Prévisualisation.valeur !== "Oui") {
             const embed = new EmbedBuilder()
               .setTitle("💥 C'est l'heure des disbands !")
               .setDescription(

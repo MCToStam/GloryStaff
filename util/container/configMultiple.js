@@ -44,13 +44,13 @@ async function containerMultiple(serveur, file, configData) {
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId(`config_select-${file}`)
+          .setCustomId(`config_select_subconfig-${file}`)
           .setPlaceholder("Choisissez un module")
           .addOptions(
             Object.keys(configData).map((system) => ({
               label: system,
               description: `Configurer ${system}`,
-              value: `config_select-${file}-${system}`,
+              value: `config_select_subconfig-${file}-${system}`,
             })),
           ),
       ),
