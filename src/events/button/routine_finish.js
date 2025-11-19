@@ -94,9 +94,12 @@ module.exports = {
 
       const configRoutine = getData(`data/${serveur}/config-routine.json`);
 
-      if (configRoutine.routine?.active && configRoutine.routine?.Salon) {
+      if (
+        configRoutine.routine?.active &&
+        configRoutine.routine?.Salon.valeur
+      ) {
         const salon = await interaction.client.channels.fetch(
-          configRoutine.routine?.Salon,
+          configRoutine.routine?.Salon.valeur,
         );
         const roleMention = configRoutine.routine?.Role;
 

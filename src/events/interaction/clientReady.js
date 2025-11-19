@@ -1,7 +1,7 @@
 const config = require("../../../config");
 const { ActivityType } = require("discord.js");
-const axios = require("axios");
 const log = require("../../../util/module/log");
+const getServerPlayer = require("../../../util/module/getServerPlayer");
 const { updateLogo } = require("../../../util/updateLogo");
 const { botLaunch } = require("../../../main.js");
 const { checkEmojiCache } = require("../../../util/module/emoji");
@@ -17,6 +17,9 @@ const {
 } = require("../../../util/alerte/disband");
 const { guerre } = require("../../../util/alerte/guerre");
 const { jail } = require("../../../util/alerte/jail");
+const {
+  joueurConnecteSalon,
+} = require("../../../util/alerte/joueurConnecteSalon");
 const { onu } = require("../../../util/alerte/onu");
 const { plainte } = require("../../../util/alerte/plainte");
 const { rappel_onu } = require("../../../util/alerte/rappel_onu");
@@ -32,29 +35,13 @@ const {
 const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
 
-async function getPlayerCount(server) {
-  try {
-    const response = await axios.get(
-      `${config.glorybot_url}/api/joueurConnecte?serveur=${server}&administrator=true`,
-    );
-    if (
-      Array.isArray(response.data) &&
-      response.data.length > 0 &&
-      response.data[0].nombre !== undefined
-    ) {
-      return response.data[0].nombre;
-    }
-  } catch (error) {}
-  return null;
-}
-
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
-  const playerCount = await getPlayerCount(server);
+  const playerCount = await getServerPlayer(server);
 
   const statusName =
     playerCount !== null
-      ? `${playerCount} joueurs connectés sur NationsGlory ${server.toUpperCase()}`
+      ? `${playerCount.nombre} joueurs connectés sur NationsGlory ${server.toUpperCase()}`
       : `NationsGlory ${server.toUpperCase()}`;
 
   client.user.setPresence({
@@ -179,9 +166,10 @@ module.exports = async (client, interaction) => {
   );
 
   cron.schedule(
-    "*/2 * * * *",
+    "*/1 * * * *",
     async () => {
       await jail(client);
+      await joueurConnecteSalon(client);
     },
     {
       timezone: "Europe/Paris",

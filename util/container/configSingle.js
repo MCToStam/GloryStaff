@@ -56,7 +56,7 @@ async function containerSingle(serveur, systemName, configData, file) {
             row.setComponents(
               new ChannelSelectMenuBuilder()
                 .setDisabled(!settings.active)
-                .setCustomId(`config_${key}-${file}-${systemName}`)
+                .setCustomId(`config_salon-${file}-${systemName}`)
                 .setPlaceholder("Choisit un salon")
                 .setChannelTypes(item.salonAutorise || [])
                 .setDefaultChannels(item.valeur ? [item.valeur] : []),
@@ -71,7 +71,7 @@ async function containerSingle(serveur, systemName, configData, file) {
             row.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(!settings.active)
-                .setCustomId(`config_${key}-${file}-${systemName}`)
+                .setCustomId(`config_role-${file}-${systemName}`)
                 .setPlaceholder("Choisit un rôle")
                 .setDefaultRoles(item.valeur ? item.valeur : [])
                 .setMinValues(0)
@@ -87,7 +87,7 @@ async function containerSingle(serveur, systemName, configData, file) {
             row.setComponents(
               new StringSelectMenuBuilder()
                 .setDisabled(!settings.active)
-                .setCustomId(`config_${key}-${file}-${systemName}`)
+                .setCustomId(`config_grade-${file}-${systemName}`)
                 .setPlaceholder("Choisit un grade")
                 .setOptions(
                   [

@@ -39,7 +39,7 @@ module.exports = {
             .setPlaceholder(q.placeholder || "")
             .setRequired(q.obligatoire)
             .setMaxLength(q.maxCara || 100)
-            .setValue(q.valeur),
+            .setValue(q.valeur || ""),
         );
 
       modal.addLabelComponents(input);

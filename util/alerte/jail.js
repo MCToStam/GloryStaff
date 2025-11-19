@@ -1,4 +1,5 @@
 const config = require("../../config");
+const getServerPlayer = require("../../util/module/getServerPlayer");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const axios = require("axios");
 const {
@@ -25,10 +26,9 @@ async function jail(client) {
           continue;
         }
 
-        const apiUrl = `${config.glorybot_url}/api/joueurConnecte?serveur=${server}&administrator=true`;
         try {
-          const response = await axios.get(apiUrl);
-          const connectedPlayers = response.data[0]?.joueur || [];
+          const data = await getServerPlayer(server);
+          const connectedPlayers = data.liste;
 
           for (const group in jailData) {
             if (jailData.hasOwnProperty(group)) {
