@@ -8,16 +8,6 @@ async function joueurConnecteSalon(client) {
       const joueurConnecteConfigData = getData(
         `data/${server}/config-joueurconnecte.json`,
       );
-      if (
-        joueurConnecteConfigData &&
-        joueurConnecteConfigData["joueurconnecte"].active &&
-        joueurConnecteConfigData["joueurconnecte"].Salon.valeur
-      ) {
-        console.log(
-          joueurConnecteConfigData["joueurconnecte"]["Texte Affiché"]
-            .questions[0].valeur,
-        );
-      }
 
       if (
         joueurConnecteConfigData &&

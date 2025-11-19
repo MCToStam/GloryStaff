@@ -166,7 +166,7 @@ module.exports = async (client, interaction) => {
   );
 
   cron.schedule(
-    "*/1 * * * *",
+    "*/2 * * * *",
     async () => {
       await jail(client);
       await joueurConnecteSalon(client);
