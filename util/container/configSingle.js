@@ -20,9 +20,9 @@ async function containerSingle(serveur, systemName, configData, file) {
     expansionterritoriale: "Expansion Territoriale",
     forum: "Forum",
     jail: "Jail",
+    joueurconnecte: "Joueur(s) Connecté(s)",
     notation: "Notation",
     onu: "ONU",
-    radio: "NGRadio",
     recap: "Récapitulatif",
     routine: "Routine",
     staff: "Staff",
@@ -136,6 +136,30 @@ async function containerSingle(serveur, systemName, configData, file) {
                 ),
             ),
           );
+        break;
+
+      case "modal":
+        let textContent = `\n\n**${key} :**`;
+
+        if (item.questions && Array.isArray(item.questions)) {
+          item.questions.forEach((q) => {
+            textContent += `\n- ${q.texte}\n*${q.valeur || ""}*`;
+          });
+        }
+
+        container.addSectionComponents((section) =>
+          section
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(textContent),
+            )
+            .setButtonAccessory((button) =>
+              button
+                .setCustomId(`config_modal-${file}-${systemName}-${key}`)
+                .setLabel(item.label)
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(!settings.active),
+            ),
+        );
         break;
     }
   }

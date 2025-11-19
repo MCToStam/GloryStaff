@@ -389,12 +389,12 @@ app.post("/staff", async (req, res) => {
         const configStaff = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
         if (
           configStaff["Affichage Staff"].active &&
-          configStaff["Affichage Staff"].Salon &&
+          configStaff["Affichage Staff"].Salon.valeur &&
           configStaff["Affichage Staff"].Message
         ) {
           try {
             const channel = await client.channels.fetch(
-              configStaff["Affichage Staff"].Salon,
+              configStaff["Affichage Staff"].Salon.valeur,
             );
             if (channel) {
               const message = await channel.messages.fetch(
@@ -606,12 +606,12 @@ app.post("/staff_old", async (req, res) => {
         const configStaff = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
         if (
           configStaff["Affichage Staff"].active &&
-          configStaff["Affichage Staff"].Salon &&
+          configStaff["Affichage Staff"].Salon.valeur &&
           configStaff["Affichage Staff"].Message
         ) {
           try {
             const channel = await client.channels.fetch(
-              configStaff["Affichage Staff"].Salon,
+              configStaff["Affichage Staff"].Salon.valeur,
             );
             if (channel) {
               const message = await channel.messages.fetch(
@@ -1514,20 +1514,20 @@ app.post("/api/attenteStaff", async (req, res) => {
   }
 
   const attenteStaff = configData.attentestaff;
-  if (!attenteStaff?.active || !attenteStaff?.Salon) {
+  if (!attenteStaff?.active || !attenteStaff?.Salon.valeur) {
     return res.status(403).json({
       error: "Le système d’attente staff est désactivé ou mal configuré.",
     });
   }
 
   try {
-    const channel = await client.channels.fetch(attenteStaff.Salon);
+    const channel = await client.channels.fetch(attenteStaff.Salon.valeur);
     if (!channel) {
       return res.status(404).json({ error: "Salon cible invalide." });
     }
 
-    const mentions = Array.isArray(attenteStaff.Role)
-      ? attenteStaff.Role.map((roleId) => `<@&${roleId}>`).join(" ")
+    const mentions = Array.isArray(attenteStaff.Role.valeur)
+      ? attenteStaff.Role.valeur.map((roleId) => `<@&${roleId}>`).join(" ")
       : "";
     const embed = new EmbedBuilder()
       .setTitle("🕓 Attente Staff")
