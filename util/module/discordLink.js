@@ -21,9 +21,7 @@ async function discordLink(discordId) {
     } else {
       console.warn("⚠️ API get-ng indisponible, utilisation du fichier local.");
     }
-  } catch (err) {
-    console.warn("⚠️ Erreur API get-ng :", err);
-  }
+  } catch (err) {}
 
   try {
     const localData = (await getData("data/data/api_get_ng.json")) ?? {};
@@ -138,7 +136,6 @@ async function discordStaff(discordId, serveur = "all") {
 
     return { pseudonym, servers: userServers, container };
   } catch (err) {
-    console.error("❌ Erreur discordStaff :", err);
     return { pseudonym, servers: [], container: false };
   }
 }
