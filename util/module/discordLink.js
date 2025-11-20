@@ -5,21 +5,34 @@ const {
   ButtonStyle,
   ActionRowBuilder,
 } = require("discord.js");
+const { getData } = require("../../util/module/getAndSaveData");
 
-async function discordLink(discordId = null) {
+async function discordLink(discordId) {
   try {
-    let url = `${config.glorybot_url}/api/get-ng`;
-    if (discordId !== null) {
-      url += `?discordId=${encodeURIComponent(discordId)}`;
-    }
+    const url = discordId
+      ? `${config.glorybot_url}/api/get-ng?discordId=${encodeURIComponent(discordId)}`
+      : `${config.glorybot_url}/api/get-ng`;
 
     const response = await fetch(url);
-    if (!response.ok) return null;
 
-    const data = await response.json();
+    if (response.ok) {
+      const data = await response.json();
+      return discordId ? (data.pseudo ?? null) : data;
+    } else {
+      console.warn("⚠️ API get-ng indisponible, utilisation du fichier local.");
+    }
+  } catch (err) {
+    console.warn("⚠️ Erreur API get-ng :", err);
+  }
 
-    return discordId !== null ? data.pseudo || null : data;
-  } catch (e) {
+  try {
+    const localData = (await getData("data/data/api_get_ng.json")) ?? {};
+    return discordId ? (localData[discordId] ?? null) : localData;
+  } catch (err) {
+    console.error(
+      "❌ Erreur lors de la lecture du fichier api_get_ng.json :",
+      err,
+    );
     return null;
   }
 }
@@ -28,73 +41,106 @@ async function discordStaff(discordId, serveur = "all") {
   const pseudonym = await discordLink(discordId);
   if (!pseudonym) return { pseudonym: null, servers: [], container: false };
 
-  const serveurs =
-    serveur === "all"
-      ? config.liste_serveur
-      : Array.isArray(serveur)
-        ? serveur
-        : [serveur];
-
   if (config.developpeur.includes(discordId)) {
-    return { pseudonym, servers: serveurs, container: false };
+    return {
+      pseudonym,
+      servers:
+        serveur === "all"
+          ? config.liste_serveur
+          : Array.isArray(serveur)
+            ? serveur
+            : [serveur],
+      container: false,
+    };
   }
 
-  const servers = [];
-  let container;
+  let allStaff = null;
 
-  await Promise.all(
-    serveurs.map(async (srv) => {
-      try {
-        const response = await fetch(
-          `${config.glorybot_url}/api/serveur?serveur=${srv}`,
-          {
-            headers: {
-              Authorization: `Bearer ${config.glorybot_token}`,
-            },
-          },
-        );
+  try {
+    const response = await fetch(`${config.glorybot_url}/api/allStaff`, {
+      headers: { Authorization: `Bearer ${config.glorybot_token}` },
+    });
 
-        if (!response.ok) throw new Error(`Erreur serveur ${srv}`);
+    if (!response.ok) throw new Error("API non fonctionnelle");
 
-        const data = await response.json();
+    allStaff = await response.json();
+  } catch (err) {
+    console.warn(
+      "⚠️ Impossible d'accéder à /api/allStaff, utilisation des données locales...",
+    );
 
-        const isAdmin =
-          data.staff?.administrateur?.includes(pseudonym) ?? false;
-        const isSuperMod =
-          data.staff?.super_moderateur?.includes(pseudonym) ?? false;
-
-        if (isAdmin || isSuperMod) {
-          servers.push(srv);
-        }
-      } catch (err) {
-        console.error(`Erreur sur le serveur ${srv}:`, err);
-      }
-    }),
-  );
-
-  if (servers.length === 0 && typeof serveur === String) {
-    const capitalizedServeur =
-      serveur.charAt(0).toUpperCase() + serveur.slice(1);
-    const emojiId = config.emoji[serveur.toLowerCase()];
-
-    container = new ContainerBuilder()
-      .setAccentColor(config.colors.error)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("## ❌ Permission Manquante"),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `Tu n'as pas la permission d'effectuer cette action ${
-            serveur !== "all"
-              ? `pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** `
-              : "!"
-          }`,
-        ),
+    try {
+      allStaff = getData("data/api_api_all_staff.json");
+    } catch (fileErr) {
+      console.error(
+        "❌ Erreur lors de la récupération du fichier local :",
+        fileErr,
       );
+      return { pseudonym, servers: [], container: false };
+    }
   }
 
-  return { pseudonym, servers, container: container || false };
+  try {
+    const targetServers =
+      serveur === "all"
+        ? config.liste_serveur
+        : Array.isArray(serveur)
+          ? serveur
+          : [serveur];
+
+    const userServers = [];
+    const pseudoLower = pseudonym.toLowerCase();
+
+    for (const srvData of allStaff) {
+      if (!targetServers.includes(srvData.serveur)) continue;
+
+      if (!srvData._initialized) {
+        srvData.administrateurSet = new Set(
+          srvData.administrateur?.map((m) => m.toLowerCase()),
+        );
+        srvData.super_moderateurSet = new Set(
+          srvData.super_moderateur?.map((m) => m.toLowerCase()),
+        );
+        srvData._initialized = true;
+      }
+
+      if (
+        srvData.administrateurSet.has(pseudoLower) ||
+        srvData.super_moderateurSet.has(pseudoLower)
+      ) {
+        userServers.push(srvData.serveur);
+      }
+    }
+
+    let container = false;
+
+    if (userServers.length === 0 && typeof serveur === "string") {
+      const capitalizedServeur =
+        serveur.charAt(0).toUpperCase() + serveur.slice(1);
+      const emojiId = config.emoji[serveur.toLowerCase()];
+
+      container = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ❌ Permission Manquante"),
+        )
+        .addSeparatorComponents()
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `Tu n'as pas la permission d'effectuer cette action ${
+              serveur !== "all"
+                ? `pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** `
+                : "!"
+            }`,
+          ),
+        );
+    }
+
+    return { pseudonym, servers: userServers, container };
+  } catch (err) {
+    console.error("❌ Erreur discordStaff :", err);
+    return { pseudonym, servers: [], container: false };
+  }
 }
 
 async function errorStaffContainer(serveur) {

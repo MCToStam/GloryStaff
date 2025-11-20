@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { getData, saveData } = require("../../util/module/getAndSaveData");
+const { getData } = require("../../util/module/getAndSaveData");
 const Canvas = require("canvas");
 const config = require("../../config");
 

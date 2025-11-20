@@ -34,6 +34,8 @@ const {
 } = require("../../../util/alerte/repartition_notation");
 const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
+const { checkGradeSupport } = require("../../../util/checkGradeSupport");
+const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
@@ -41,7 +43,9 @@ async function cycleStatus(client, index = 0) {
 
   const statusName =
     playerCount !== null
-      ? `${playerCount.nombre} joueurs connectés sur NationsGlory ${server.toUpperCase()}`
+      ? `${
+          playerCount.nombre
+        } joueurs connectés sur NationsGlory ${server.toUpperCase()}`
       : `NationsGlory ${server.toUpperCase()}`;
 
   client.user.setPresence({
@@ -117,6 +121,8 @@ module.exports = async (client, interaction) => {
     async () => {
       for (const serveur of config.liste_serveur) {
         await sanction(client, serveur);
+        await checkGradeSupport(client);
+        await cacheApiGloryBot();
       }
     },
     {
