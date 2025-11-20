@@ -219,9 +219,28 @@ app.post("/staff", async (req, res) => {
         Guide: serverData.guide,
       };
 
+      const allStaffList = Object.values(processedData).flat().filter(Boolean);
+
       const staffDirectoryPath = path.join(__dirname, "data", "staff");
       if (!fs.existsSync(staffDirectoryPath)) {
         fs.mkdirSync(staffDirectoryPath, { recursive: true });
+      }
+
+      const staffServerDir = path.join(__dirname, "data", serveur, "staff");
+      if (!fs.existsSync(staffServerDir)) {
+        fs.mkdirSync(staffServerDir, { recursive: true });
+      }
+
+      const existingFiles = fs
+        .readdirSync(staffServerDir)
+        .filter((f) => f.endsWith(".json"));
+
+      for (const file of existingFiles) {
+        const staffName = path.basename(file, ".json");
+        if (!allStaffList.includes(staffName)) {
+          fs.unlinkSync(path.join(staffServerDir, file));
+          console.log(`🗑️ Fichier supprimé : ${file}`);
+        }
       }
 
       for (const role in processedData) {
@@ -871,7 +890,7 @@ app.post("/update-leaders", async (req, res) => {
 
               if (
                 serverConfig.doublelead.active &&
-                serverConfig.doublelead.Salon
+                serverConfig.doublelead.Salon.valeur
               ) {
                 if (
                   !updatedData
@@ -879,7 +898,7 @@ app.post("/update-leaders", async (req, res) => {
                     .alerteServeur.includes(serverName)
                 ) {
                   const channel = await client.channels.fetch(
-                    serverConfig.doublelead.Salon,
+                    serverConfig.doublelead.Salon.valeur,
                   );
                   const embed = new EmbedBuilder()
                     .setColor(config.couleur[serverName.toLowerCase()])
@@ -888,12 +907,12 @@ app.post("/update-leaders", async (req, res) => {
                     .setFooter({ text: config.footer });
 
                   if (
-                    Array.isArray(serverConfig.doublelead.Role) &&
-                    serverConfig.doublelead.Role.length > 0
+                    Array.isArray(serverConfig.doublelead.Role.valeur) &&
+                    serverConfig.doublelead.Role.valeur.length > 0
                   ) {
-                    const roleMentions = serverConfig.doublelead.Role.map(
-                      (roleId) => `<@&${roleId}>`,
-                    ).join(", ");
+                    const roleMentions = serverConfig.doublelead.Role.valeur
+                      .map((roleId) => `<@&${roleId}>`)
+                      .join(", ");
                     channel.send({
                       embeds: [embed],
                       content: roleMentions,
