@@ -36,12 +36,17 @@ module.exports = {
       .setLabel("Utilisateur Discord")
       .setDescription("Choisit l'utilisateur à lier")
       .setUserSelectMenuComponent(
-        new UserSelectMenuBuilder()
-          .setCustomId(`id_discord`)
-          .setPlaceholder("Choisit l'utilisateur à lier")
-          .setRequired(true)
-          .setMaxValues(1)
-          .setDefaultUsers(linkedDiscordId),
+        (() => {
+          const component = new UserSelectMenuBuilder()
+            .setCustomId(`id_discord`)
+            .setPlaceholder("Choisit l'utilisateur à lier")
+            .setRequired(true)
+            .setMaxValues(1);
+
+          if (linkedDiscordId) component.setDefaultUsers(linkedDiscordId);
+
+          return component;
+        })(),
       );
 
     modal.addLabelComponents(input);

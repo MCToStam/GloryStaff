@@ -68,10 +68,14 @@ module.exports = {
 
     const blameLevels = ["Blâme 1", "Blâme 2", "Blâme 3"];
     let blame = 0;
-    for (let i = 2; i >= 0; i--) {
-      if (staffData[blameLevels[i]]) {
-        blame = i + 1;
-        break;
+
+    for (let i = 0; i < blameLevels.length; i++) {
+      if (
+        staffData[blameLevels[i]] !== undefined &&
+        staffData[blameLevels[i]] !== null &&
+        staffData[blameLevels[i]] !== false
+      ) {
+        blame += 1;
       }
     }
 

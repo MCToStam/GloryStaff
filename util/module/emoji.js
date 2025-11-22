@@ -91,10 +91,14 @@ async function getEmojiTete(client, joueur) {
     }
   }
 
-  const url = `https://skins.nationsglory.fr/face/${joueur}/3d/4`;
-  const response = await fetch(url);
-  if (!response.ok)
-    throw new Error(`Impossible de récupérer l'image pour ${joueur}`);
+  let response;
+  try {
+    const url = `https://skins.nationsglory.fr/face/${joueur}/3d/4`;
+    response = await fetch(url);
+  } catch (e) {
+    return "";
+  }
+  if (!response.ok) return "";
   const buffer = Buffer.from(await response.arrayBuffer());
 
   const emoji = await client.application.emojis.create({
