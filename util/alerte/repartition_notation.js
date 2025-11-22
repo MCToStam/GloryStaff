@@ -46,7 +46,14 @@ async function repartition_notation(client) {
         }
 
         const numberKeys = keys.filter(
-          (key) => !["active", "Salon", "Role"].includes(key),
+          (key) =>
+            ![
+              "active",
+              "Salon",
+              "Role",
+              "Répartir Automatiquement",
+              "Répartir Manuellement",
+            ].includes(key),
         );
 
         const numberKeysValues = (
