@@ -1,6 +1,5 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const axios = require("axios");
 const { EmbedBuilder } = require("discord.js");
 
 function formatDuree(duree) {
@@ -72,10 +71,14 @@ async function fetchAllNewSanctions(pseudonyme, lastKnownSanction) {
     const url = `https://apiv2.nationsglory.fr/plugins/api/user/all/${encodeURIComponent(
       pseudonyme,
     )}/get_punisher/${page}`;
-    let response;
+    let responseData;
 
     try {
-      response = await axios.get(url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      responseData = await response.json();
     } catch (err) {
       console.error(
         `Erreur API sanctions ${pseudonyme} page ${page}:`,
@@ -84,7 +87,8 @@ async function fetchAllNewSanctions(pseudonyme, lastKnownSanction) {
       break;
     }
 
-    const sanctions = parseSanctions(response.data);
+    const sanctions = parseSanctions(responseData);
+
     if (sanctions.length === 0) break;
 
     for (const sanction of sanctions) {
@@ -113,9 +117,15 @@ async function findSanctionServer(pseudonyme, sanction) {
       const url = `https://apiv2.nationsglory.fr/plugins/api/user/${serveur}/${encodeURIComponent(
         pseudonyme,
       )}/get_punisher/${page}`;
+
       try {
-        const res = await axios.get(url);
-        const sanctions = parseSanctions(res.data);
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        const sanctions = parseSanctions(data);
 
         for (const s of sanctions) {
           if (

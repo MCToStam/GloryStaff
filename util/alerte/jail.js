@@ -1,7 +1,6 @@
 const config = require("../../config");
 const getServerPlayer = require("../../util/module/getServerPlayer");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const axios = require("axios");
 const {
   TextDisplayBuilder,
   ContainerBuilder,

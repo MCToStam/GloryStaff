@@ -1,6 +1,5 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const axios = require("axios");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
 const {
@@ -83,8 +82,10 @@ async function plainte(client) {
 
       if (!config_forum.Plainte.Forum) continue;
 
-      const { data } = await axios.get(config_forum.Plainte.Forum);
+      const response = await fetch(config_forum.Plainte.Forum);
+      const data = await response.text();
       const $ = cheerio.load(data);
+
       const complaints = [];
 
       $("tr").each((index, element) => {
