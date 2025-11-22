@@ -430,41 +430,41 @@ app.post("/staff", async (req, res) => {
                 };
 
                 const description = `
-                                    **<:administrateur:1319373624439996466> Administrateurs (${effectifRole(
+                                    **${config.emojigrade["Administrateur"]} Administrateurs (${effectifRole(
                                       "Administrateur",
                                     )}) :**\n${
                                       processedData["Administrateur"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**<:supermoderateur:1319373645923225781> Super Modérateurs (${effectifRole(
+                                    \n**${config.emojigrade["Super-Modérateur"]} Super Modérateurs (${effectifRole(
                                       "Super-Modérateur",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Super-Modérateur"].join(
                                         ", ",
                                       ) || "Aucun",
                                     )}
-                                    \n**<:moderateurplus:1320087028217548901> Modérateurs Plus (${effectifRole(
+                                    \n**${config.emojigrade["Modérateur Plus"]} Modérateurs Plus (${effectifRole(
                                       "Modérateur Plus",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Modérateur Plus"].join(
                                         ", ",
                                       ) || "Aucun",
                                     )}
-                                    \n**<:moderateur:1320087126603202681> Modérateurs (${effectifRole(
+                                    \n**${config.emojigrade["Modérateur"]} Modérateurs (${effectifRole(
                                       "Modérateur",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Modérateur"].join(", ") ||
                                         "Aucun",
                                     )}
-                                    \n**<:moderateurtest:1320087193829511260> Modérateurs Tests (${effectifRole(
+                                    \n**${config.emojigrade["Modérateur Test"]} Modérateurs Tests (${effectifRole(
                                       "Modérateur Test",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Modérateur Test"].join(
                                         ", ",
                                       ) || "Aucun",
                                     )}
-                                    \n**<:guide:1320087261198549072> Guides (${effectifRole(
+                                    \n**${config.emojigrade["Guide"]} Guides (${effectifRole(
                                       "Guide",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Guide"].join(", ") ||
@@ -638,41 +638,41 @@ app.post("/staff_old", async (req, res) => {
               );
               if (message) {
                 const description = `
-                                    **<:administrateur:1319373624439996466> Administrateurs (${
+                                    **${config.emojigrade["Administrateur"]} Administrateurs (${
                                       processedData["Administrateur"].length
                                     }) :**\n${
                                       processedData["Administrateur"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**<:supermoderateur:1319373645923225781> Super Modérateurs (${
+                                    \n**${config.emojigrade["Super-Modérateur"]} Super Modérateurs (${
                                       processedData["Super-Modérateur"].length
                                     }) :**\n${
                                       processedData["Super-Modérateur"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**<:moderateurplus:1320087028217548901> Modérateurs Plus (${
+                                    \n**${config.emojigrade["Modérateur Plus"]} Modérateurs Plus (${
                                       processedData["Modérateur Plus"].length
                                     }) :**\n${
                                       processedData["Modérateur Plus"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**<:moderateur:1320087126603202681> Modérateurs (${
+                                    \n**${config.emojigrade["Modérateur"]} Modérateurs (${
                                       processedData["Modérateur"].length
                                     }) :**\n${
                                       processedData["Modérateur"].join(", ") ||
                                       "Aucun"
                                     }
-                                    \n**<:moderateurtest:1320087193829511260> Modérateurs Tests (${
+                                    \n**${config.emojigrade["Modérateur Test"]} Modérateurs Tests (${
                                       processedData["Modérateur Test"].length
                                     }) :**\n${
                                       processedData["Modérateur Test"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**<:guide:1320087261198549072> Guides (${
+                                    \n**${config.emojigrade["Guide"]} Guides (${
                                       processedData["Guide"].length
                                     }) :**\n${
                                       processedData["Guide"].join(", ") ||

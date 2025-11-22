@@ -117,7 +117,7 @@ module.exports = async (client, interaction) => {
   );
 
   cron.schedule(
-    "0 0/12 * * *",
+    "0 0,12 * * *",
     async () => {
       for (const serveur of config.liste_serveur) {
         await sanction(client, serveur);

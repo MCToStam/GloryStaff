@@ -258,32 +258,32 @@ module.exports = {
         };
 
         const description = `
-**<:administrateur:1319373624439996466> Administrateurs (${effectifRole(
+**${config.emojigrade["Administrateur"]} Administrateurs (${effectifRole(
           "Administrateur",
         )}) :**\n${
           escapeUnderscore(staffData["Administrateur"].join(", ")) || "Aucun"
         }
-\n**<:supermoderateur:1319373645923225781> Super Modérateurs (${effectifRole(
+\n**${config.emojigrade["Super-Modérateur"]} Super Modérateurs (${effectifRole(
           "Super-Modérateur",
         )}) :**\n${
           escapeUnderscore(staffData["Super-Modérateur"].join(", ")) || "Aucun"
         }
-\n**<:moderateurplus:1320087028217548901> Modérateurs Plus (${effectifRole(
+\n**${config.emojigrade["Modérateur Plus"]} Modérateurs Plus (${effectifRole(
           "Modérateur Plus",
         )}) :**\n${
           escapeUnderscore(staffData["Modérateur Plus"].join(", ")) || "Aucun"
         }
-\n**<:moderateur:1320087126603202681> Modérateurs (${effectifRole(
+\n**${config.emojigrade["Modérateur"]} Modérateurs (${effectifRole(
           "Modérateur",
         )}) :**\n${
           escapeUnderscore(staffData["Modérateur"].join(", ")) || "Aucun"
         }
-\n**<:moderateurtest:1320087193829511260> Modérateurs Tests (${effectifRole(
+\n**${config.emojigrade["Modérateur Test"]} Modérateurs Tests (${effectifRole(
           "Modérateur Test",
         )}) :**\n${
           escapeUnderscore(staffData["Modérateur Test"].join(", ")) || "Aucun"
         }
-\n**<:guide:1320087261198549072> Guides (${effectifRole("Guide")}) :**\n${
+\n**${config.emojigrade["Guide"]} Guides (${effectifRole("Guide")}) :**\n${
           escapeUnderscore(staffData["Guide"].join(", ")) || "Aucun"
         }
 \n\n*Dernière mise à jour : <t:${Math.floor(Date.now() / 1000)}:R>*

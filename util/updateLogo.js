@@ -103,7 +103,7 @@ async function updateLogo(client, config) {
                 Authorization: `Bot ${token}`,
                 "Content-Type": "application/json",
                 "X-Audit-Log-Reason":
-                  "Suppression de l’avatar pour le serveur de support",
+                  "Suppression de l'avatar pour le serveur de support",
               },
               body: JSON.stringify({ avatar: null }),
             },
@@ -134,7 +134,7 @@ async function updateLogo(client, config) {
             headers: {
               Authorization: `Bot ${token}`,
               "Content-Type": "application/json",
-              "X-Audit-Log-Reason": "Suppression de l’avatar",
+              "X-Audit-Log-Reason": "Suppression de l'avatar",
             },
             body: JSON.stringify({ avatar: null }),
           },

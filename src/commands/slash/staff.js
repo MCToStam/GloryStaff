@@ -4,12 +4,14 @@ const {
   StringSelectMenuBuilder,
   ActionRowBuilder,
   MessageFlags,
+  ContainerBuilder,
 } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const { getData } = require("../../../util/module/getAndSaveData");
 const {
   errorStaffContainer,
   discordStaff,
+  discordLink,
 } = require("../../../util/module/discordLink");
 
 module.exports = {
@@ -58,19 +60,8 @@ module.exports = {
     const joueur = interaction.options.getString("staff");
 
     if (!joueur) {
-      const responseLink = await fetch(`${config.glorybot_url}/api/get-ng`);
+      const linkData = (await discordLink(false))?.data;
       const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
-      const linkBrut = await responseLink.json();
-      const linkData = linkBrut.data;
-
-      const embed = new EmbedBuilder()
-        .setTitle(
-          `Liste des Staffs du serveur ${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`,
-        )
-        .setColor(config.couleur[serveur] || 0x00ae86)
-        .setFooter({ text: config.footer });
 
       let fullStaffSection = "";
       for (const [grade, members] of Object.entries(fullStaffData)) {
@@ -94,25 +85,54 @@ module.exports = {
         fullStaffSection ||
         "Aucune donnée trouvée dans le fichier staff-serveur.json.";
 
-      embed.setDescription(fullStaffSection);
-
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId("totalStaff")
-        .setPlaceholder("Sélectionnez une option")
-        .addOptions([
-          {
-            label: "Connexion",
-            value: "totalstaff_connexion",
-            emoji: "1363956750704709642",
-          },
-        ]);
-
-      const actionRow = new ActionRowBuilder().addComponents(selectMenu);
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur] || config.color)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `## Liste des Staff - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+          ),
+        )
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) => t.setContent(fullStaffSection))
+        .addSeparatorComponents((s) => s)
+        .addActionRowComponents((row) =>
+          row.setComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId(`globalstaff`)
+              .setPlaceholder("Choisit une option")
+              .setOptions([
+                {
+                  label: "Liste des Staffs",
+                  value: "globalstaff_liste",
+                  default: true,
+                  emoji: "1441495206229835979",
+                },
+                {
+                  label: "Activité en Jeu",
+                  value: "globalstaff_activitejeu",
+                  default: false,
+                  emoji: "1441495207932596234",
+                },
+                {
+                  label: "Activité Vocal sur Discord",
+                  value: "globalstaff_activitediscord",
+                  default: false,
+                  emoji: "1441495208951808203",
+                },
+                {
+                  label: "Traitement des Attentes Staffs",
+                  value: "globalstaff_traitement",
+                  default: false,
+                  emoji: "1441495210206036141",
+                },
+              ]),
+          ),
+        );
 
       return interaction.reply({
-        embeds: [embed],
-        components: [actionRow],
-        ephemeral: true,
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+        allowedMentions: { parse: [] },
       });
     } else {
       const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
