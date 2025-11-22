@@ -63,7 +63,7 @@ module.exports = {
     const staffData = getData(`data/${serveur}/staff-serveur.json`);
 
     const configJail = getData(`data/${serveur}/config-jail.json`);
-    const roleAutorise = configJail.jail.Grade;
+    const roleAutorise = configJail.jail.Grade.valeur;
 
     const gradesHierarchie = [
       "Administrateur",

@@ -1,12 +1,11 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder,
   StringSelectMenuBuilder,
-  ActionRowBuilder,
   MessageFlags,
   ContainerBuilder,
+  ButtonStyle,
 } = require("discord.js");
-const { createCanvas, loadImage } = require("canvas");
+const { getEmojiTete } = require("../../../util/module/emoji");
 const { getData } = require("../../../util/module/getAndSaveData");
 const {
   errorStaffContainer,
@@ -89,7 +88,9 @@ module.exports = {
         .setAccentColor(config.couleur[serveur] || config.color)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `## Liste des Staff - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+            `## Liste des Staff - ${
+              serveur.charAt(0).toUpperCase() + serveur.slice(1)
+            }`,
           ),
         )
         .addSeparatorComponents((s) => s)
@@ -135,246 +136,282 @@ module.exports = {
         allowedMentions: { parse: [] },
       });
     } else {
-      const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
-
-      let joueurExiste = false;
-      let gradeDuJoueur = null;
-
-      for (const [grade, members] of Object.entries(fullStaffData)) {
-        if (Array.isArray(members) && members.includes(joueur)) {
-          joueurExiste = true;
-          gradeDuJoueur = grade;
-          break;
-        }
-      }
-
-      if (!joueurExiste) {
-        return interaction.reply({
-          embeds: [
-            {
-              title: "Erreur",
-              description: `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur <:NG${serveur
+      const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
+      if (!staffData) {
+        const container = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((t) => t.setContent("## Erreur"))
+          .addSeparatorComponents((s) => s)
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur <:NG${serveur
                 .charAt(0)
                 .toUpperCase()}${serveur.slice(1)}:${
                 config.emoji[serveur]
               }> **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
-              color: config.errorcolor,
-              footer: { text: config.footer },
-            },
-          ],
-          ephemeral: true,
+            ),
+          );
+
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
+      const gradeDuJoueur =
+        Object.entries(fullStaffData).find(
+          ([, members]) => Array.isArray(members) && members.includes(joueur),
+        )?.[0] || "Inconnu";
 
-      let linkedDiscordId;
-      try {
-        const responseLinked = await fetch(
-          `${config.glorybot_url}/api/get-ng?pseudo=${encodeURIComponent(
-            joueur,
-          )}`,
-        );
-        if (!responseLinked.ok)
-          throw new Error(`Erreur API: ${responseLinked.status}`);
-        const data = await responseLinked.json();
+      await interaction.deferReply({});
 
-        linkedDiscordId = data.discordId || null;
-      } catch (e) {
-        linkedDiscordId = null;
-      }
+      const linkedDiscordIdData = (await discordLink(false)).data;
+      const linkedDiscordId = Object.keys(linkedDiscordIdData).find(
+        (id) =>
+          typeof linkedDiscordIdData[id] === "string" &&
+          linkedDiscordIdData[id].toLowerCase() === joueur.toLowerCase(),
+      );
 
-      const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
-
+      const blameLevels = ["Blâme 1", "Blâme 2", "Blâme 3"];
       let blame = 0;
-      let texte_blame = "Blâme";
-      if (staffData["Blâme 3"]) {
-        blame = 3;
-        texte_blame = "Blâmes";
-      } else if (staffData["Blâme 2"]) {
-        blame = 2;
-        texte_blame = "Blâmes";
-      } else if (staffData["Blâme 1"]) {
-        blame = 1;
-        texte_blame = "Blâme";
-      } else {
-        blame = 0;
-        texte_blame = "Blâme";
-      }
-
-      let sanctioninterserv = "";
-      if (staffData.blue !== undefined) {
-        const totalSanctions = config.liste_serveur.reduce((total, serveur) => {
-          return total + (staffData[serveur] || 0);
-        }, 0);
-
-        sanctioninterserv = `\n**Sanction Inter-Serveur :** ${totalSanctions}`;
-      }
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-
-      let body = null;
-
-      try {
-        const res = await fetch(
-          `https://publicapi.nationsglory.fr/user/${joueur}`,
-          {
-            headers: {
-              Authorization: `Bearer ${config.apitoken_backup}`,
-              Accept: "application/json",
-            },
-            signal: controller.signal,
-          },
-        );
-
-        clearTimeout(timeout);
-        body = await res.json();
-      } catch (error) {
-        if (error.name === "AbortError") {
-          console.error("Requête annulée après 2 secondes.");
-        } else {
-          console.error(
-            "Erreur lors de la récupération des données :",
-            error.message,
-          );
+      for (let i = 2; i >= 0; i--) {
+        if (staffData[blameLevels[i]]) {
+          blame = i + 1;
+          break;
         }
       }
 
-      const imageUrl = `https://skins.nationsglory.fr/body/${joueur}/3d/4?vr=-20&hr=10&hrh=20&vrla=50&vrra=-10&vrll=-10&vrrl=20&ratio=12&format=png&displayHair=true&headOnly=false&layers=false`;
-      const response = await fetch(imageUrl);
+      const formatServeur = serveur.charAt(0).toUpperCase() + serveur.slice(1);
 
-      const buffer = Buffer.from(await response.arrayBuffer());
+      let [body, linkedMinecraftPseudonym, emojiTete] = await Promise.all([
+        (async () => {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          try {
+            const res = await fetch(
+              `https://publicapi.nationsglory.fr/user/${joueur}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${config.apitoken_backup}`,
+                  Accept: "application/json",
+                },
+                signal: controller.signal,
+              },
+            );
+            clearTimeout(timeout);
+            return await res.json();
+          } catch (error) {
+            if (error.name !== "AbortError")
+              console.error("Erreur API NG :", error.message);
+            return null;
+          }
+        })(),
+        (async () => {
+          if (!config.liste_serveur_bedrock.includes(serveur)) return null;
+          const res = await fetch(
+            `${
+              config.glorybot_url
+            }/api/get-bedrock?pseudo_ng=${encodeURIComponent(joueur)}`,
+          );
+          if (!res.ok) return null;
+          const data = await res.json();
+          return data.pseudo_mc || null;
+        })(),
+        getEmojiTete(client, joueur),
+      ]);
 
-      const image = await loadImage(buffer);
+      const jailData = getData(`data/${serveur}/config-jail.json`);
+      const routineData = getData(`data/${serveur}/config-routine.json`);
 
-      const canvas = createCanvas(image.width, image.height);
-      const ctx = canvas.getContext("2d");
+      const roleAutoriseJail = jailData.jail.Grade.valeur;
+      const roleAutoriseRoutine = routineData.routine.Grade.valeur;
 
-      ctx.scale(-1, 1);
-      ctx.drawImage(image, -image.width, 0);
+      const gradesHierarchie = [
+        "Administrateur",
+        "Super-Modérateur",
+        "Modérateur Plus",
+        "Modérateur",
+        "Modérateur Test",
+        "Guide",
+      ];
 
-      const flippedImageBuffer = canvas.toBuffer();
+      const utilisateurAutoriseJail =
+        jailData?.jail?.active &&
+        roleAutoriseJail &&
+        gradesHierarchie
+          .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)
+          .includes(gradeDuJoueur);
 
-      const routineData = getData(`data/${serveur}/routine.json`);
+      const utilisateurAutoriseRoutine =
+        routineData?.routine?.active &&
+        roleAutoriseRoutine &&
+        gradesHierarchie
+          .slice(0, gradesHierarchie.indexOf(roleAutoriseRoutine) + 1)
+          .includes(gradeDuJoueur);
 
-      let linkedMinecraftPseudonym;
-      if (config.liste_serveur_bedrock.includes(serveur)) {
-        const responseLinked = await fetch(
-          `${
-            config.glorybot_url
-          }/api/get-bedrock?pseudo_ng=${encodeURIComponent(joueur)}`,
-        );
-        if (!responseLinked.ok)
-          throw new Error(`Erreur API: ${responseLinked.status}`);
-        const data = await responseLinked.json();
+      const optionsMenu = [
+        {
+          label: "Information Générale",
+          value: "gestionstaff_information",
+          default: true,
+          emoji: "1441495206229835979",
+        },
+        {
+          label: "Activité en Jeu",
+          value: "gestionstaff_activitejeu",
+          default: false,
+          emoji: "1441495207932596234",
+        },
+        {
+          label: "Activité Vocal sur Discord",
+          value: "gestionstaff_activitediscord",
+          default: false,
+          emoji: "1441495208951808203",
+        },
+        {
+          label: "Traitement des Attentes Staffs",
+          value: "gestionstaff_traitement",
+          default: false,
+          emoji: "1441495210206036141",
+        },
+      ];
 
-        linkedMinecraftPseudonym = data.pseudo_mc || null;
+      if (utilisateurAutoriseJail) {
+        optionsMenu.push({
+          label: "Jail",
+          value: "gestionstaff_jail",
+          default: false,
+          emoji: "1441734907260043264",
+        });
       }
 
-      const embed = new EmbedBuilder()
-        .setTitle(`Gestion Staff - ${joueur.replace(/_/g, "\\_")}`)
-        .setDescription(
-          `**Grade :** ${
-            config.emojigrade[gradeDuJoueur]
-          } ${gradeDuJoueur}\n**Liaison Discord :** ${
-            linkedDiscordId ? `<@${linkedDiscordId}>` : "Aucune liaison"
-          }${
-            config.liste_serveur_bedrock.includes(serveur)
-              ? `\n**Liaison Minecraft :** ${
-                  linkedMinecraftPseudonym
-                    ? linkedMinecraftPseudonym
-                    : "Aucune liaison"
-                }`
-              : ""
-          }\n**${texte_blame} :** ${blame}${sanctioninterserv}${
-            body && body.servers && body.servers[serveur]
-              ? `\n\n**Dernière Connexion ${serveur
-                  .charAt(0)
-                  .toUpperCase()}${serveur.slice(1)} :** <t:${Math.floor(
-                  new Date(
-                    new Date(
-                      body.servers[serveur].last_connection + " GMT+0200",
-                    ).toISOString(),
-                  ).getTime() / 1000,
-                )}:R>\n**Temps de Jeu ${serveur
-                  .charAt(0)
-                  .toUpperCase()}${serveur.slice(1)} :** ${convertirTemps(
-                  body.servers[serveur].playtime,
-                )}\n**Temps de Jeu Total :** ${totalTemps(body)}`
-              : ""
-          }`,
+      if (utilisateurAutoriseRoutine) {
+        optionsMenu.push({
+          label: "Routine",
+          value: "gestionstaff_routine",
+          default: false,
+          emoji: "1441734905980649695",
+        });
+      }
+
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur] || config.color)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `## ${emojiTete} Gestion Staff - ${joueur.replace(/_/g, "\\_")}`,
+          ),
         )
-        .setColor(config.couleur[serveur])
-        .setFooter({ text: config.footer })
-        .setThumbnail("attachment://modele.png");
+        .addSeparatorComponents((s) => s);
 
-      const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId("gestionStaff")
-        .setPlaceholder("Sélectionnez une option")
-        .addOptions([
-          {
-            label: "Liaison Discord",
-            value: "gestionstaff_liaisondiscord",
-            emoji: "1333877538946285739",
-          },
-          {
-            label: "Blâme",
-            value: "gestionstaff_blame",
-            emoji: "1333876277651705878",
-          },
-          {
-            label: "Date de Rank",
-            value: "gestionstaff_datederank",
-            emoji: "1333876299336515645",
-          },
-          {
-            label: "Punisher",
-            value: "gestionstaff_punisher",
-            emoji: "1410535886789017600",
-          },
-        ]);
+      const lastConn = body?.servers?.[serveur]?.last_connection;
+      const playtime = body?.servers?.[serveur]?.playtime;
 
-      if (routineData[joueur]) {
-        selectMenu.addOptions([
-          {
-            label: "Routine",
-            value: "gestionstaff_routine",
-            emoji: "1342098615090413568",
-          },
-        ]);
+      container.addTextDisplayComponents((t) =>
+        t.setContent(
+          `**Grade :** ${
+            config.emojigrade[gradeDuJoueur] || ""
+          } ${gradeDuJoueur}`,
+        ),
+      );
+
+      if (lastConn) {
+        container.addTextDisplayComponents((t) => {
+          const lastConnFormatted = lastConn
+            ? `<t:${Math.floor(
+                new Date(
+                  new Date(lastConn + " GMT+0200").toISOString(),
+                ).getTime() / 1000,
+              )}:R>`
+            : null;
+          const playtimeFormatted = playtime ? convertirTemps(playtime) : null;
+
+          let content = "";
+
+          if (lastConn) {
+            content += `\n**Dernière Connexion ${formatServeur} :** ${lastConnFormatted}\n`;
+            content += `**Temps de Jeu ${formatServeur} :** ${playtimeFormatted}\n`;
+            content += `**Temps de Jeu Total :** ${totalTemps(body)}`;
+          }
+
+          return t.setContent(content);
+        });
       }
+
+      container.addSeparatorComponents((s) => s);
+
+      container.addSectionComponents((section) =>
+        section
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              `**Liaison Discord :** ${
+                linkedDiscordId ? `<@${linkedDiscordId}>` : "Aucune liaison"
+              }`,
+            ),
+          )
+          .setButtonAccessory((button) =>
+            button
+              .setCustomId(`gestionstaff_liaisondiscord-${joueur}`)
+              .setLabel(
+                linkedDiscordId ? "Modifier la Liaison" : "Ajouter une Liaison",
+              )
+              .setStyle(ButtonStyle.Primary),
+          ),
+      );
 
       if (config.liste_serveur_bedrock.includes(serveur)) {
-        selectMenu.addOptions([
-          {
-            label: "Liaison Minecraft",
-            value: "gestionstaff_liaisonminecraft",
-            emoji: "1132392965277495416",
-          },
-        ]);
+        container.addSectionComponents((section) =>
+          section
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(
+                `**Liaison Minecraft :** ${
+                  linkedMinecraftPseudonym ?? "Aucune liaison"
+                }`,
+              ),
+            )
+            .setButtonAccessory((button) =>
+              button
+                .setCustomId(`gestionstaff_liaisonminecraft-${joueur}`)
+                .setLabel(
+                  linkedMinecraftPseudonym
+                    ? "Modifier la Liaison"
+                    : "Ajouter une Liaison",
+                )
+                .setStyle(ButtonStyle.Primary),
+            ),
+        );
       }
 
-      if (
-        !config.liste_serveur_bedrock.includes(serveur) ||
-        linkedMinecraftPseudonym
-      ) {
-        selectMenu.addOptions([
-          {
-            label: "Connexion",
-            value: "gestionstaff_connexion",
-            emoji: "1363956750704709642",
-          },
-        ]);
-      }
+      container.addSectionComponents((section) =>
+        section
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              `**Blâme${blame > 0 ? "s" : ""} :** ${blame}`,
+            ),
+          )
+          .setButtonAccessory((button) =>
+            button
+              .setCustomId(`gestionstaff_blame-${joueur}`)
+              .setLabel("Afficher ou Modifier les Blâmes")
+              .setStyle(ButtonStyle.Primary),
+          ),
+      );
 
-      const actionRow = new ActionRowBuilder().addComponents(selectMenu);
+      container.addSeparatorComponents((s) => s);
+
+      container.addActionRowComponents((row) =>
+        row.setComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`gestionstaff-${joueur}`)
+            .setPlaceholder("Choisit une option")
+            .setOptions(optionsMenu),
+        ),
+      );
 
       return interaction.editReply({
-        embeds: [embed],
-        components: [actionRow],
-        files: [{ attachment: flippedImageBuffer, name: "modele.png" }],
-        ephemeral: true,
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] },
       });
     }
   },

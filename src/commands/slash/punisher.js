@@ -22,13 +22,6 @@ module.exports = {
     )
     .addStringOption((option) =>
       option
-        .setName("type")
-        .setDescription("Le type de configuration à afficher")
-        .setRequired(true)
-        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs),
-    )
-    .addStringOption((option) =>
-      option
         .setName("joueur")
         .setDescription("Le joueur pour lequel afficher le punisher")
         .setRequired(true)
