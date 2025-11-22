@@ -1,7 +1,9 @@
 const config = require("../../config");
 
 async function getServeur(interaction) {
-  const color = interaction.message.components[0].data.accent_color;
+  const color =
+    interaction.message.components[0].data.accent_color ||
+    interaction.message.components[1].data.accent_color;
 
   const serveur = Object.keys(config.couleur).find((key) => {
     const hexValue = config.couleur[key];

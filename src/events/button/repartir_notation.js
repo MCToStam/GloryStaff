@@ -22,7 +22,6 @@ module.exports = {
     const subId = interaction.customId;
     const serveur = await getServeur(interaction);
 
-    // === ÉTAPE 1 : CHOIX DU MODE ===
     if (subId === "notation_module") {
       const container = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur] || config.colors.success)
@@ -56,20 +55,16 @@ module.exports = {
       });
     }
 
-    // === ÉTAPE 2 : MODE AUTOMATIQUE ===
     if (subId === "notation_module-automatique") {
       return await modeAutomatique(client, interaction, config, serveur);
     }
 
-    // === ÉTAPE 3 : MODE MANUEL ===
     if (subId.startsWith("notation_module-manual")) {
       return await modeManuel(client, interaction, config, serveur, subId);
     }
   },
 };
 
-//
-// ---------- MODE AUTOMATIQUE ----------
 async function modeAutomatique(client, interaction, config, serveur) {
   await interaction.deferReply({ ephemeral: true });
 

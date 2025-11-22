@@ -61,6 +61,24 @@ module.exports = {
       traitementCount[dateString]++;
     });
 
+    const traitementDuration = {};
+
+    sessions.forEach(({ start, end }) => {
+      if (!end) return;
+
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      const durationMs = endDate - startDate;
+
+      const day = ("0" + startDate.getDate()).slice(-2);
+      const month = ("0" + (startDate.getMonth() + 1)).slice(-2);
+      const year = startDate.getFullYear();
+      const dateString = `${day}-${month}-${year}`;
+
+      if (!traitementDuration[dateString]) traitementDuration[dateString] = 0;
+      traitementDuration[dateString] += durationMs;
+    });
+
     let semaineOffset = 0;
     const today = new Date();
     if (today.getDay() === 1) {
@@ -113,9 +131,18 @@ module.exports = {
 
       labels.push(jours[i]);
       values.push(traitementCount[dateString] || 0);
-      description += `**${jours[i]} ${day} ${moisEnTexte(month)} :** ${
-        traitementCount[dateString] || 0
-      } traitement${(traitementCount[dateString] || 0) > 1 ? "s" : ""}\n`;
+      const traitementsDay = traitementCount[dateString] || 0;
+      const durationDay = traitementDuration[dateString] || 0;
+
+      description += `**${jours[i]} ${day} ${moisEnTexte(
+        month,
+      )} :** ${traitementsDay} traitement${traitementsDay > 1 ? "s" : ""}`;
+
+      if (traitementsDay > 0 && durationDay > 0) {
+        description += ` (Durée Totale : ${formatDuration(durationDay)})`;
+      }
+
+      description += `\n`;
     }
 
     const total = values.reduce((acc, val) => acc + val, 0);
@@ -286,4 +313,20 @@ function moisEnTexte(num) {
     "Décembre",
   ];
   return noms[parseInt(num, 10) - 1];
+}
+
+function formatDuration(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts = [];
+
+  if (hours > 0) parts.push(`${hours} heure${hours > 1 ? "s" : ""}`);
+  if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+  if (seconds > 0 || parts.length === 0)
+    parts.push(`${seconds} seconde${seconds > 1 ? "s" : ""}`);
+
+  return parts.join(" ");
 }

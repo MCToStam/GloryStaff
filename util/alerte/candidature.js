@@ -190,7 +190,7 @@ async function sendCandidatures(client, AllCandidatures) {
 
       if (data && data.servers && data.servers[serveur]) {
         const lastConnectionDate = new Date(
-          `${data.servers[serveur].last_connection} UTC`,
+          data.servers[serveur].last_connection + "Z",
         );
         const lastConnectionTimestamp = Math.floor(
           lastConnectionDate.getTime() / 1000,
