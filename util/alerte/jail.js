@@ -137,11 +137,7 @@ async function jail(client) {
           }
 
           saveData(`data/${server}/jail.json`, jailData);
-        } catch (apiError) {
-          console.log(
-            `Erreur lors de la récupération de l'API pour le serveur ${server}: ${apiError}`,
-          );
-        }
+        } catch (apiError) {}
       }
     } catch (e) {
       console.log("Erreur lors de la gestion des jails :", e);

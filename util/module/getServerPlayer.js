@@ -21,13 +21,13 @@ async function getServerPlayer(server) {
       const value =
         Array.isArray(data) && (data[0]?.nombre !== undefined) !== undefined
           ? { nombre: data[0].nombre || 0, liste: data[0].joueur || [] }
-          : null;
+          : { nombre: 0, liste: [] };
 
       cache.set(server, { value, expires: Date.now() + CACHE_DURATION });
       return value;
     } catch (e) {
       cache.delete(server);
-      return null;
+      return { nombre: 0, liste: [] };
     }
   })();
 

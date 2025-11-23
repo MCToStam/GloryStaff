@@ -1,6 +1,7 @@
 const express = require("express");
 const { getData } = require("./util/module/getAndSaveData");
 const { discordStaff } = require("./util/module/discordLink");
+const { getEmojiTete } = require("./util/module/emoji");
 const bodyParser = require("body-parser");
 const {
   EmbedBuilder,
@@ -8,6 +9,9 @@ const {
   ButtonBuilder,
   ButtonStyle,
   WebhookClient,
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -430,41 +434,53 @@ app.post("/staff", async (req, res) => {
                 };
 
                 const description = `
-                                    **${config.emojigrade["Administrateur"]} Administrateurs (${effectifRole(
+                                    **${
+                                      config.emojigrade["Administrateur"]
+                                    } Administrateurs (${effectifRole(
                                       "Administrateur",
                                     )}) :**\n${
                                       processedData["Administrateur"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**${config.emojigrade["Super-Modérateur"]} Super Modérateurs (${effectifRole(
+                                    \n**${
+                                      config.emojigrade["Super-Modérateur"]
+                                    } Super Modérateurs (${effectifRole(
                                       "Super-Modérateur",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Super-Modérateur"].join(
                                         ", ",
                                       ) || "Aucun",
                                     )}
-                                    \n**${config.emojigrade["Modérateur Plus"]} Modérateurs Plus (${effectifRole(
+                                    \n**${
+                                      config.emojigrade["Modérateur Plus"]
+                                    } Modérateurs Plus (${effectifRole(
                                       "Modérateur Plus",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Modérateur Plus"].join(
                                         ", ",
                                       ) || "Aucun",
                                     )}
-                                    \n**${config.emojigrade["Modérateur"]} Modérateurs (${effectifRole(
+                                    \n**${
+                                      config.emojigrade["Modérateur"]
+                                    } Modérateurs (${effectifRole(
                                       "Modérateur",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Modérateur"].join(", ") ||
                                         "Aucun",
                                     )}
-                                    \n**${config.emojigrade["Modérateur Test"]} Modérateurs Tests (${effectifRole(
+                                    \n**${
+                                      config.emojigrade["Modérateur Test"]
+                                    } Modérateurs Tests (${effectifRole(
                                       "Modérateur Test",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Modérateur Test"].join(
                                         ", ",
                                       ) || "Aucun",
                                     )}
-                                    \n**${config.emojigrade["Guide"]} Guides (${effectifRole(
+                                    \n**${
+                                      config.emojigrade["Guide"]
+                                    } Guides (${effectifRole(
                                       "Guide",
                                     )}) :**\n${escapeUnderscore(
                                       processedData["Guide"].join(", ") ||
@@ -638,34 +654,37 @@ app.post("/staff_old", async (req, res) => {
               );
               if (message) {
                 const description = `
-                                    **${config.emojigrade["Administrateur"]} Administrateurs (${
+                                    **${
+                                      config.emojigrade["Administrateur"]
+                                    } Administrateurs (${
                                       processedData["Administrateur"].length
-                                    }) :**\n${
-                                      processedData["Administrateur"].join(
-                                        ", ",
-                                      ) || "Aucun"
-                                    }
-                                    \n**${config.emojigrade["Super-Modérateur"]} Super Modérateurs (${
+                                    }) :**\n${processedData["Administrateur"].join(", ") || "Aucun"}
+                                    \n**${
+                                      config.emojigrade["Super-Modérateur"]
+                                    } Super Modérateurs (${
                                       processedData["Super-Modérateur"].length
                                     }) :**\n${
                                       processedData["Super-Modérateur"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**${config.emojigrade["Modérateur Plus"]} Modérateurs Plus (${
+                                    \n**${
+                                      config.emojigrade["Modérateur Plus"]
+                                    } Modérateurs Plus (${
                                       processedData["Modérateur Plus"].length
                                     }) :**\n${
                                       processedData["Modérateur Plus"].join(
                                         ", ",
                                       ) || "Aucun"
                                     }
-                                    \n**${config.emojigrade["Modérateur"]} Modérateurs (${
+                                    \n**${
+                                      config.emojigrade["Modérateur"]
+                                    } Modérateurs (${
                                       processedData["Modérateur"].length
-                                    }) :**\n${
-                                      processedData["Modérateur"].join(", ") ||
-                                      "Aucun"
-                                    }
-                                    \n**${config.emojigrade["Modérateur Test"]} Modérateurs Tests (${
+                                    }) :**\n${processedData["Modérateur"].join(", ") || "Aucun"}
+                                    \n**${
+                                      config.emojigrade["Modérateur Test"]
+                                    } Modérateurs Tests (${
                                       processedData["Modérateur Test"].length
                                     }) :**\n${
                                       processedData["Modérateur Test"].join(
@@ -674,10 +693,7 @@ app.post("/staff_old", async (req, res) => {
                                     }
                                     \n**${config.emojigrade["Guide"]} Guides (${
                                       processedData["Guide"].length
-                                    }) :**\n${
-                                      processedData["Guide"].join(", ") ||
-                                      "Aucun"
-                                    }
+                                    }) :**\n${processedData["Guide"].join(", ") || "Aucun"}
                                     \n\n*Dernière mise à jour : <t:${Math.floor(
                                       Date.now() / 1000,
                                     )}:R>*
@@ -850,7 +866,10 @@ app.post("/update-leaders", async (req, res) => {
     });
 
     const multiServerLeaders = updatedData
-      .filter((entry) => Object.keys(entry.servers).length > 1)
+      .filter((entry) => {
+        const uniqueServers = new Set(entry.servers.map((s) => s.server));
+        return uniqueServers.size > 1;
+      })
       .map((entry) => ({
         leader: entry.leader,
         servers: entry.servers,
@@ -866,20 +885,46 @@ app.post("/update-leaders", async (req, res) => {
         }
 
         for (const { leader, servers } of multiServerLeaders) {
-          let message = `Le joueur **${leader}** possède différents pays sur plusieurs serveurs :\n`;
-          for (const [serverName, countryName] of Object.entries(servers)) {
-            message += `<:NG${
-              serverName.charAt(0).toUpperCase() + serverName.slice(1)
-            }:${config.emoji[serverName.toLowerCase()]}> **${
-              serverName.charAt(0).toUpperCase() + serverName.slice(1)
-            }** : ${countryName}\n`;
+          const leaderPseudos = leader.split("/");
+          let message;
+
+          if (leaderPseudos.length === 1) {
+            const emoji = await getEmojiTete(client, leaderPseudos[0]);
+            message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays sur plusieurs serveurs :\n`;
+          } else if (leaderPseudos.length === 2) {
+            const emoji1 = await getEmojiTete(client, leaderPseudos[0]);
+            const emoji2 = await getEmojiTete(client, leaderPseudos[1]);
+            message = `Les joueurs ${emoji1} **${leaderPseudos[0]}** et ${emoji2} **${leaderPseudos[1]}** possèdent différents pays sur plusieurs serveurs :\n`;
+          } else {
+            const last = leaderPseudos.pop();
+            const emojis = await Promise.all(
+              leaderPseudos.map((p) => getEmojiTete(client, p)),
+            );
+            const lastEmoji = await getEmojiTete(client, last);
+
+            message = `Les joueurs ${leaderPseudos
+              .map((p, i) => `${emojis[i]} **${p}**`)
+              .join(
+                ", ",
+              )} et ${lastEmoji} **${last}** possèdent différents pays sur plusieurs serveurs :\n`;
           }
 
-          for (const [serverName, countryName] of Object.entries(servers)) {
+          for (const { compte, server, country } of servers) {
+            message += `<:NG${
+              server.charAt(0).toUpperCase() + server.slice(1)
+            }:${config.emoji[server.toLowerCase()]}> **${
+              server.charAt(0).toUpperCase() + server.slice(1)
+            }** : ${country} (${await getEmojiTete(
+              client,
+              compte,
+            )} ${compte})\n`;
+          }
+
+          for (const { server } of servers) {
             const serverConfigPath = path.join(
               __dirname,
               "data",
-              serverName,
+              server,
               "config-doublelead.json",
             );
 
@@ -892,19 +937,22 @@ app.post("/update-leaders", async (req, res) => {
                 serverConfig.doublelead.active &&
                 serverConfig.doublelead.Salon.valeur
               ) {
-                if (
-                  !updatedData
-                    .find((entry) => entry.leader === leader)
-                    .alerteServeur.includes(serverName)
-                ) {
+                const updatedEntry = updatedData.find(
+                  (entry) => entry.leader === leader,
+                );
+
+                if (!updatedEntry.alerteServeur.includes(server)) {
                   const channel = await client.channels.fetch(
                     serverConfig.doublelead.Salon.valeur,
                   );
-                  const embed = new EmbedBuilder()
-                    .setColor(config.couleur[serverName.toLowerCase()])
-                    .setTitle("Double Lead")
-                    .setDescription(message)
-                    .setFooter({ text: config.footer });
+
+                  const container = new ContainerBuilder()
+                    .setAccentColor(config.couleur[server] || config.color)
+                    .addTextDisplayComponents((t) =>
+                      t.setContent(`## 🏴 Double Lead`),
+                    )
+                    .addSeparatorComponents((s) => s)
+                    .addTextDisplayComponents((t) => t.setContent(message));
 
                   if (
                     Array.isArray(serverConfig.doublelead.Role.valeur) &&
@@ -913,17 +961,25 @@ app.post("/update-leaders", async (req, res) => {
                     const roleMentions = serverConfig.doublelead.Role.valeur
                       .map((roleId) => `<@&${roleId}>`)
                       .join(", ");
+
+                    const roleTextDisplay = new TextDisplayBuilder().setContent(
+                      roleMentions,
+                    );
+
                     channel.send({
-                      embeds: [embed],
-                      content: roleMentions,
+                      components: [roleTextDisplay, container],
+                      flags:
+                        MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
                     });
                   } else {
-                    channel.send({ embeds: [embed] });
+                    channel.send({
+                      components: [container],
+                      flags:
+                        MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+                    });
                   }
 
-                  updatedData
-                    .find((entry) => entry.leader === leader)
-                    .alerteServeur.push(serverName);
+                  updatedEntry.alerteServeur.push(server);
                 }
               }
             }
