@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageFlags, Message } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { serveurs } = require("../../../util/option-serveur.js");
 const { ensureSanctions } = require("../../../util/punisher");
 const { getPunisherContainer } = require("../../../util/container/punisher");
@@ -18,7 +18,10 @@ module.exports = {
           "Le serveur pour lequel afficher la liste des doubles lead",
         )
         .setRequired(true)
-        .setAutocomplete(true),
+        .addChoices(
+          { name: "Inter-Serveur", value: "inter-serveur" },
+          ...serveurs,
+        ),
     )
     .addStringOption((option) =>
       option

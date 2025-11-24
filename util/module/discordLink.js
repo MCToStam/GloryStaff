@@ -17,7 +17,7 @@ async function discordLink(discordId) {
 
     if (response.ok) {
       const data = await response.json();
-      return discordId ? (data.pseudo ?? null) : data;
+      return discordId ? (data.pseudo ?? {}) : data;
     } else {
       console.warn("⚠️ API get-ng indisponible, utilisation du fichier local.");
     }
@@ -25,13 +25,13 @@ async function discordLink(discordId) {
 
   try {
     const localData = (await getData("data/data/api_get_ng.json")) ?? {};
-    return discordId ? (localData[discordId] ?? null) : localData;
+    return discordId ? (localData[discordId] ?? {}) : localData;
   } catch (err) {
     console.error(
       "❌ Erreur lors de la lecture du fichier api_get_ng.json :",
       err,
     );
-    return null;
+    return {};
   }
 }
 

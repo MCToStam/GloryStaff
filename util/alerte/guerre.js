@@ -1,359 +1,251 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
+const { getEmojiTete } = require("../../util/module/emoji");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
 const {
-  EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
 } = require("discord.js");
 
+const moisMapping = {
+  janvier: "01",
+  février: "02",
+  mars: "03",
+  avril: "04",
+  mai: "05",
+  juin: "06",
+  juillet: "07",
+  août: "08",
+  septembre: "09",
+  octobre: "10",
+  novembre: "11",
+  décembre: "12",
+};
+
 function convertirEnTimestamp(dateStr) {
-  const moisMapping = {
-    janvier: "01",
-    février: "02",
-    mars: "03",
-    avril: "04",
-    mai: "05",
-    juin: "06",
-    juillet: "07",
-    août: "08",
-    septembre: "09",
-    octobre: "10",
-    novembre: "11",
-    décembre: "12",
-  };
+  const now = DateTime.now().setZone("Europe/Paris");
+  const relativeMatch = dateStr.match(/Il y a (\d+) (minute|heure|jour)s?/);
 
-  if (dateStr.includes("Il y a")) {
-    const maintenant = DateTime.now().setZone("Europe/Paris");
-    const regex = /Il y a (\d+) (minute|heure|jour)s?/;
-    const match = dateStr.match(regex);
-
-    if (match) {
-      let [_, valeur, unité] = match;
-      valeur = parseInt(valeur);
-
-      if (unité === "minute")
-        return Math.floor(maintenant.minus({ minutes: valeur }).toSeconds());
-      if (unité === "heure")
-        return Math.floor(maintenant.minus({ hours: valeur }).toSeconds());
-      if (unité === "jour")
-        return Math.floor(maintenant.minus({ days: valeur }).toSeconds());
-    }
+  if (relativeMatch) {
+    const [_, value, unit] = relativeMatch;
+    const timeUnit = { minute: "minutes", heure: "hours", jour: "days" }[unit];
+    return Math.floor(now.minus({ [timeUnit]: parseInt(value) }).toSeconds());
   }
 
-  const regex = /(\d{1,2}) ([\p{L}éûàç]+) (\d{4}) à (\d{1,2}):(\d{2})/u;
-
-  const cleaned = dateStr
+  const match = dateStr
     .replace(/.*le\s+/, "")
     .trim()
-    .replace(/\u00A0/g, " ")
-    .replace(/\u202F/g, " ");
-
-  const match = cleaned.match(regex);
+    .replace(/\u00A0|\u202F/g, " ")
+    .match(/(\d{1,2}) ([\p{L}éûàç]+) (\d{4}) à (\d{1,2}):(\d{2})/u);
 
   if (!match) return null;
 
-  let [_, jour, moisTexte, annee, heure, minute] = match;
+  const [, jour, moisTexte, annee, heure, minute] = match;
   const mois = moisMapping[moisTexte.toLowerCase()];
-
   if (!mois) return null;
 
-  const dateLocale = DateTime.fromObject(
-    {
-      year: parseInt(annee),
-      month: parseInt(mois),
-      day: parseInt(jour),
-      hour: parseInt(heure),
-      minute: parseInt(minute),
-    },
-    { zone: "Europe/Paris" },
+  return Math.floor(
+    DateTime.fromObject(
+      { year: +annee, month: +mois, day: +jour, hour: +heure, minute: +minute },
+      { zone: "Europe/Paris" },
+    ).toSeconds(),
   );
+}
 
-  return Math.floor(dateLocale.toSeconds());
+async function sendMessageWithEmbed(
+  salon,
+  container,
+  roles = [],
+  rolePingDone = false,
+) {
+  let roleTextDisplay;
+  if (roles && !rolePingDone) {
+    const roleMentions = roles.map((roleId) => `<@&${roleId}>`).join(", ");
+
+    roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
+  }
+  let components = [container];
+  if (roles && !rolePingDone) components = [roleTextDisplay, container];
+  return await salon.send({
+    components,
+    flags: MessageFlags.IsComponentsV2,
+  });
 }
 
 async function guerre(client) {
   for (const server of config.liste_serveur) {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
     try {
       const config_forum = getData(`data/${server}/config-forum.json`);
+      if (
+        !config_forum?.Guerre?.Forum ||
+        !config_forum?.Guerre?.active ||
+        !config_forum?.Guerre?.Salon?.valeur
+      )
+        continue;
+      await new Promise((res) => setTimeout(res, 5000));
 
-      if (!config_forum.Guerre.Forum) continue;
-
-      const response = await fetch(config_forum.Guerre.Forum);
-      const data = await response.text();
+      const data = await (await fetch(config_forum.Guerre.Forum)).text();
       const $ = cheerio.load(data);
-      const complaints = [];
 
-      $("tr").each((index, element) => {
-        const badge = $(element)
-          .find(".badge")
-          .filter((_, el) => $(el).text().trim().includes("En Attente"));
+      const complaints = $("tr")
+        .map((i, el) => {
+          if (!$(el).find(".badge").text().includes("En Attente")) return null;
 
-        if (badge.length > 0) {
-          const titleElement = $(element).find("th a.stretched-link").first();
-          const title = titleElement.text().trim();
-          const link = titleElement.attr("href");
-          const author = $(element)
-            .find("a.text-muted.stretched-link.position-relative")
-            .first()
-            .text()
-            .trim();
-
-          const dateElement = $(element)
+          const titleEl = $(el).find("th a.stretched-link").first();
+          const dateStr = $(el)
             .find("span.small.text-muted")
-            .filter((_, el) => $(el).text().includes("Posté par"))
-            .parent()
-            .find("span.small.text-muted")
-            .last();
+            .filter((_, m) => $(m).text().includes("Posté"))
+            .last()
+            .text();
 
-          const dateStr = dateElement.text().trim();
-          const timestamp = convertirEnTimestamp(dateStr);
-
-          if (title && link && timestamp) {
-            complaints.push({
-              titre: title,
-              lien: `https://nationsglory.fr${link}`,
-              auteur: author,
-              date: timestamp,
-              message: [],
-              moderateur: null,
-            });
-          }
-        }
-      });
+          return {
+            titre: titleEl.text().trim(),
+            lien: `https://nationsglory.fr${titleEl.attr("href")}`,
+            auteur: $(el)
+              .find("a.text-muted.stretched-link.position-relative")
+              .first()
+              .text()
+              .trim(),
+            date: convertirEnTimestamp(dateStr),
+            message: [],
+          };
+        })
+        .get()
+        .filter((c) => c?.titre && c?.lien && c?.date);
 
       const guerresExistantes = getData(`data/${server}/forum/guerre.json`);
-
       const nouvellesGuerres = complaints.filter(
         (c) => !guerresExistantes.some((p) => p.lien === c.lien),
       );
 
-      if (nouvellesGuerres.length > 0) {
-        if (
-          config_forum.Guerre?.active &&
-          config_forum.Guerre?.Salon.valeur &&
-          config_forum.Guerre?.Forum
-        ) {
-          const salon = client.channels.cache.get(
-            config_forum.Guerre.Salon.valeur,
-          );
-          if (!salon) {
-            console.warn(
-              `⚠️ Salon introuvable pour ${server} (ID: ${config_forum.Guerre.Salon.valeur})`,
-            );
-          } else {
-            let rolePingDone = false;
-            for (const guerre of nouvellesGuerres) {
-              const embed = new EmbedBuilder()
-                .setColor(config.couleur[server.toLowerCase()])
-                .setTitle("Nouvelle Guerre")
-                .setDescription(
-                  `📌 **Titre :** ${guerre.titre}\n✏️ **Auteur :** ${guerre.auteur}\n\n*Cette guerre a été postée <t:${guerre.date}:R>.*`,
-                )
-                .setFooter({ text: config.footer });
-
-              const actionRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setURL(guerre.lien)
-                  .setLabel("Aller sur la guerre")
-                  .setStyle(ButtonStyle.Link),
+      if (nouvellesGuerres.length && config_forum.Guerre?.active) {
+        const salon = client.channels.cache.get(
+          config_forum.Guerre.Salon.valeur,
+        );
+        if (!salon) console.warn(`⚠️ Salon introuvable pour ${server}`);
+        else {
+          let rolePingDone = false;
+          for (const guerre of nouvellesGuerres) {
+            const emoji = await getEmojiTete(client, guerre.auteur);
+            const container = new ContainerBuilder()
+              .setAccentColor(config.couleur[server])
+              .addTextDisplayComponents((t) =>
+                t.setContent(`## 📍 Nouvelle Guerre`),
+              )
+              .addSeparatorComponents((s) => s)
+              .addTextDisplayComponents((t) =>
+                t.setContent(
+                  `📌 **Titre :** ${guerre.titre}\n${emoji} **Auteur :** ${guerre.auteur}\n\n*Postée <t:${guerre.date}:R>*`,
+                ),
+              )
+              .addSeparatorComponents((s) => s)
+              .addActionRowComponents(
+                new ActionRowBuilder().addComponents(
+                  new ButtonBuilder()
+                    .setURL(guerre.lien)
+                    .setLabel("🔗 Aller sur la Guerre")
+                    .setStyle(ButtonStyle.Link),
+                ),
               );
 
-              try {
-                let sentMessage;
-                const guerreRoles = config_forum.Guerre?.Role.valeur;
+            const sent = await sendMessageWithEmbed(
+              salon,
+              container,
+              config_forum.Guerre.Role?.valeur,
+              rolePingDone,
+            );
+            rolePingDone = true;
+            guerre.message.push({
+              guildId: salon.guild.id,
+              channelId: salon.id,
+              messageId: sent.id,
+            });
 
-                if (
-                  Array.isArray(guerreRoles) &&
-                  guerreRoles.length > 0 &&
-                  !rolePingDone
-                ) {
-                  const roleMentions = guerreRoles
-                    .map((roleId) => `<@&${roleId}>`)
-                    .join(", ");
-                  sentMessage = await salon.send({
-                    embeds: [embed],
-                    components: [actionRow],
-                    content: roleMentions,
-                  });
-                  rolePingDone = true;
-                } else {
-                  sentMessage = await salon.send({
-                    embeds: [embed],
-                    components: [actionRow],
-                  });
-                }
-
-                guerre.message.push({
-                  guildId: salon.guild.id,
-                  channelId: salon.id,
-                  messageId: sentMessage.id,
-                });
-                console.log(
-                  `✅ Message envoyé pour une nouvelle guerre dans ${server}`,
-                );
-                if (salon.type === "GUILD_NEWS") {
-                  try {
-                    await sentMessage.crosspost();
-                    console.log(
-                      `📣 Message publié dans le salon d’annonce pour ${server}`,
-                    );
-                  } catch (err) {
-                    console.warn(
-                      `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
-                    );
-                  }
-                }
-              } catch (error) {
-                console.error(
-                  `❌ Erreur lors de l'envoi du message pour ${server}:`,
-                  error.message,
-                );
-              }
-            }
+            if (salon.type === "GUILD_NEWS")
+              await sent.crosspost().catch(() => {});
           }
         }
-
-        console.log(
-          `🆕 ${nouvellesGuerres.length} nouvelle(s) guerre(s) ajoutée(s).`,
-        );
         guerresExistantes.push(...nouvellesGuerres);
-
         saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
       }
+      const guerresInitiales = [...guerresExistantes];
 
       if (
         config_forum["Guerre non traitée"]?.active &&
-        config_forum["Guerre non traitée"]?.Salon.valeur &&
-        config_forum["Guerre non traitée"]?.Temps
+        config_forum["Guerre non traitée"]?.Temps?.valeur
       ) {
         const salonNonTraitee = client.channels.cache.get(
           config_forum["Guerre non traitée"].Salon.valeur,
         );
-        if (!salonNonTraitee) {
-          console.warn(
-            `⚠️ Salon introuvable pour les guerres non traitées (${server})`,
-          );
-        } else {
-          const delaiTimestamp = DateTime.now()
-            .minus({
-              days: parseInt(config_forum["Guerre non traitée"].Temps),
-            })
-            .toSeconds();
+        const délai = Math.floor(
+          DateTime.now()
+            .minus({ days: +config_forum["Guerre non traitée"].Temps.valeur })
+            .toSeconds(),
+        );
+        let rolePingDone = false;
 
-          const guerresAnciennes = guerresExistantes.filter(
-            (guerre) => guerre.date < delaiTimestamp && !guerre.alerteEnvoyee,
-          );
-
-          let rolePingDone = false;
-          for (const guerre of guerresAnciennes) {
-            const embedAlerte = new EmbedBuilder()
-              .setColor(config.couleur[server.toLowerCase()])
-              .setTitle("⏳ Guerre non Traitée")
-              .setDescription(
-                `📌 **Titre :** ${guerre.titre}\n✏️ **Auteur :** ${guerre.auteur}\n\n*Cette guerre est en attente depuis plus de ${config_forum["Guerre non traitée"].Temps} jours !*`,
-              )
-              .setFooter({ text: config.footer });
-
-            const actionRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setURL(guerre.lien)
-                .setLabel("Voir la guerre")
-                .setStyle(ButtonStyle.Link),
+        for (const guerre of guerresExistantes.filter(
+          (p) => p.date < délai && !p.alerteEnvoyee,
+        )) {
+          const emoji = await getEmojiTete(client, guerre.auteur);
+          const container = new ContainerBuilder()
+            .setAccentColor(config.couleur[server])
+            .addTextDisplayComponents((t) =>
+              t.setContent(`## 🚨 Guerre non Traitée`),
+            )
+            .addSeparatorComponents((s) => s)
+            .addTextDisplayComponents((t) =>
+              t.setContent(
+                `📌 **Titre :** ${guerre.titre}\n${emoji} **Auteur :** ${guerre.auteur}\n\n*Postée depuis plus de ${config_forum["Guerre non traitée"].Temps.valeur} jours*`,
+              ),
+            )
+            .addSeparatorComponents((s) => s)
+            .addActionRowComponents(
+              new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setURL(guerre.lien)
+                  .setLabel("🔗 Aller sur la Guerre")
+                  .setStyle(ButtonStyle.Link),
+              ),
             );
 
-            try {
-              let sentMessage;
-              if (
-                Array.isArray(
-                  config_forum["Guerre non traitée"]?.Role.valeur,
-                ) &&
-                config_forum["Guerre non traitée"].Role.valeur.length > 0 &&
-                !rolePingDone
-              ) {
-                const roleMentions = config_forum[
-                  "Guerre non traitée"
-                ].Role.valeur
-                  .map((roleId) => `<@&${roleId}>`)
-                  .join(", ");
-
-                sentMessage = await salonNonTraitee.send({
-                  embeds: [embedAlerte],
-                  components: [actionRow],
-                  content: roleMentions,
-                });
-
-                rolePingDone = true;
-              } else {
-                sentMessage = await salonNonTraitee.send({
-                  embeds: [embedAlerte],
-                  components: [actionRow],
-                });
-              }
-
-              guerre.alerteEnvoyee = true;
-              console.log(
-                `🚨 Alerte envoyée pour une guerre non traitée dans ${server}`,
-              );
-            } catch (error) {
-              console.error(
-                `❌ Erreur lors de l'envoi de l'alerte pour ${server}:`,
-                error.message,
-              );
-            }
-          }
-
-          saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
+          await sendMessageWithEmbed(
+            salonNonTraitee,
+            container,
+            config_forum["Guerre non traitée"].Role?.valeur,
+            rolePingDone,
+          );
+          guerre.alerteEnvoyee = rolePingDone = true;
         }
+
+        saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
       }
 
-      const guerresMisesAJour = guerresExistantes.filter((p) =>
-        complaints.some((c) => c.lien === p.lien),
-      );
-
-      const guerresSupprimees = guerresExistantes.filter(
+      for (const guerre of guerresInitiales.filter(
         (p) => !complaints.some((c) => c.lien === p.lien),
-      );
-
-      for (const guerre of guerresSupprimees) {
-        if (guerre.message && guerre.message.length > 0) {
-          for (const msgInfo of guerre.message) {
-            try {
-              const guild = client.guilds.cache.get(msgInfo.guildId);
-              if (guild) {
-                const channel = guild.channels.cache.get(msgInfo.channelId);
-                if (channel) {
-                  const message = await channel.messages.fetch(
-                    msgInfo.messageId,
-                  );
-                  if (message) {
-                    if (message?.deletable) {
-                      await message.delete();
-                    }
-                    console.log(
-                      `🗑️ Message supprimé pour une guerre résolue (${guerre.titre})`,
-                    );
-                  }
-                }
-              }
-            } catch (error) {
-              console.warn(
-                `⚠️ Impossible de supprimer un message d'alerte : ${error.message}`,
-              );
-            }
-          }
+      )) {
+        for (const msg of guerre.message || []) {
+          const channel = client.channels.cache.get(msg.channelId);
+          if (channel)
+            channel.messages
+              .fetch(msg.messageId)
+              .then((m) => m?.deletable && m.delete().catch(() => {}))
+              .catch(() => {});
         }
       }
 
-      if (
-        JSON.stringify(guerresExistantes) !== JSON.stringify(guerresMisesAJour)
-      ) {
-        saveData(`data/${server}/forum/guerre.json`, guerresMisesAJour);
-      }
-    } catch (error) {}
+      saveData(
+        `data/${server}/forum/guerre.json`,
+        guerresInitiales.filter((p) =>
+          complaints.some((c) => c.lien === p.lien),
+        ),
+      );
+    } catch (e) {}
   }
 }
 

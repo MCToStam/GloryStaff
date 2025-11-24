@@ -121,9 +121,9 @@ module.exports = async (client, interaction) => {
     async () => {
       for (const serveur of config.liste_serveur) {
         await sanction(client, serveur);
-        await checkGradeSupport(client);
-        await cacheApiGloryBot();
       }
+      await checkGradeSupport(client);
+      await cacheApiGloryBot();
     },
     {
       timezone: "Europe/Paris",
