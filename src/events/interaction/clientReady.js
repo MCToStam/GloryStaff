@@ -207,7 +207,7 @@ module.exports = async (client, interaction) => {
       timezone: "Europe/Paris",
     },
   );
-
+  
   cron.schedule(
     "*/30 * * * *",
     async () => {
