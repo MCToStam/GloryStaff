@@ -6,40 +6,38 @@ module.exports = async (client, interaction) => {
   const btn = client.container.buttons.get(interaction.customId.split("-")[0]);
 
   if (!btn) return;
-  if (btn.conf.type === "User") {
-    const originalMessage = interaction.message.reference
-      ? await interaction.channel.messages.fetch(
-          interaction.message.reference.messageId,
-        )
-      : interaction.message;
+  const originalMessage = interaction?.message?.reference
+    ? await interaction.channel.messages.fetch(
+        interaction.message.reference.messageId,
+      )
+    : interaction.message;
 
-    const authorId = originalMessage.interaction?.user?.id;
-    if (!authorId || interaction.user.id !== authorId) {
-      const permissionContainer = {
-        type: 17,
-        accent_color: config.colors.error,
-        components: [
-          {
-            type: 10,
-            content: "## :no_entry_sign: Intéraction Interdite ",
-          },
-          {
-            type: 14,
-            spacing: SeparatorSpacingSize.Large,
-          },
-          {
-            type: 10,
-            content:
-              "Vous n'avez pas la permission d'intéragir avec ce bouton car vous n'êtes pas l'auteur de la commande.",
-          },
-        ],
-      };
-      return interaction.reply({
-        components: [permissionContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
-      });
-    }
+  const authorId = originalMessage.interaction?.user?.id;
+  if (authorId && interaction.user.id !== authorId) {
+    const permissionContainer = {
+      type: 17,
+      accent_color: config.colors.error,
+      components: [
+        {
+          type: 10,
+          content: "## :no_entry_sign: Intéraction Interdite ",
+        },
+        {
+          type: 14,
+          spacing: SeparatorSpacingSize.Large,
+        },
+        {
+          type: 10,
+          content:
+            "Vous n'avez pas la permission d'intéragir avec ce bouton car vous n'êtes pas l'auteur de la commande.",
+        },
+      ],
+    };
+    return interaction.reply({
+      components: [permissionContainer],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      allowedMentions: { parse: [] },
+    });
   }
 
   try {

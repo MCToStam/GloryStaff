@@ -334,8 +334,20 @@ async function sendCandidatures(client, AllCandidatures) {
           components: [
             {
               type: 2,
+              custom_id: `candidature_punisher-${candidature.auteur}`,
+              label: "💢 Afficher le Punisher",
+              style: ButtonStyle.Primary,
+            },
+          ],
+        },
+        { type: 14, spacing: SeparatorSpacingSize.Small },
+        {
+          type: 1,
+          components: [
+            {
+              type: 2,
               url: candidature.lien,
-              label: "Aller sur la Candidature",
+              label: "🔗 Aller sur la Candidature",
               style: ButtonStyle.Link,
             },
           ],

@@ -1,11 +1,11 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { getData } = require("../../util/module/getAndSaveData");
 const Canvas = require("canvas");
 const config = require("../../config");
 
 const cachePath = path.join(__dirname, "..", "..", "data", "emojisCache.json");
-let emojisCache = getData("data/emojisCache.json");
+let emojisCache = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+const pendingEmojis = {};
 
 async function saveCache() {
   await fs.promises
@@ -40,6 +40,8 @@ async function getEmojiDrapeau(client, serveur, pays) {
 
   if (!client.application) await client.application.fetch();
 
+  if (pendingEmojis[key]) return pendingEmojis[key];
+
   if (emojisCache[key]) {
     try {
       const emoji = await client.application.emojis.fetch(
@@ -52,25 +54,34 @@ async function getEmojiDrapeau(client, serveur, pays) {
     }
   }
 
-  const url = `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${pays}`;
-  const response = await fetch(url);
-  if (!response.ok)
-    throw new Error(
-      `Impossible de récupérer l'image pour ${pays} et ${serveur}`,
-    );
-  const buffer = Buffer.from(await response.arrayBuffer());
+  pendingEmojis[key] = (async () => {
+    const url = `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${pays}`;
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(
+        `Impossible de récupérer l'image pour ${pays} et ${serveur}`,
+      );
+    const buffer = Buffer.from(await response.arrayBuffer());
 
-  const emoji = await client.application.emojis.create({
-    name: key.slice(0, 32),
-    attachment: buffer,
-  });
+    const emoji = await client.application.emojis.create({
+      name: key.slice(0, 32),
+      attachment: buffer,
+    });
 
-  emojisCache[key] = { emojiId: emoji.id, nom: key, createdAt: now };
-  await saveCache();
+    emojisCache[key] = { emojiId: emoji.id, nom: key, createdAt: now };
+    await saveCache();
 
-  scheduleDeleteEmoji(client, key, emoji.id);
+    scheduleDeleteEmoji(client, key, emoji.id);
 
-  return emoji;
+    return emoji;
+  })();
+
+  try {
+    const emoji = await pendingEmojis[key];
+    return emoji;
+  } finally {
+    delete pendingEmojis[key];
+  }
 }
 
 async function getEmojiTete(client, joueur) {
@@ -79,6 +90,8 @@ async function getEmojiTete(client, joueur) {
 
   if (!client.application) await client.application.fetch();
 
+  if (pendingEmojis[key]) return pendingEmojis[key];
+
   if (emojisCache[key]) {
     try {
       const emoji = await client.application.emojis.fetch(
@@ -91,27 +104,32 @@ async function getEmojiTete(client, joueur) {
     }
   }
 
-  let response;
-  try {
+  pendingEmojis[key] = (async () => {
     const url = `https://skins.nationsglory.fr/face/${joueur}/3d/4`;
-    response = await fetch(url);
-  } catch (e) {
-    return "";
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`Impossible de récupérer l'image pour ${joueur}`);
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    const emoji = await client.application.emojis.create({
+      name: key.slice(0, 32),
+      attachment: buffer,
+    });
+
+    emojisCache[key] = { emojiId: emoji.id, nom: joueur, createdAt: now };
+    await saveCache();
+
+    scheduleDeleteEmoji(client, key, emoji.id);
+
+    return emoji;
+  })();
+
+  try {
+    const emoji = await pendingEmojis[key];
+    return emoji;
+  } finally {
+    delete pendingEmojis[key];
   }
-  if (!response.ok) return "";
-  const buffer = Buffer.from(await response.arrayBuffer());
-
-  const emoji = await client.application.emojis.create({
-    name: key.slice(0, 32),
-    attachment: buffer,
-  });
-
-  emojisCache[key] = { emojiId: emoji.id, nom: joueur, createdAt: now };
-  await saveCache();
-
-  scheduleDeleteEmoji(client, key, emoji.id);
-
-  return emoji;
 }
 
 async function getHexEmoji(client, hexColor) {
@@ -120,6 +138,8 @@ async function getHexEmoji(client, hexColor) {
 
   if (!client.application) await client.application.fetch();
 
+  if (pendingEmojis[key]) return pendingEmojis[key];
+
   if (emojisCache[key]) {
     try {
       const emoji = await client.application.emojis.fetch(
@@ -132,26 +152,35 @@ async function getHexEmoji(client, hexColor) {
     }
   }
 
-  const canvas = Canvas.createCanvas(32, 32);
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = hexColor;
-  ctx.beginPath();
-  ctx.arc(16, 16, 16, 0, Math.PI * 2);
-  ctx.fill();
+  pendingEmojis[key] = (async () => {
+    const canvas = Canvas.createCanvas(32, 32);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = hexColor;
+    ctx.beginPath();
+    ctx.arc(16, 16, 16, 0, Math.PI * 2);
+    ctx.fill();
 
-  const buffer = canvas.toBuffer("image/png");
+    const buffer = canvas.toBuffer("image/png");
 
-  const emoji = await client.application.emojis.create({
-    name: key.slice(0, 32),
-    attachment: buffer,
-  });
+    const emoji = await client.application.emojis.create({
+      name: key.slice(0, 32),
+      attachment: buffer,
+    });
 
-  emojisCache[key] = { emojiId: emoji.id, color: hexColor, createdAt: now };
-  await saveCache();
+    emojisCache[key] = { emojiId: emoji.id, color: hexColor, createdAt: now };
+    await saveCache();
 
-  scheduleDeleteEmoji(client, key, emoji.id);
+    scheduleDeleteEmoji(client, key, emoji.id);
 
-  return emoji;
+    return emoji;
+  })();
+
+  try {
+    const emoji = await pendingEmojis[key];
+    return emoji;
+  } finally {
+    delete pendingEmojis[key];
+  }
 }
 
 async function checkEmojiCache(client) {

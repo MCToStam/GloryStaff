@@ -1,5 +1,6 @@
 const { ensureSanctions } = require("../../../../util/punisher");
 const { getPunisherContainer } = require("../../../../util/container/punisher");
+const { MessageFlags } = require("discord.js");
 
 module.exports = {
   data: {
@@ -20,7 +21,7 @@ module.exports = {
     const maxPage = Math.max(1, Math.ceil(sanctions.length / PER_PAGE));
     const page = 1;
 
-    const { embed, row } = getPunisherContainer(
+    const sanctionContainer = await getPunisherContainer(
       joueur,
       sanctions,
       page,
@@ -28,11 +29,12 @@ module.exports = {
       embedColor,
       config,
       PER_PAGE,
+      client,
     );
 
     return interaction.editReply({
-      embeds: [embed],
-      components: [row],
+      components: [sanctionContainer],
+      flags: MessageFlags.IsComponentsV2,
     });
   },
 };

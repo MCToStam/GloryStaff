@@ -18,10 +18,7 @@ module.exports = {
           "Le serveur pour lequel afficher la liste des doubles lead",
         )
         .setRequired(true)
-        .addChoices(
-          { name: "Inter-Serveur", value: "inter-serveur" },
-          ...serveurs,
-        ),
+        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs),
     )
     .addStringOption((option) =>
       option
@@ -57,7 +54,7 @@ module.exports = {
 
     const pseudo = interaction.options.getString("joueur");
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({});
 
     const searchRes = await fetch(
       `https://apiv2.nationsglory.fr/forums/userSearch?search=${pseudo}`,
@@ -97,17 +94,21 @@ module.exports = {
     const sanctions = await ensureSanctions(joueur, 7, config, serveursCibles);
     const maxPage = Math.max(1, Math.ceil(sanctions.length / 7));
 
-    const { embed, row } = getPunisherContainer(
+    const sanctionContainer = await getPunisherContainer(
       joueur,
       sanctions,
       1,
       maxPage,
-      config.couleur[serveur] || config.color,
+      config.couleur[serveur] || undefined,
       config,
       7,
       serveur,
+      client,
     );
 
-    await interaction.editReply({ embeds: [embed], components: [row] });
+    await interaction.editReply({
+      components: [sanctionContainer],
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };
