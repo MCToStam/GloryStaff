@@ -1,44 +1,42 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const { EmbedBuilder } = require("discord.js");
+const { getEmojiTete } = require("../../util/module/emoji");
+const {
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
+} = require("discord.js");
+
+function sameSanction(a, b) {
+  return (
+    a?.date === b?.date && a?.raison === b?.raison && a?.staff === b?.staff
+  );
+}
 
 function formatDuree(duree) {
   if (!duree) return "";
-
-  const order = ["y", "mois", "j", "h", "m", "s"];
-  const map = {
-    y: { sing: "an", plur: "ans" },
-    mois: { sing: "mois", plur: "mois" },
-    j: { sing: "jour", plur: "jours" },
-    h: { sing: "heure", plur: "heures" },
-    m: { sing: "minute", plur: "minutes" },
-    s: { sing: "seconde", plur: "secondes" },
-  };
-
-  const regex = /(\d+)(y|mois|j|h|m|s)/g;
-  let matches = [];
-  let match;
-
-  while ((match = regex.exec(duree)) !== null) {
-    const [, value, unit] = match;
-    matches.push({ value: Number(value), unit });
-  }
-
-  matches.sort((a, b) => order.indexOf(a.unit) - order.indexOf(b.unit));
-
-  return matches
-    .map(({ value, unit }) => {
-      const names = map[unit];
-      if (!names) return `${value}${unit}`;
-      return `${value} ${value > 1 ? names.plur : names.sing}`;
-    })
-    .join(" ");
+  return duree.replace(/(\d+)(y|mois|j|h|m|s)/g, (_, value, unit) => {
+    const map = {
+      y: { sing: "an", plur: "ans" },
+      mois: { sing: "mois", plur: "mois" },
+      j: { sing: "jour", plur: "jours" },
+      h: { sing: "heure", plur: "heures" },
+      m: { sing: "minute", plur: "minutes" },
+      s: { sing: "seconde", plur: "secondes" },
+    };
+    const u = map[unit];
+    return u ? `${value} ${value > 1 ? u.plur : u.sing}` : `${value}${unit}`;
+  });
 }
 
 function parseSanctions(rawText) {
   if (!rawText) return [];
 
-  let clean = rawText.replace(/&[0-9a-frlmonk]/gi, "");
+  if (/No sanction registered/i.test(rawText)) {
+    return "NO_SANCTION";
+  }
+
+  const clean = rawText.replace(/&[0-9a-frlmonk]/gi, "");
   const parts = clean
     .split("###")
     .map((p) => p.trim())
@@ -51,7 +49,6 @@ function parseSanctions(rawText) {
         /\[Punisher\]\s*\[(.+?) · (.+?)\]\s*'(.+?)'\s*by\s*(.+?)\s*on\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/i;
       const match = line.match(regex);
       if (!match) return { raw: line };
-
       return {
         type: match[1],
         duree: match[2],
@@ -64,47 +61,36 @@ function parseSanctions(rawText) {
 }
 
 async function fetchAllNewSanctions(pseudonyme, lastKnownSanction) {
-  let page = 1;
   let newSanctions = [];
 
-  while (true) {
+  for (let page = 1; page <= 10; page++) {
     const url = `https://apiv2.nationsglory.fr/plugins/api/user/all/${encodeURIComponent(
       pseudonyme,
     )}/get_punisher/${page}`;
-    let responseData;
 
     try {
       const response = await fetch(url);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
+
+      const text = await response.text();
+      const sanctions = parseSanctions(text);
+
+      if (sanctions === "NO_SANCTION" || sanctions.length === 0) break;
+
+      for (const sanction of sanctions) {
+        if (lastKnownSanction && sameSanction(sanction, lastKnownSanction)) {
+          return newSanctions.reverse();
+        }
+        newSanctions.push(sanction);
       }
-      responseData = await response.json();
     } catch (err) {
       console.error(
-        `Erreur API sanctions ${pseudonyme} page ${page}:`,
+        `[SANCTION] Erreur API ${pseudonyme} page ${page}:`,
         err.message,
       );
       break;
     }
-
-    const sanctions = parseSanctions(responseData);
-
-    if (sanctions.length === 0) break;
-
-    for (const sanction of sanctions) {
-      if (
-        lastKnownSanction &&
-        sanction.date === lastKnownSanction.date &&
-        sanction.raison === lastKnownSanction.raison &&
-        sanction.staff === lastKnownSanction.staff
-      ) {
-        return newSanctions.reverse();
-      }
-      newSanctions.push(sanction);
-    }
-
-    page++;
-    if (page > 10) break;
   }
 
   return newSanctions.reverse();
@@ -112,37 +98,23 @@ async function fetchAllNewSanctions(pseudonyme, lastKnownSanction) {
 
 async function findSanctionServer(pseudonyme, sanction) {
   for (const serveur of config.liste_serveur) {
-    let page = 1;
-    while (page <= 5) {
+    for (let page = 1; page <= 5; page++) {
       const url = `https://apiv2.nationsglory.fr/plugins/api/user/${serveur}/${encodeURIComponent(
         pseudonyme,
       )}/get_punisher/${page}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+      const text = await res.text();
+      const sanctions = parseSanctions(text);
 
-      try {
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+      if (sanctions === "NO_SANCTION") break;
 
-        const data = await res.json();
-        const sanctions = parseSanctions(data);
-
-        for (const s of sanctions) {
-          if (
-            s.date === sanction.date &&
-            s.raison === sanction.raison &&
-            s.staff === sanction.staff
-          ) {
-            return serveur;
-          }
-        }
-      } catch (err) {
-        console.error(
-          `Erreur API serveur ${serveur} pour ${pseudonyme}:`,
-          err.message,
-        );
+      if (
+        Array.isArray(sanctions) &&
+        sanctions.some((s) => sameSanction(s, sanction))
+      ) {
+        return serveur;
       }
-      page++;
     }
   }
   return null;
@@ -152,30 +124,38 @@ async function sendSanctionMessage(
   channelId,
   roleIds,
   message,
+  titre,
   serveur,
   client,
 ) {
   const channel = client.channels.cache.get(channelId);
   if (!channel)
     return console.error(
-      `Salon ${channelId} sanctions introuvable pour ${serveur}`,
+      `[SANCTION] Salon ${channelId} introuvable pour ${serveur}`,
     );
 
-  let content = "";
-  if (roleIds && Array.isArray(roleIds) && roleIds.length > 0) {
-    content = roleIds.map((r) => `<@&${r}>`).join(" ");
-  }
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) => t.setContent(`## 🔨 ${titre}`))
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) => t.setContent(message));
 
-  const embed = new EmbedBuilder()
-    .setTitle(`Nouvelle Sanction`)
-    .setDescription(message)
-    .setColor(config.couleur[serveur])
-    .setTimestamp();
+  let roleTextDisplay;
+  if (roleIds) {
+    const roleMentions = roleIds.map((roleId) => `<@&${roleId}>`).join(", ");
+
+    roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
+  }
+  let components = [container];
+  if (roleIds) components = [roleTextDisplay, container];
 
   try {
-    await channel.send({ content, embeds: [embed] });
+    await channel.send({
+      components,
+      flags: MessageFlags.IsComponentsV2,
+    });
   } catch (err) {
-    console.error(`Erreur envoi embed sanctions pour ${serveur}:`, err.message);
+    console.error(`[SANCTION] Erreur envoi embed sur ${serveur}:`, err.message);
   }
 }
 
@@ -185,76 +165,86 @@ async function sanction(client, serveur) {
 
   if (
     !configStaff["Sanction Staff"].active ||
-    !configStaff["Sanction Staff"].Salon.valeur
+    !configStaff["Sanction Staff"].Salon?.valeur
   )
     return;
 
-  console.log("[SANCTION] Recherche pour le serveur", serveur);
+  console.log(`[SANCTION] Vérification des sanctions sur ${serveur}`);
 
   const staffServer = getData(`data/${serveur}/staff-serveur.json`);
-
-  const filteredStaff = Object.entries(staffServer)
-    .filter(([key]) => key !== "timestamp")
-    .map(([_, value]) => value);
-
-  const currentStaff = new Set(filteredStaff.flat());
+  const currentStaff = new Set(
+    Object.entries(staffServer)
+      .filter(([k]) => k !== "timestamp")
+      .flatMap(([_, v]) => v),
+  );
 
   for (const pseudonyme of currentStaff) {
     if (!pseudonyme) continue;
 
-    let data = getData(`data/${serveur}/staff/${pseudonyme}.json`);
-
+    const dataPath = `data/${serveur}/staff/${pseudonyme}.json`;
+    let data = getData(dataPath) || {};
     const lastKnownSanction = data.lastSanction || null;
+
     const newSanctions = await fetchAllNewSanctions(
       pseudonyme,
       lastKnownSanction,
     );
+    if (!newSanctions.length) continue;
 
-    if (newSanctions.length === 0) continue;
-
-    for (const sanction of newSanctions) {
-      sanction.serveur = await findSanctionServer(pseudonyme, sanction);
-    }
-
-    if (!data.lastSanction) {
+    if (!lastKnownSanction) {
       data.lastSanction = newSanctions[newSanctions.length - 1];
-      saveData(`data/${serveur}/staff/${pseudonyme}.json`, data);
+      saveData(dataPath, data);
       continue;
     }
 
-    const lignes = newSanctions.map((s) => {
-      const ts = s.date
-        ? `<t:${Math.floor(new Date(s.date).getTime() / 1000)}:R>`
-        : "";
+    await Promise.all(
+      newSanctions.map(async (s) => {
+        s.serveur = await findSanctionServer(pseudonyme, s);
+      }),
+    );
 
-      let dureeStr = "";
-      if (s.duree === "Def") {
-        if (s.type !== "Warn") {
-          dureeStr = "définitif ";
-        }
-      } else if (s.duree && s.type !== "Warn") {
-        dureeStr = `pendant ${formatDuree(s.duree)} `;
-      }
+    const lignes = await Promise.all(
+      newSanctions.map(async (s) => {
+        const ts = s.date
+          ? `<t:${Math.floor(new Date(s.date).getTime() / 1000)}:R>`
+          : "";
 
-      return `${config.emoji_formate[s.serveur] || ""} **${
-        s.type
-      }** ${dureeStr}pour **${s.raison}** par **${s.staff}** ${ts}`;
-    });
+        const dureeStr =
+          s.type !== "Warn" && s.duree === "Def"
+            ? "définitif "
+            : s.type !== "Warn" && s.duree
+              ? `pendant ${formatDuree(s.duree)} `
+              : "";
 
-    const embedMessage = `**${pseudonyme}** a reçu ${newSanctions.length} ${
+        const tete = await getEmojiTete(client, s.staff);
+
+        return `${config.emoji_formate[s.serveur] || ""} **${
+          s.type
+        }** ${dureeStr}pour **${s.raison}** par ${tete} **${s.staff}** ${ts}`;
+      }),
+    );
+
+    const embedMessage = `**${await getEmojiTete(
+      client,
+      pseudonyme,
+    )} ${pseudonyme}** a reçu ${newSanctions.length} ${
       newSanctions.length > 1 ? "nouvelles sanctions" : "nouvelle sanction"
     } :\n\n${lignes.join("\n")}`;
+
+    const titre =
+      newSanctions.length > 1 ? "Nouvelles Sanctions" : "Nouvelle Sanction";
 
     await sendSanctionMessage(
       configStaff["Sanction Staff"].Salon.valeur,
       configStaff["Sanction Staff"].Role.valeur,
       embedMessage,
+      titre,
       serveur,
       client,
     );
 
     data.lastSanction = newSanctions[newSanctions.length - 1];
-    saveData(`data/${serveur}/staff/${pseudonyme}.json`, data);
+    saveData(dataPath, data);
   }
 
   saveData(`data/${serveur}/sanction-config.json`, ancienConfigStaff);
