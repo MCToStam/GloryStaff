@@ -1,4 +1,5 @@
 const { getData } = require("../../../util/module/getAndSaveData");
+const { getEmojiTete, getEmojiDrapeau } = require("../../../util/module/emoji");
 const {
   SlashCommandBuilder,
   ContainerBuilder,
@@ -27,7 +28,6 @@ module.exports = {
     const serveur = interaction.options.getString("serveur").toLowerCase();
 
     const { errorContainer } = await errorStaffContainer(serveur);
-
     if (errorContainer) {
       return interaction.reply({
         components: [errorContainer],
@@ -35,11 +35,7 @@ module.exports = {
       });
     }
 
-    const { pseudonym, servers, container } = await discordStaff(
-      interaction.user.id,
-      serveur,
-    );
-
+    const { container } = await discordStaff(interaction.user.id, serveur);
     if (container) {
       return interaction.reply({
         components: [container],
@@ -50,9 +46,7 @@ module.exports = {
     const data = getData(`data/doublelead.json`);
 
     const matchingLeaders = data.filter((entry) =>
-      Object.keys(entry.servers).some(
-        (server) => server.toLowerCase() === serveur,
-      ),
+      entry.servers.some((s) => s.server.toLowerCase() === serveur),
     );
 
     if (matchingLeaders.length === 0) {
@@ -60,7 +54,7 @@ module.exports = {
         .setAccentColor(config.couleur[serveur])
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `## Double Lead - ${
+            `## 🏴 Double Lead - ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
             }`,
           ),
@@ -70,7 +64,7 @@ module.exports = {
           t.setContent(
             `Aucun double lead n'a été trouvé sur le serveur <:NG${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }:${config.emoji[serveur.toLowerCase()]}> **${
+            }:${config.emoji[serveur]}> **${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
             }**.`,
           ),
@@ -78,46 +72,64 @@ module.exports = {
       return await interaction.reply({
         components: [noDoubleLead],
         flags: MessageFlags.IsComponentsV2,
-        ephemeral: true,
       });
     }
+
+    await interaction.deferReply({});
+
+    const linesFinal = await Promise.all(
+      matchingLeaders.map(async (entry) => {
+        const pseudos = entry.leader.split("/");
+        let lines = [];
+
+        for (const pseudo of pseudos) {
+          for (const s of entry.servers.filter(
+            (srv) => srv.compte === pseudo,
+          )) {
+            const emojiTete = await getEmojiTete(client, pseudo);
+            const emojiDrapeau = await getEmojiDrapeau(
+              client,
+              s.server,
+              s.country,
+            );
+
+            lines.push(
+              s.server.toLowerCase() === serveur
+                ? `**${emojiTete} ${pseudo.replace(
+                    /_/g,
+                    "\\_",
+                  )} ➜ ${emojiDrapeau} ${s.country} ${
+                    s.server.charAt(0).toUpperCase() + s.server.slice(1)
+                  }**`
+                : `${emojiTete} ${pseudo.replace(
+                    /_/g,
+                    "\\_",
+                  )} ➜ ${emojiDrapeau} ${s.country} ${
+                    s.server.charAt(0).toUpperCase() + s.server.slice(1)
+                  }`,
+            );
+          }
+        }
+
+        return lines.join("\n");
+      }),
+    );
 
     const containerDoubleLead = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
         t.setContent(
-          `## Double Lead - ${
+          `## 🏴 Double Lead - ${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }`,
         ),
       )
       .addSeparatorComponents((s) => s)
-      .addTextDisplayComponents((t) =>
-        t.setContent(
-          matchingLeaders
-            .map((entry) => {
-              let serverList = "";
-              Object.keys(entry.servers).forEach((serverName) => {
-                const countryName = entry.servers[serverName];
-                serverList += `↪ <:NG${
-                  serverName.charAt(0).toUpperCase() + serverName.slice(1)
-                }:${config.emoji[serverName]}> ${
-                  serverName.charAt(0).toUpperCase() + serverName.slice(1)
-                } : ${countryName}\n`;
-              });
-              return `**${entry.leader.replace(
-                /_/g,
-                "\\_",
-              )} :**\n${serverList}`;
-            })
-            .join("\n"),
-        ),
-      );
+      .addTextDisplayComponents((t) => t.setContent(linesFinal.join("\n\n")));
 
-    return await interaction.reply({
+    return await interaction.editReply({
       components: [containerDoubleLead],
       flags: MessageFlags.IsComponentsV2,
-      ephemeral: true,
     });
   },
 };
