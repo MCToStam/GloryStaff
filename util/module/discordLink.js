@@ -33,7 +33,7 @@ async function discordLink(discordId) {
       "❌ Erreur lors de la lecture du fichier api_get_ng.json :",
       err,
     );
-    return discordId ? {} : null;
+    return discordId ? null : {};
   }
 }
 
