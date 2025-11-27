@@ -10,10 +10,6 @@ module.exports = {
     name: "ally_editchef",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const data = getData("data/coral/alliance/donnee.json");
     const allianceNom = interaction.customId.replace("ally_editchef-", "");

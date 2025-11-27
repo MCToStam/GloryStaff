@@ -53,7 +53,11 @@ module.exports = async (client, interaction) => {
           server.toLowerCase().startsWith(value.toLowerCase()),
         );
 
-        const staffInfo = await discordStaff(memberId, matchedServers);
+        const staffInfo = await discordStaff(
+          memberId,
+          matchedServers,
+          "super_moderateur",
+        );
 
         if (staffInfo.servers.length > 0 || isDev) {
           availableServers.push(...staffInfo.servers);

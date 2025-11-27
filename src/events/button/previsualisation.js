@@ -79,10 +79,6 @@ module.exports = {
     name: "previsualisation",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const systeme = interaction.customId.split("-")[1];
     const embedColor = interaction.message.embeds[0]?.color;

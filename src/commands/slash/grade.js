@@ -42,6 +42,7 @@ module.exports = {
     const { pseudonym, servers, container } = await discordStaff(
       interaction.user.id,
       serveur,
+      "super_moderateur",
     );
 
     if (container) {

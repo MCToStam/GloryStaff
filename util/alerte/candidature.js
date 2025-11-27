@@ -338,6 +338,12 @@ async function sendCandidatures(client, AllCandidatures) {
               label: "💢 Afficher le Punisher",
               style: ButtonStyle.Primary,
             },
+            {
+              type: 2,
+              custom_id: `candidature_activite-${candidature.auteur}-${serveur}`,
+              label: "⌚ Afficher l'Activité",
+              style: ButtonStyle.Primary,
+            },
           ],
         },
         { type: 14, spacing: SeparatorSpacingSize.Small },

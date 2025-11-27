@@ -13,7 +13,7 @@ module.exports = async (client, member) => {
       pseudonym,
       servers: availableServers,
       container,
-    } = await discordStaff(memberId);
+    } = await discordStaff(memberId, "all", "super_moderateur");
 
     const rolesToAdd = availableServers
       .map((server) => config.role[server])

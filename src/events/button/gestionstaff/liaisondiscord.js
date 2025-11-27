@@ -10,10 +10,6 @@ module.exports = {
     name: "gestionstaff_liaisondiscord",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const joueur = interaction.customId.split("-")[1];
 

@@ -14,10 +14,6 @@ module.exports = {
     name: "notation_module",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const subId = interaction.customId;
     const serveur = await getServeur(interaction);

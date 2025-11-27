@@ -7,10 +7,6 @@ module.exports = {
     name: "punisher",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const [type, direction, joueur, pageStr, serveur] =
       interaction.customId.split("-");

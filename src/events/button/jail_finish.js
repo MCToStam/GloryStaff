@@ -11,10 +11,6 @@ module.exports = {
     name: "jail_finish",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const embedColor = interaction.message.embeds[0]?.color;
 

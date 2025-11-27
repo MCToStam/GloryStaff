@@ -11,10 +11,6 @@ module.exports = {
     name: "onu_help",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const embedColor = interaction.message.embeds[0]?.color;
 

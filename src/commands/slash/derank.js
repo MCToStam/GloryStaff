@@ -110,7 +110,7 @@ module.exports = {
       pseudonym: pseudo_staff,
       servers,
       container,
-    } = await discordStaff(interaction.user.id, serveur);
+    } = await discordStaff(interaction.user.id, serveur, "super_moderateur");
 
     if (container) {
       return interaction.reply({

@@ -17,10 +17,6 @@ module.exports = {
     name: "globalstaff_activitediscord",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const serveur = await getServeur(interaction);
     await interaction.deferUpdate({});

@@ -7,10 +7,6 @@ module.exports = {
     name: "config_toggle",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const [_, systemName, file] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);

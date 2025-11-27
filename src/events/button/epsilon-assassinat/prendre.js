@@ -11,10 +11,6 @@ module.exports = {
     name: "assassinat_epsilon_prendre",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const data = getData("data/epsilon/assassinat/donnee.json");
 

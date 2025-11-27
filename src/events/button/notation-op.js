@@ -10,10 +10,6 @@ module.exports = {
     name: "notation_op",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const id = interaction.customId.slice("notation_op-".length);
     const modal = new ModalBuilder()

@@ -11,10 +11,6 @@ module.exports = {
     name: "notation_help",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     let color = interaction.message.components[0].data.accent_color;
     if (!color) {

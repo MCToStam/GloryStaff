@@ -5,10 +5,6 @@ module.exports = {
     name: "jail_previsualisation_finish",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const embed = new EmbedBuilder()
       .setTitle("Prévisualitation")

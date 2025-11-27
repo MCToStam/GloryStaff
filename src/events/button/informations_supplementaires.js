@@ -10,10 +10,6 @@ module.exports = {
     name: "informations_supplementaires",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const systemebrut = interaction.customId.split("-")[1];
 

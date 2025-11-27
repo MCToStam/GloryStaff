@@ -17,10 +17,6 @@ module.exports = {
     name: "gestionstaff_traitement",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const serveur = await getServeur(interaction);
     const joueur = interaction.customId.split("/")[1];

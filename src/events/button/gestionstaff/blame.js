@@ -12,10 +12,6 @@ module.exports = {
     name: "gestionstaff_blame",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const joueur = interaction.customId.split("-")[1];
     const serveur = await getServeur(interaction);

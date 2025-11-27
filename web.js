@@ -1078,7 +1078,11 @@ app.get("/api/get-staff", async (req, res) => {
     ) {
       return res.status(200).json(config.liste_serveur);
     }
-    const { pseudonym, servers, container } = await discordStaff(discordId);
+    const { pseudonym, servers, container } = await discordStaff(
+      discordId,
+      "all",
+      "super_moderateur",
+    );
 
     return res.status(200).json(servers);
   } catch (error) {

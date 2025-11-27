@@ -208,7 +208,6 @@ module.exports = async (client, interaction) => {
     },
   );
 
-  await checkCandidature(client);
   cron.schedule(
     "*/30 * * * *",
     async () => {

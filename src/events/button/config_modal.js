@@ -12,10 +12,6 @@ module.exports = {
     name: "config_modal",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const [_, file, systemName, key] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);

@@ -35,7 +35,11 @@ module.exports = {
       });
     }
 
-    const { container } = await discordStaff(interaction.user.id, serveur);
+    const { container } = await discordStaff(
+      interaction.user.id,
+      serveur,
+      "super_moderateur",
+    );
     if (container) {
       return interaction.reply({
         components: [container],

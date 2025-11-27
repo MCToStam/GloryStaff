@@ -7,10 +7,6 @@ module.exports = {
     name: "config_retour",
   },
 
-  conf: {
-    type: "User",
-  },
-
   async execute(client, interaction, config) {
     const [_, file] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);

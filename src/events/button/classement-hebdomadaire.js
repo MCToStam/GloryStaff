@@ -6,10 +6,6 @@ module.exports = {
     name: "classement_hebdomadaire",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const [, type, id] = interaction.customId.split("-");
     const isNotation = type === "notation";

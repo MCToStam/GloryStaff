@@ -12,10 +12,6 @@ module.exports = {
     name: "routine_finish",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const message = interaction.message;
     const embed = message.embeds[0];

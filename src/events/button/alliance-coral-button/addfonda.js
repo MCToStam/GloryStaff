@@ -10,10 +10,6 @@ module.exports = {
     name: "ally_addfonda",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const allianceNom = interaction.customId.replace("ally_addfonda-", "");
 

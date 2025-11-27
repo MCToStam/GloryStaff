@@ -11,10 +11,6 @@ module.exports = {
     name: "alliance_create",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const modal = new ModalBuilder()
       .setCustomId("modal_alliance_create")

@@ -1,15 +1,10 @@
-const { ensureSanctions } = require("../../../util/punisher");
-const { getPunisherContainer } = require("../../../util/container/punisher");
-const { getServeur } = require("../../../util/module/getServeur");
+const { ensureSanctions } = require("../../../../util/punisher");
+const { getPunisherContainer } = require("../../../../util/container/punisher");
 const { MessageFlags } = require("discord.js");
 
 module.exports = {
   data: {
     name: "candidature_punisher",
-  },
-
-  conf: {
-    type: "Button",
   },
 
   async execute(client, interaction, config) {

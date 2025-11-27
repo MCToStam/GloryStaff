@@ -17,7 +17,11 @@ async function checkGradeSupport(client) {
       if (member.user.bot) continue;
 
       try {
-        const { servers: availableServers } = await discordStaff(member.id);
+        const { servers: availableServers } = await discordStaff(
+          member.id,
+          "all",
+          "super_moderateur",
+        );
 
         const expectedRoles = availableServers
           .map((server) => config.role[server])

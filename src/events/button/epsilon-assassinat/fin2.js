@@ -7,10 +7,6 @@ module.exports = {
     name: "assassinat_epsilon_fin2",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     const customId = interaction.customId;
     const isKill = customId.endsWith("-kill");

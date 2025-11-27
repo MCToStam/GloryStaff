@@ -6,10 +6,6 @@ module.exports = {
     name: "alliance_delete",
   },
 
-  conf: {
-    type: "Button",
-  },
-
   async execute(client, interaction, config) {
     let data = getData("data/coral/alliance/donnee.json");
     const allianceNom = interaction.customId.replace("alliance_delete-", "");
