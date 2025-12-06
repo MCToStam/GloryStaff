@@ -8,7 +8,6 @@ const {
 } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const { getData } = require("../../../util/module/getAndSaveData");
-const { errorStaffContainer } = require("../../../util/module/discordLink");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -196,7 +195,7 @@ module.exports = {
       ]);
 
     const buttonFinish = new ButtonBuilder()
-      .setCustomId("routine_finish")
+      .setCustomId(`routine_finish-${pseudo}`)
       .setLabel("Terminer la Routine")
       .setStyle(ButtonStyle.Success);
 

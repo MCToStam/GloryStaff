@@ -18,7 +18,8 @@ module.exports = {
           "Le serveur pour lequel afficher la liste des doubles lead",
         )
         .setRequired(true)
-        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs),
+        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs)
+        .setAutocomplete(false),
     )
     .addStringOption((option) =>
       option

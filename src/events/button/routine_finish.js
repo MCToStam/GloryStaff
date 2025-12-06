@@ -127,7 +127,7 @@ module.exports = {
         }
       }
 
-      const pseudo = embed.title.split(" - ")[1];
+      const pseudo = interaction.customId.split("-")[1];
       const debutRoutineMatch = embed.description.match(
         /\*\*Début de la routine :\*\* <t:(\d+):R>/,
       );
