@@ -2,6 +2,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const Canvas = require("canvas");
 const config = require("../../config");
+const { log } = require("node:console");
 
 const cachePath = path.join(__dirname, "..", "..", "data", "emojisCache.json");
 let emojisCache = JSON.parse(fs.readFileSync(cachePath, "utf8"));
@@ -46,10 +47,9 @@ async function createOrFetchEmoji(client, key, buffer, extraData = {}) {
     scheduleDeleteEmoji(client, key, emoji.id);
     return emoji;
   } catch (e) {
-    if (e.message.includes("already exists for this application")) {
-      const existing = client.application.emojis.cache.find(
-        (e) => e.name === key.slice(0, 32),
-      );
+    if (e.message.includes("Invalid Form Body")) {
+      const emojis = await client.application.emojis.fetch();
+      const existing = emojis.find((e) => e.name === key.slice(0, 32));
       if (existing) {
         emojisCache[key] = {
           emojiId: existing.id,
