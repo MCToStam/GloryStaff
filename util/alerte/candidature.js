@@ -147,327 +147,336 @@ async function sendCandidatures(client, AllCandidatures) {
       continue;
     }
 
-    try {
-      const accentColor = candidature.badgeColor
-        ? parseInt(candidature.badgeColor.replace("#", ""), 16)
-        : 0x6f6f6f;
-
-      const response = await fetch(
-        `https://publicapi.nationsglory.fr/user/${candidature.auteur}`,
-        {
-          headers: {
-            Authorization: `Bearer ${config.apitoken_backup}`,
-            accept: "application/json",
-          },
-        },
-      );
-
-      const responseDouble = await fetch(
-        `https://apiv2.nationsglory.fr/plugins/api/user/all/${candidature.auteur}/check_if_unique`,
-        {
-          headers: {
-            Authorization: `Bearer ${config.apitoken_backup}`,
-            accept: "application/json",
-          },
-        },
-      );
-
-      const responsePunisher = await fetch(
-        `https://apiv2.nationsglory.fr/plugins/api/user/all/${candidature.auteur}/get_punisher/1`,
-        {
-          headers: {
-            Authorization: `Bearer ${config.apitoken_backup}`,
-            accept: "application/json",
-          },
-        },
-      );
-
-      let doubleData = null;
-      let punisherData = null;
-
+    const isNew = !candidature.messageId;
+    if (
+      isNew ||
+      (candidature.messageId &&
+        candidature.badgeColor !== candidature.savedBadgeColor)
+    ) {
       try {
-        doubleData = await responseDouble.text();
-      } catch (err) {
-        doubleData = null;
-      }
+        const accentColor = candidature.badgeColor
+          ? parseInt(candidature.badgeColor.replace("#", ""), 16)
+          : 0x6f6f6f;
 
-      try {
-        punisherData = await responsePunisher.text();
-      } catch (err) {
-        punisherData = null;
-      }
-
-      let data = null;
-      try {
-        data = await response.json();
-      } catch (err) {
-        data = null;
-      }
-
-      const components = [
-        {
-          type: 10,
-          content: `## Candidature ${role} - [${candidature.auteur}](https://nationsglory.fr/profile/${candidature.auteur})`,
-        },
-        { type: 14, spacing: SeparatorSpacingSize.Small },
-        {
-          type: 10,
-          content: `${await getEmojiTete(
-            client,
-            candidature.auteur,
-          )} **Auteur :** ${candidature.auteur}`,
-        },
-        {
-          type: 10,
-          content: `🗓️ **Date de création :** <t:${candidature.timestamp}:R>`,
-        },
-      ];
-
-      if (data && data.servers && data.servers[serveur]) {
-        const lastConnectionDate = new Date(
-          data.servers[serveur].last_connection + "Z",
-        );
-        const lastConnectionTimestamp = Math.floor(
-          lastConnectionDate.getTime() / 1000,
+        const response = await fetch(
+          `https://publicapi.nationsglory.fr/user/${candidature.auteur}`,
+          {
+            headers: {
+              Authorization: `Bearer ${config.apitoken_backup}`,
+              accept: "application/json",
+            },
+          },
         );
 
-        let seconds = parseInt(data.servers[serveur].playtime, 10);
+        const responseDouble = await fetch(
+          `https://apiv2.nationsglory.fr/plugins/api/user/all/${candidature.auteur}/check_if_unique`,
+          {
+            headers: {
+              Authorization: `Bearer ${config.apitoken_backup}`,
+              accept: "application/json",
+            },
+          },
+        );
 
-        const years = Math.floor(seconds / (365 * 24 * 60 * 60));
-        seconds %= 365 * 24 * 60 * 60;
+        const responsePunisher = await fetch(
+          `https://apiv2.nationsglory.fr/plugins/api/user/all/${candidature.auteur}/get_punisher/1`,
+          {
+            headers: {
+              Authorization: `Bearer ${config.apitoken_backup}`,
+              accept: "application/json",
+            },
+          },
+        );
 
-        const months = Math.floor(seconds / (30 * 24 * 60 * 60));
-        seconds %= 30 * 24 * 60 * 60;
+        let doubleData = null;
+        let punisherData = null;
 
-        const days = Math.floor(seconds / (24 * 60 * 60));
-        seconds %= 24 * 60 * 60;
+        try {
+          doubleData = await responseDouble.text();
+        } catch (err) {
+          doubleData = null;
+        }
 
-        const hours = Math.floor(seconds / 3600);
-        seconds %= 3600;
+        try {
+          punisherData = await responsePunisher.text();
+        } catch (err) {
+          punisherData = null;
+        }
 
-        const minutes = Math.floor(seconds / 60);
-        seconds %= 60;
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (err) {
+          data = null;
+        }
 
-        const parts = [];
-        if (years) parts.push(`${years} an${years > 1 ? "s" : ""}`);
-        if (months) parts.push(`${months} mois`);
-        if (days) parts.push(`${days} jour${days > 1 ? "s" : ""}`);
-        if (hours) parts.push(`${hours}h`);
-        if (minutes) parts.push(`${minutes}m`);
-        if (seconds) parts.push(`${seconds}s`);
-
-        const playtimeFormatted = parts.length ? parts.join(" ") : "0s";
-
-        components.push(
+        const components = [
+          {
+            type: 10,
+            content: `## Candidature ${role} - [${candidature.auteur}](https://nationsglory.fr/profile/${candidature.auteur})`,
+          },
           { type: 14, spacing: SeparatorSpacingSize.Small },
           {
             type: 10,
-            content: `⏱️ **Temps de Jeu ${
-              serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            } :** ${playtimeFormatted}`,
+            content: `${await getEmojiTete(
+              client,
+              candidature.auteur,
+            )} **Auteur :** ${candidature.auteur}`,
           },
           {
             type: 10,
-            content: `🔙 **Dernière Connexion ${
-              serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            } :** <t:${lastConnectionTimestamp}:R>`,
+            content: `🗓️ **Date de création :** <t:${candidature.timestamp}:R>`,
           },
-        );
-      }
+        ];
 
-      if (doubleData || punisherData) {
-        components.push({ type: 14, spacing: SeparatorSpacingSize.Small });
-      }
-
-      if (doubleData) {
-        const cleanedDouble = doubleData
-          .split(/,|\/|;/)
-          .map((d) => d.trim())
-          .filter(
-            (d) =>
-              d &&
-              !["null", "undefined", "-", "aucun", "none"].includes(
-                d.toLowerCase(),
-              ),
+        if (data && data.servers && data.servers[serveur]) {
+          const lastConnectionDate = new Date(
+            data.servers[serveur].last_connection + "Z",
           );
-        components.push({
-          type: 10,
-          content: `👥 **Doubles Comptes :** ${
-            cleanedDouble.length > 0
-              ? cleanedDouble.join(", ")
-              : "Aucun double compte"
-          }`,
-        });
-      }
-
-      if (punisherData) {
-        const sanctions = punisherData
-          .split("###")
-          .map((s) => s.trim())
-          .filter((s) => s && s.startsWith("&7[&cPunisher&7]"));
-
-        if (sanctions.length > 0) {
-          const lastSanctionRaw = sanctions[0];
-          const match = lastSanctionRaw.match(
-            /&4(\w+)&7.*]&r\s+'(.+?)'\s+by &7([\w\d_]+)&r on &7(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
+          const lastConnectionTimestamp = Math.floor(
+            lastConnectionDate.getTime() / 1000,
           );
 
-          if (match) {
-            const [, type, reason, auteur, dateStr] = match;
+          let seconds = parseInt(data.servers[serveur].playtime, 10);
 
-            const timestamp = Math.floor(
-              new Date(dateStr + "Z").getTime() / 1000,
-            );
+          const years = Math.floor(seconds / (365 * 24 * 60 * 60));
+          seconds %= 365 * 24 * 60 * 60;
 
-            components.push({
+          const months = Math.floor(seconds / (30 * 24 * 60 * 60));
+          seconds %= 30 * 24 * 60 * 60;
+
+          const days = Math.floor(seconds / (24 * 60 * 60));
+          seconds %= 24 * 60 * 60;
+
+          const hours = Math.floor(seconds / 3600);
+          seconds %= 3600;
+
+          const minutes = Math.floor(seconds / 60);
+          seconds %= 60;
+
+          const parts = [];
+          if (years) parts.push(`${years} an${years > 1 ? "s" : ""}`);
+          if (months) parts.push(`${months} mois`);
+          if (days) parts.push(`${days} jour${days > 1 ? "s" : ""}`);
+          if (hours) parts.push(`${hours}h`);
+          if (minutes) parts.push(`${minutes}m`);
+          if (seconds) parts.push(`${seconds}s`);
+
+          const playtimeFormatted = parts.length ? parts.join(" ") : "0s";
+
+          components.push(
+            { type: 14, spacing: SeparatorSpacingSize.Small },
+            {
               type: 10,
-              content: `🚫 **Dernière Sanction :** ${type} : ${reason} par ${await getEmojiTete(client, auteur)} ${auteur} <t:${timestamp}:R>`,
-            });
-          }
-        }
-      }
-
-      components.push(
-        { type: 14, spacing: SeparatorSpacingSize.Small },
-        {
-          type: 1,
-          components: [
-            {
-              type: 2,
-              custom_id: `candidature_punisher-${candidature.auteur}`,
-              label: "💢 Afficher le Punisher",
-              style: ButtonStyle.Primary,
+              content: `⏱️ **Temps de Jeu ${
+                serveur.charAt(0).toUpperCase() + serveur.slice(1)
+              } :** ${playtimeFormatted}`,
             },
             {
-              type: 2,
-              custom_id: `candidature_activite-${candidature.auteur}-${serveur}`,
-              label: "⌚ Afficher l'Activité",
-              style: ButtonStyle.Primary,
+              type: 10,
+              content: `🔙 **Dernière Connexion ${
+                serveur.charAt(0).toUpperCase() + serveur.slice(1)
+              } :** <t:${lastConnectionTimestamp}:R>`,
             },
-          ],
-        },
-        { type: 14, spacing: SeparatorSpacingSize.Small },
-        {
-          type: 1,
-          components: [
-            {
-              type: 2,
-              url: candidature.lien,
-              label: "🔗 Aller sur la Candidature",
-              style: ButtonStyle.Link,
-            },
-          ],
-        },
-      );
-
-      const candidatureContainer = {
-        type: 17,
-        accent_color: accentColor,
-        components: components,
-      };
-
-      const isNew = !candidature.messageId;
-      if (isNew) {
-        const candidatureDetailsContainer = await getCandidatureContent(
-          candidature.lien,
-          serveur,
-        );
-
-        const roleMention =
-          roleData.Role.valeur && Array.isArray(roleData.Role.valeur)
-            ? roleData.Role.valeur.map((r) => `<@&${r}>`).join(" ")
-            : null;
-
-        const headerComponents = roleMention
-          ? [{ type: 10, content: roleMention }, candidatureContainer]
-          : [candidatureContainer];
-
-        if (channel.type === 0) {
-          const sent = await channel.send({
-            components: headerComponents,
-            flags: MessageFlags.IsComponentsV2,
-          });
-          candidature.messageId = sent.id;
-          candidature.savedBadgeColor = candidature.badgeColor;
-
-          const thread = await sent.startThread({
-            name: `Candidature ${role} - ${candidature.auteur}`,
-          });
-
-          await thread.send({
-            components: [candidatureDetailsContainer],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        } else if (channel.type === 15) {
-          const thread = await channel.threads.create({
-            name: `Candidature ${role} - ${candidature.auteur}`,
-            message: {
-              components: headerComponents,
-              flags: MessageFlags.IsComponentsV2,
-            },
-          });
-
-          await thread.send({
-            components: [candidatureDetailsContainer],
-            flags: MessageFlags.IsComponentsV2,
-          });
-
-          let mainMessage;
-          if (thread.appliedMessage) {
-            mainMessage = thread.appliedMessage;
-          } else {
-            const fetched = await thread.messages.fetch({ limit: 1 });
-            mainMessage = fetched.first();
-          }
-
-          if (mainMessage) {
-            candidature.messageId = mainMessage.id;
-            candidature.savedBadgeColor = candidature.badgeColor;
-          } else {
-            console.warn(
-              "Impossible de récupérer le message principal du thread forum",
-            );
-          }
-        } else {
-          console.warn(`⚠️ Channel ${channelId} n'est ni texte ni forum.`);
-        }
-      } else if (
-        candidature.messageId &&
-        candidature.badgeColor !== candidature.savedBadgeColor
-      ) {
-        let msg = null;
-
-        if (channel.type === 0) {
-          msg = await channel.messages
-            .fetch(candidature.messageId)
-            .catch(() => null);
-        } else if (channel.type === 15) {
-          const thread = channel.threads.cache.find(
-            (t) => t.id === candidature.messageId,
           );
+        }
 
-          if (thread) {
-            if (thread.appliedMessage) {
-              msg = thread.appliedMessage;
-            } else {
-              const fetched = await thread.messages
-                .fetch({ limit: 1 })
-                .catch(() => null);
-              msg = fetched?.first() || null;
+        if (doubleData || punisherData) {
+          components.push({ type: 14, spacing: SeparatorSpacingSize.Small });
+        }
+
+        if (doubleData) {
+          const cleanedDouble = doubleData
+            .split(/,|\/|;/)
+            .map((d) => d.trim())
+            .filter(
+              (d) =>
+                d &&
+                !["null", "undefined", "-", "aucun", "none"].includes(
+                  d.toLowerCase(),
+                ),
+            );
+          components.push({
+            type: 10,
+            content: `👥 **Doubles Comptes :** ${
+              cleanedDouble.length > 0
+                ? cleanedDouble.join(", ")
+                : "Aucun double compte"
+            }`,
+          });
+        }
+
+        if (punisherData) {
+          const sanctions = punisherData
+            .split("###")
+            .map((s) => s.trim())
+            .filter((s) => s && s.startsWith("&7[&cPunisher&7]"));
+
+          if (sanctions.length > 0) {
+            const lastSanctionRaw = sanctions[0];
+            const match = lastSanctionRaw.match(
+              /&4(\w+)&7.*]&r\s+'(.+?)'\s+by &7([\w\d_]+)&r on &7(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
+            );
+
+            if (match) {
+              const [, type, reason, auteur, dateStr] = match;
+
+              const timestamp = Math.floor(
+                new Date(dateStr + "Z").getTime() / 1000,
+              );
+
+              components.push({
+                type: 10,
+                content: `🚫 **Dernière Sanction :** ${type} : ${reason} par ${await getEmojiTete(
+                  client,
+                  auteur,
+                )} ${auteur} <t:${timestamp}:R>`,
+              });
             }
           }
         }
 
-        if (msg) {
-          await msg.edit({ components: [candidatureContainer] });
-          candidature.savedBadgeColor = candidature.badgeColor;
+        components.push(
+          { type: 14, spacing: SeparatorSpacingSize.Small },
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                custom_id: `candidature_punisher-${candidature.auteur}`,
+                label: "💢 Afficher le Punisher",
+                style: ButtonStyle.Primary,
+              },
+              {
+                type: 2,
+                custom_id: `candidature_activite-${candidature.auteur}-${serveur}`,
+                label: "⌚ Afficher l'Activité",
+                style: ButtonStyle.Primary,
+              },
+            ],
+          },
+          { type: 14, spacing: SeparatorSpacingSize.Small },
+          {
+            type: 1,
+            components: [
+              {
+                type: 2,
+                url: candidature.lien,
+                label: "🔗 Aller sur la Candidature",
+                style: ButtonStyle.Link,
+              },
+            ],
+          },
+        );
+
+        const candidatureContainer = {
+          type: 17,
+          accent_color: accentColor,
+          components: components,
+        };
+
+        if (isNew) {
+          const candidatureDetailsContainer = await getCandidatureContent(
+            candidature.lien,
+            serveur,
+          );
+
+          const roleMention =
+            roleData.Role.valeur && Array.isArray(roleData.Role.valeur)
+              ? roleData.Role.valeur.map((r) => `<@&${r}>`).join(" ")
+              : null;
+
+          const headerComponents = roleMention
+            ? [{ type: 10, content: roleMention }, candidatureContainer]
+            : [candidatureContainer];
+
+          if (channel.type === 0) {
+            const sent = await channel.send({
+              components: headerComponents,
+              flags: MessageFlags.IsComponentsV2,
+            });
+            candidature.messageId = sent.id;
+            candidature.savedBadgeColor = candidature.badgeColor;
+
+            const thread = await sent.startThread({
+              name: `Candidature ${role} - ${candidature.auteur}`,
+            });
+
+            await thread.send({
+              components: [candidatureDetailsContainer],
+              flags: MessageFlags.IsComponentsV2,
+            });
+          } else if (channel.type === 15) {
+            const thread = await channel.threads.create({
+              name: `Candidature ${role} - ${candidature.auteur}`,
+              message: {
+                components: headerComponents,
+                flags: MessageFlags.IsComponentsV2,
+              },
+            });
+
+            await thread.send({
+              components: [candidatureDetailsContainer],
+              flags: MessageFlags.IsComponentsV2,
+            });
+
+            let mainMessage;
+            if (thread.appliedMessage) {
+              mainMessage = thread.appliedMessage;
+            } else {
+              const fetched = await thread.messages.fetch({ limit: 1 });
+              mainMessage = fetched.first();
+            }
+
+            if (mainMessage) {
+              candidature.messageId = mainMessage.id;
+              candidature.savedBadgeColor = candidature.badgeColor;
+            } else {
+              console.warn(
+                "Impossible de récupérer le message principal du thread forum",
+              );
+            }
+          } else {
+            console.warn(`⚠️ Channel ${channelId} n'est ni texte ni forum.`);
+          }
+        } else if (
+          candidature.messageId &&
+          candidature.badgeColor !== candidature.savedBadgeColor
+        ) {
+          let msg = null;
+
+          if (channel.type === 0) {
+            msg = await channel.messages
+              .fetch(candidature.messageId)
+              .catch(() => null);
+          } else if (channel.type === 15) {
+            const thread = channel.threads.cache.find(
+              (t) => t.id === candidature.messageId,
+            );
+
+            if (thread) {
+              if (thread.appliedMessage) {
+                msg = thread.appliedMessage;
+              } else {
+                const fetched = await thread.messages
+                  .fetch({ limit: 1 })
+                  .catch(() => null);
+                msg = fetched?.first() || null;
+              }
+            }
+          }
+
+          if (msg) {
+            await msg.edit({ components: [candidatureContainer] });
+            candidature.savedBadgeColor = candidature.badgeColor;
+          }
         }
+      } catch (err) {
+        console.error(
+          `❌ Erreur envoi/édition candidature dans ${channelId}`,
+          err,
+        );
       }
-    } catch (err) {
-      console.error(
-        `❌ Erreur envoi/édition candidature dans ${channelId}`,
-        err,
-      );
     }
   }
 
