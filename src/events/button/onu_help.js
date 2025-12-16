@@ -5,6 +5,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 const { getAbsolutePath } = require("../../../util/module/getAndSaveData");
+const { getServeur } = require("../../../util/module/getServeur");
 
 module.exports = {
   data: {
@@ -12,11 +13,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const embedColor = interaction.message.embeds[0]?.color;
-
-    const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor,
-    );
+    const serveur = await getServeur(interaction);
 
     const imagePath = getAbsolutePath("data/salonetrole.png");
 

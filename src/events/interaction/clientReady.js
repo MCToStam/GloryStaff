@@ -20,9 +20,7 @@ const { jail } = require("../../../util/alerte/jail");
 const {
   joueurConnecteSalon,
 } = require("../../../util/alerte/joueurConnecteSalon");
-const { onu } = require("../../../util/alerte/onu");
 const { plainte } = require("../../../util/alerte/plainte");
-const { rappel_onu } = require("../../../util/alerte/rappel_onu");
 const {
   recapitulatif_hebdomadaire,
 } = require("../../../util/alerte/recapitulatif_hebdomadaire");
@@ -34,6 +32,7 @@ const {
 } = require("../../../util/alerte/repartition_notation");
 const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
+const { checkONU } = require("../../../util/alerte/onu_v2");
 const { checkGradeSupport } = require("../../../util/checkGradeSupport");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 
@@ -183,32 +182,6 @@ module.exports = async (client, interaction) => {
   );
 
   cron.schedule(
-    "*/10 * * * 6",
-    async () => {
-      for (const serveur of config.liste_serveur) {
-        // await onu(client, serveur, "Samedi");
-        // await rappel_onu(client, serveur, "Samedi");
-      }
-    },
-    {
-      timezone: "Europe/Paris",
-    },
-  );
-
-  cron.schedule(
-    "*/10 * * * 0",
-    async () => {
-      for (const serveur of config.liste_serveur) {
-        // await onu(client, serveur, "Dimanche");
-        // await rappel_onu(client, serveur, "Dimanche");
-      }
-    },
-    {
-      timezone: "Europe/Paris",
-    },
-  );
-
-  cron.schedule(
     "*/30 * * * *",
     async () => {
       await checkCandidature(client);
@@ -220,6 +193,10 @@ module.exports = async (client, interaction) => {
 
   cron.schedule("0 0 * * *", async () => {
     await updateLogo(client, config);
+  });
+
+  cron.schedule("* * * * *", async () => {
+    await checkONU(client);
   });
 
   process.on("unhandledRejection", (reason, p) => {
