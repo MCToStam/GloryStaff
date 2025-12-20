@@ -31,14 +31,17 @@ function getDateFrance() {
   );
 }
 
-function parseHeureONU(heureStr) {
-  const [jourStr, heureStrPart] = heureStr.split(" ");
-  const [heure, minute] = heureStrPart.replace("h", ":").split(":").map(Number);
+function parseHeureONU(dateStr) {
+  const [jourStr, heureStrPart] = dateStr.split(" ");
+  const [heureStr, minuteStr] = heureStrPart.split("h").map(Number);
+  const [heure, minute] = [heureStr, minuteStr].map(Number);
 
   return {
     jour: joursMap[jourStr],
     heure,
     minute,
+    heureStr,
+    minuteStr,
     jourStr,
   };
 }
@@ -52,7 +55,9 @@ async function checkONU(client) {
 
     const nowKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
     const alerteONU = data["Alerte"];
-    const { jour, heure, minute, jourStr } = parseHeureONU(alerteONU.Heure);
+    const { jour, heure, minute, heureStr, minuteStr, jourStr } = parseHeureONU(
+      alerteONU.Heure,
+    );
     if (
       alerteONU.active &&
       now.getDay() === jour &&
@@ -85,7 +90,7 @@ async function checkONU(client) {
           t.setContent(
             `L’ONU est une réunion hebdomadaire entre le staff et les joueurs ! Ce rendez-vous permet de faire des rappels, annoncer les nouveautés, les rank ainsi que de faire des pubs, des demandes de missiles, d’autonuke et de poser toutes les questions qui vous titillent. Afin de participer à l'ONU, il vous suffit de rejoindre le [Discord Global](https://discord.gg/nationsglory) de NationsGlory et rejoindre le salon ${
               alerteONU["Salon NationsGlory"]
-            }.\n\nVoici les différentes règlementations :\n- Les assauts sont interdit\n- Le PvP est désactivé sauf dans les arènes et les warzones\n- Les warzones ne distribuent pas de récompenses\n- La présence des chefs est fortement recommandée\n\nCette réunion a lieu le **${jourStr.toLowerCase()}** à **${heure}h${minute}**.`,
+            }.\n\nVoici les différentes règlementations :\n- Les assauts sont interdit\n- Le PvP est désactivé sauf dans les arènes et les warzones\n- Les warzones ne distribuent pas de récompenses\n- La présence des chefs est fortement recommandée\n\nCette réunion a lieu le **${jourStr.toLowerCase()}** à **${heureStr}h${minuteStr}**.`,
           ),
         )
         .addMediaGalleryComponents(
@@ -125,6 +130,10 @@ async function checkONU(client) {
 
       alerteONU.lastSent = nowKey;
       saveData(`data/${serveur}/config-onu.json`, data);
+    } else if (alerteONU.lastSent === nowKey) {
+      console.log(
+        `❌ "lastSent" et "nowKey" identique pour l'ONU du serveur ${serveur} !`,
+      );
     }
 
     for (let i = 1; i <= 3; i++) {
@@ -168,7 +177,7 @@ async function checkONU(client) {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `C'est bientôt l'ONU ! Pour rappel, cette réunion est prévue pour **${jourStr}** à **${heure}h${minute}**, donc dans exactement **${
+              `C'est bientôt l'ONU ! Pour rappel, cette réunion est prévue pour **${jourStr}** à **${heureStr}h${minuteStr}**, donc dans exactement **${
                 rappel.Temps
               } ${
                 rappel.Temps > 1 ? "minutes" : "minute"
@@ -212,6 +221,10 @@ async function checkONU(client) {
 
         rappel.lastSent = nowKey;
         saveData(`data/${serveur}/config-onu.json`, data);
+      } else if (rappel.lastSent === nowKey) {
+        console.log(
+          `❌ "lastSent" et "nowKey" identique pour l'ONU du serveur ${serveur} !`,
+        );
       }
     }
   }
