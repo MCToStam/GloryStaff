@@ -91,13 +91,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
     current += size;
   });
 
-  configNotation["répartition"] = {
-    active: configNotation?.répartition?.active || false,
-    Salon: configNotation?.répartition?.Salon || false,
-    Role: configNotation?.répartition?.Role || false,
-    ...repartition,
-  };
-
+  configNotation["répartition"].donnee = repartition;
   saveData(configNotationPath, configNotation);
 
   const embedDescription = await Promise.all(
@@ -264,14 +258,12 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     if (nextIndex >= total) {
       const configNotationPath = `data/${serveur}/config-notation.json`;
       const configNotation = (await getData(configNotationPath)) || {};
-      for (const key of Object.keys(configNotation["répartition"])) {
-        if (!["active", "Salon", "Role"].includes(key)) {
-          delete configNotation["répartition"][key];
-        }
+      for (const key of Object.keys(configNotation["répartition"].donnee)) {
+          delete configNotation["répartition"].donnee[key];
       }
 
       for (const [s, range] of cache.entries()) {
-        configNotation["répartition"][s] = range;
+        configNotation["répartition"].donnee[s] = range;
       }
       saveData(configNotationPath, configNotation);
       manualCache.delete(serveur);

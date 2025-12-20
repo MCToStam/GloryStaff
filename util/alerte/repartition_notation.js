@@ -19,10 +19,8 @@ async function repartition_notation(client) {
   for (const server of config.liste_serveur) {
     try {
       const repartitionData = getData(`data/${server}/config-notation.json`);
-      const keys = Object.keys(repartitionData["répartition"]);
-      const hasNumberKey = keys.some(
-        (key) => key !== "active" && key !== "Salon" && key !== "Role",
-      );
+      const keys = Object.keys(repartitionData["répartition"].donnee);
+      const hasNumberKey = keys.some((key) => key);
       if (
         repartitionData["répartition"].active &&
         repartitionData["répartition"].Salon.valeur &&
@@ -41,30 +39,19 @@ async function repartition_notation(client) {
         } catch (err) {
           console.error(
             "Erreur lors de la récupération des données depuis l'API get-ng:",
-            err,
+            err
           );
         }
 
-        const numberKeys = keys.filter(
-          (key) =>
-            ![
-              "active",
-              "Salon",
-              "Role",
-              "Répartir Automatiquement",
-              "Répartir Manuellement",
-            ].includes(key),
-        );
-
         const numberKeysValues = (
           await Promise.all(
-            numberKeys.map(async (key) => {
+            repartitionData["répartition"].donnee.map(async (key) => {
               const emoji = await getEmojiTete(client, key);
               const emojiText = emoji.id
                 ? `<:${emoji.name}:${emoji.id}>`
                 : emoji.name;
-              return `${emojiText} ${key} : ${repartitionData["répartition"][key]}`;
-            }),
+              return `${emojiText} ${key} : ${repartitionData["répartition"].donnee[key]}`;
+            })
           )
         ).join("\n");
 
@@ -89,19 +76,19 @@ async function repartition_notation(client) {
           .setAccentColor(config.couleur[server])
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `## Annonce des Notations - Semaine du ${jour}/${mois}`,
-            ),
+              `## Annonce des Notations - Semaine du ${jour}/${mois}`
+            )
           )
           .addSeparatorComponents((separator) => separator)
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `Voici la liste des staffs qui sont en charge des notations, si vous avez un recours à faire, il est préférable de s'adresser à la bonne qui vous a noté sur le [serveur Discord global de NationsGlory](https://discord.gg/nationsglory).\n\n${numberKeysValues}`,
-            ),
+              `Voici la liste des staffs qui sont en charge des notations, si vous avez un recours à faire, il est préférable de s'adresser à la bonne qui vous a noté sur le [serveur Discord global de NationsGlory](https://discord.gg/nationsglory).\n\n${numberKeysValues}`
+            )
           )
           .addMediaGalleryComponents(
             new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
-              mediaGalleryItem.setURL("attachment://ordre-des-notations.png"),
-            ),
+              mediaGalleryItem.setURL("attachment://ordre-des-notations.png")
+            )
           )
           .addSeparatorComponents((separator) => separator)
           .addActionRowComponents(
@@ -109,12 +96,12 @@ async function repartition_notation(client) {
               new ButtonBuilder()
                 .setCustomId("notation_help")
                 .setLabel("Informations Supplémentaires")
-                .setStyle(ButtonStyle.Success),
-            ),
+                .setStyle(ButtonStyle.Success)
+            )
           );
 
         const salon = client.channels.cache.get(
-          repartitionData["répartition"].Salon.valeur,
+          repartitionData["répartition"].Salon.valeur
         );
         if (repartitionData["répartition"]?.Role.valeur) {
           const roleMentions = repartitionData["répartition"].Role.valeur
@@ -122,7 +109,7 @@ async function repartition_notation(client) {
             .join(", ");
 
           const roleTextDisplay = new TextDisplayBuilder().setContent(
-            roleMentions,
+            roleMentions
           );
 
           await salon.send({
