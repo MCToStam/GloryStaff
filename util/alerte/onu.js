@@ -67,13 +67,11 @@ async function checkONU(client) {
         .catch(() => null);
       if (!channel) continue;
 
-      const roleMentions = alerteONU.Role.valeur
-        .map((roleId) => `<@&${roleId}>`)
-        .join(", ");
-
       const roleTextDisplay = new TextDisplayBuilder();
       if (alerteONU.Role.valeur.length > 0)
-        roleTextDisplay.setContent(roleMentions);
+        roleTextDisplay.setContent(
+          alerteONU.Role.valeur.map((roleId) => `<@&${roleId}>`).join(", "),
+        );
 
       const container = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
@@ -126,7 +124,7 @@ async function checkONU(client) {
       );
 
       alerteONU.lastSent = nowKey;
-      await saveData(`data/${serveur}/config-onu.json`, data);
+      saveData(`data/${serveur}/config-onu.json`, data);
     }
 
     for (let i = 1; i <= 3; i++) {
@@ -152,13 +150,11 @@ async function checkONU(client) {
           .catch(() => null);
         if (!channel) continue;
 
-        const roleMentions = rappel.Role.valeur
-          .map((roleId) => `<@&${roleId}>`)
-          .join(", ");
-
         const roleTextDisplay = new TextDisplayBuilder();
         if (rappel.Role.valeur.length > 0)
-          roleTextDisplay.setContent(roleMentions);
+          roleTextDisplay.setContent(
+            rappel.Role.valeur.map((roleId) => `<@&${roleId}>`).join(", "),
+          );
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -215,7 +211,7 @@ async function checkONU(client) {
         );
 
         rappel.lastSent = nowKey;
-        await saveData(`data/${serveur}/config-onu.json`, data);
+        saveData(`data/${serveur}/config-onu.json`, data);
       }
     }
   }
