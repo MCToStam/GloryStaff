@@ -32,7 +32,7 @@ const {
 } = require("../../../util/alerte/repartition_notation");
 const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
-const { checkONU } = require("../../../util/alerte/onu_v2");
+const { checkONU } = require("../../../util/alerte/onu");
 const { checkGradeSupport } = require("../../../util/checkGradeSupport");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 
@@ -195,7 +195,7 @@ module.exports = async (client, interaction) => {
     await updateLogo(client, config);
   });
 
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("* * * * 0,6", async () => {
     await checkONU(client);
   });
 

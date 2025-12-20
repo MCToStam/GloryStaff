@@ -2,7 +2,8 @@ const config = require("../../config");
 const {
   getData,
   getAbsolutePath,
-} = require("../../util/module/getAndSaveData");
+  saveData,
+} = require("../module/getAndSaveData");
 const {
   ContainerBuilder,
   MessageFlags,
@@ -49,20 +50,22 @@ async function checkONU(client) {
     const data = await getData(`data/${serveur}/config-onu.json`);
     if (!data || !data["Alerte"]) continue;
 
+    const nowKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
     const alerteONU = data["Alerte"];
     const { jour, heure, minute, jourStr } = parseHeureONU(alerteONU.Heure);
     if (
       alerteONU.active &&
       now.getDay() === jour &&
       now.getHours() === heure &&
-      now.getMinutes() === minute
+      now.getMinutes() === minute &&
+      alerteONU.lastSent !== nowKey
     ) {
-      if (!alerteONU.Salon?.valeur) return;
+      if (!alerteONU.Salon?.valeur) continue;
 
       const channel = await client.channels
         .fetch(alerteONU.Salon?.valeur)
         .catch(() => null);
-      if (!channel) return;
+      if (!channel) continue;
 
       const roleMentions = alerteONU.Role.valeur
         .map((roleId) => `<@&${roleId}>`)
@@ -118,12 +121,19 @@ async function checkONU(client) {
         files: [attachment],
         flags: MessageFlags.IsComponentsV2,
       });
+      console.log(
+        `✅ Message d'ONU envoyé avec succès pour le serveur ${serveur}`,
+      );
+
+      alerteONU.lastSent = nowKey;
+      await saveData(`data/${serveur}/config-onu.json`, data);
     }
 
     for (let i = 1; i <= 3; i++) {
       const rappel = data[`Rappel ${i}`];
       if (!rappel?.active || !rappel.Temps) continue;
 
+      const nowKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
       const rappelDate = new Date(now);
       rappelDate.setHours(heure);
       rappelDate.setMinutes(minute - Number(rappel.Temps));
@@ -132,14 +142,15 @@ async function checkONU(client) {
       if (
         now.getDay() === jour &&
         now.getHours() === rappelDate.getHours() &&
-        now.getMinutes() === rappelDate.getMinutes()
+        now.getMinutes() === rappelDate.getMinutes() &&
+        rappel.lastSent !== nowKey
       ) {
-        if (!rappel.Salon?.valeur) return;
+        if (!rappel.Salon?.valeur) continue;
 
         const channel = await client.channels
           .fetch(rappel.Salon?.valeur)
           .catch(() => null);
-        if (!channel) return;
+        if (!channel) continue;
 
         const roleMentions = rappel.Role.valeur
           .map((roleId) => `<@&${roleId}>`)
@@ -199,6 +210,12 @@ async function checkONU(client) {
           files: [attachment],
           flags: MessageFlags.IsComponentsV2,
         });
+        console.log(
+          `✅ Message de rappel d'ONU n°${i} envoyé avec succès pour le serveur ${serveur}`,
+        );
+
+        rappel.lastSent = nowKey;
+        await saveData(`data/${serveur}/config-onu.json`, data);
       }
     }
   }

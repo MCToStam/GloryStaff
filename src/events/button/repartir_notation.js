@@ -259,7 +259,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       const configNotationPath = `data/${serveur}/config-notation.json`;
       const configNotation = (await getData(configNotationPath)) || {};
       for (const key of Object.keys(configNotation["répartition"].donnee)) {
-          delete configNotation["répartition"].donnee[key];
+        delete configNotation["répartition"].donnee[key];
       }
 
       for (const [s, range] of cache.entries()) {
