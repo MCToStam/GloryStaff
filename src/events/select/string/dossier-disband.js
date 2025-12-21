@@ -57,9 +57,7 @@ module.exports = {
       changementChefDetails = "Non";
     }
 
-    const nbGuerres = Array.isArray(r.pvp.nb_guerres)
-      ? r.pvp.nb_guerres.length
-      : 0;
+    const nbGuerres = r.pvp.nb_guerres;
     const guerresDetails =
       Array.isArray(r.pvp.nb_guerres) && r.pvp.nb_guerres.length
         ? `(${r.pvp.nb_guerres.join(", ")})`

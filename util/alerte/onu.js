@@ -130,10 +130,6 @@ async function checkONU(client) {
 
       alerteONU.lastSent = nowKey;
       saveData(`data/${serveur}/config-onu.json`, data);
-    } else if (alerteONU.lastSent === nowKey) {
-      console.log(
-        `❌ "lastSent" et "nowKey" identique pour l'ONU du serveur ${serveur} !`,
-      );
     }
 
     for (let i = 1; i <= 3; i++) {
@@ -221,10 +217,6 @@ async function checkONU(client) {
 
         rappel.lastSent = nowKey;
         saveData(`data/${serveur}/config-onu.json`, data);
-      } else if (rappel.lastSent === nowKey) {
-        console.log(
-          `❌ "lastSent" et "nowKey" identique pour l'ONU du serveur ${serveur} !`,
-        );
       }
     }
   }
