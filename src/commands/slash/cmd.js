@@ -6,6 +6,7 @@ exports.execute = async (client, interaction) => {
   const canal = interaction.options.getString("canal");
   const server = interaction.options.getString("server");
   const guild = server ? client.guilds.cache.get(server) : interaction.guild;
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const globalCmds = client.application.commands;
   const guildCmds = guild.commands;
@@ -47,7 +48,7 @@ exports.execute = async (client, interaction) => {
             ],
           };
 
-          return interaction.reply({
+          return interaction.editReply({
             components: [goodContainer],
             allowedMentions: { parse: [] },
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -74,7 +75,7 @@ exports.execute = async (client, interaction) => {
             ],
           };
 
-          return interaction.reply({
+          return interaction.editReply({
             components: [goodContainer],
             allowedMentions: { parse: [] },
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -103,7 +104,7 @@ exports.execute = async (client, interaction) => {
             ],
           };
 
-          return interaction.reply({
+          return interaction.editReply({
             components: [goodContainer],
             allowedMentions: { parse: [] },
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -130,7 +131,7 @@ exports.execute = async (client, interaction) => {
             ],
           };
 
-          return interaction.reply({
+          return interaction.editReply({
             components: [goodContainer],
             allowedMentions: { parse: [] },
             flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -157,7 +158,7 @@ exports.execute = async (client, interaction) => {
         ],
       };
 
-      return interaction.reply({
+      return interaction.editReply({
         components: [erreurContainer],
         allowedMentions: { parse: [] },
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -188,7 +189,7 @@ exports.execute = async (client, interaction) => {
       ],
     };
 
-    return interaction.reply({
+    return interaction.editReply({
       components: [goodContainer],
       allowedMentions: { parse: [] },
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,

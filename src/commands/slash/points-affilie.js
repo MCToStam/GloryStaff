@@ -9,18 +9,28 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("points-affilie")
     .setDescription("Affiche les récompenses des points affiliés")
-    .addStringOption((option) =>
+    .addIntegerOption((option) =>
       option
         .setName("points")
         .setDescription(
           "Le nombre de points avec lequel afficher les récompenses",
         )
         .setRequired(false),
+    )
+    .addIntegerOption((option) =>
+      option
+        .setName("euro")
+        .setDescription(
+          "Le nombre d'euro pour lequel afficher les point requis",
+        )
+        .setRequired(false),
     ),
 
   async execute(client, interaction, config) {
-    const pointsInput = interaction.options.getString("points");
+    const pointsInput = interaction.options.getInteger("points");
+    const euroInput = interaction.options.getInteger("euro");
     const points = pointsInput ? parseInt(pointsInput, 10) : null;
+    const euros = euroInput ? parseInt(euroInput, 10) : null;
 
     const { pseudonym, servers, container } = await discordStaff(
       interaction.user.id,
@@ -45,11 +55,69 @@ module.exports = {
     ];
 
     let description = "";
-    if (!points) {
+
+    if (!points && !euros) {
       description = rewards
         .map((r) => `${r.emoji} **${r.points} points** → ${r.label}`)
         .join("\n");
-    } else {
+    } else if (euros) {
+      const euroRewards = rewards.filter((r) => r.euro);
+
+      let best = null;
+
+      const maxCounts = euroRewards.map((r) => Math.ceil(euros / r.euro) + 2);
+
+      function search(index, currentEuro, currentPoints, counts) {
+        if (index === euroRewards.length) {
+          if (currentEuro >= euros) {
+            if (
+              !best ||
+              currentPoints < best.points ||
+              (currentPoints === best.points && currentEuro < best.euros)
+            ) {
+              best = {
+                euros: currentEuro,
+                points: currentPoints,
+                counts: [...counts],
+              };
+            }
+          }
+          return;
+        }
+
+        const reward = euroRewards[index];
+
+        for (let i = 0; i <= maxCounts[index]; i++) {
+          search(
+            index + 1,
+            currentEuro + i * reward.euro,
+            currentPoints + i * reward.points,
+            [...counts, i],
+          );
+        }
+      }
+
+      search(0, 0, 0, []);
+
+      if (!best) {
+        description = `❌ Impossible d’atteindre **${euros}€**.`;
+      } else {
+        const details = euroRewards
+          .map((r, i) => {
+            const count = best.counts[i];
+            if (count === 0) return null;
+            return `• ${count} × ${r.label}`;
+          })
+          .filter(Boolean)
+          .join("\n");
+
+        description =
+          `💶 Pour obtenir **au moins ${euros}€** :\n\n` +
+          `${details}\n\n` +
+          `➡️ **${best.points} points** nécessaires\n` +
+          `➡️ Donne **${best.euros}€**`;
+      }
+    } else if (points) {
       const availableRewards = rewards
         .filter((r) => points >= r.points)
         .sort((a, b) => b.points - a.points);
