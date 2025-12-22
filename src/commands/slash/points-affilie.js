@@ -114,7 +114,9 @@ module.exports = {
         description =
           `💶 Pour obtenir **au moins ${euros}€** :\n\n` +
           `${details}\n\n` +
-          `➡️ **${best.points} points** nécessaires\n` +
+          `➡️ **${best.points} points** nécessaires, soit ${Math.ceil(
+            best.points / 15,
+          )} vidéo${Math.ceil(best.points / 15) > 1 ? "s" : ""}\n` +
           `➡️ Donne **${best.euros}€**`;
       }
     } else if (points) {
