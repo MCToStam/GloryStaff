@@ -12,71 +12,20 @@ module.exports = async (client, interaction) => {
 
     if (name === "serveur") {
       try {
-        const now = Date.now();
-        const serveurCache = new Map();
         const memberId = interaction.user.id;
-
-        if (serveurCache.has(memberId)) {
-          const { timestamp, servers } = serveurCache.get(memberId);
-          if (now - timestamp < 10 * 60 * 1000) {
-            const filteredServers = config.liste_serveur.filter((server) =>
-              server.toLowerCase().startsWith(value.toLowerCase()),
-            );
-            const choices = filteredServers.slice(0, 25).map((server) => ({
-              name: server.charAt(0).toUpperCase() + server.slice(1),
-              value: server,
-            }));
-            return await interaction.respond(choices);
-          } else {
-            serveurCache.delete(memberId);
-          }
-        }
-
-        let availableServers = [];
-
-        let pseudo;
-        try {
-          const response = await fetch(
-            `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`,
-          );
-          if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
-          const data = await response.json();
-
-          pseudo = data.pseudo || null;
-        } catch (e) {
-          pseudo = null;
-        }
-
-        const isDev = config.developpeur.includes(memberId);
 
         const matchedServers = config.liste_serveur.filter((server) =>
           server.toLowerCase().startsWith(value.toLowerCase()),
         );
 
-        const staffInfo = await discordStaff(
+        const { pseudonym, servers, container } = await discordStaff(
           memberId,
           matchedServers,
-          "super_moderateur",
+          "guide",
         );
 
-        if (staffInfo.servers.length > 0 || isDev) {
-          availableServers.push(...staffInfo.servers);
-        } else if (pseudo) {
-          for (const server of matchedServers) {
-            const staffRolesData = getData(`data/${server}/staff-serveur.json`);
-            const isStaffLinked = Object.entries(staffRolesData).some(
-              ([, roleList]) =>
-                Array.isArray(roleList) && roleList.includes(pseudo),
-            );
-
-            if (isStaffLinked) {
-              availableServers.push(server);
-            }
-          }
-        }
-
-        if (availableServers.length === 0) {
-          if (!pseudo) {
+        if (servers.length === 0) {
+          if (!pseudonym) {
             return await interaction.respond([
               {
                 name: "Compte NationsGlory non lié, fait le maintenant : https://glorybot.fr",
@@ -91,18 +40,9 @@ module.exports = async (client, interaction) => {
               },
             ]);
           }
-        } else {
-          serveurCache.set(memberId, {
-            timestamp: now,
-            servers: availableServers,
-          });
         }
 
-        const filteredServers = availableServers.filter((server) =>
-          server.toLowerCase().startsWith(value.toLowerCase()),
-        );
-
-        const choices = filteredServers.slice(0, 25).map((server) => ({
+        const choices = servers.map((server) => ({
           name: server.charAt(0).toUpperCase() + server.slice(1),
           value: server,
         }));

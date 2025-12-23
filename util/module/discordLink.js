@@ -27,7 +27,7 @@ async function discordLink(discordId) {
 
   try {
     const localData = (await getData("data/api_get_ng.json")) ?? {};
-    return discordId ? (localData[discordId] ?? {}) : localData;
+    return discordId ? (localData[discordId] ?? null) : localData;
   } catch (err) {
     console.error(
       "❌ Erreur lors de la lecture du fichier api_get_ng.json :",
@@ -39,7 +39,30 @@ async function discordLink(discordId) {
 
 async function discordStaff(discordId, serveur = "all", gradeMin) {
   const pseudonym = await discordLink(discordId);
-  if (!pseudonym) return { pseudonym: null, servers: [], container: false };
+  if (!pseudonym) {
+    const linkContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Compte non Lié"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Ton compte Discord doit être lié à ton compte NationsGlory pour effectuer cette action.",
+        ),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("🔗 Lier son Compte")
+            .setURL("https://glorybot.fr/user/profile")
+            .setStyle(ButtonStyle.Link),
+        ),
+      );
+
+    return { pseudonym: null, servers: [], container: linkContainer };
+  }
 
   if (config.developpeur.includes(discordId)) {
     return {
@@ -53,6 +76,7 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
       container: false,
     };
   }
+
   let allStaff = null;
   try {
     const response = await fetch(`${config.glorybot_url}/api/allStaff`, {
@@ -61,19 +85,15 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
     if (!response.ok) throw new Error("API non fonctionnelle");
     allStaff = await response.json();
   } catch {
-    try {
-      allStaff = getData("data/api_api_all_staff.json");
-    } catch {
-      return { pseudonym, servers: [], container: false };
-    }
+    allStaff = getData("data/api_api_all_staff.json");
   }
 
   const gradesHierarchie = [
     "administrateur",
     "super_moderateur",
     "moderateur_plus",
-    "modérateur",
-    "modérateur_test",
+    "moderateur",
+    "moderateur_test",
     "guide",
   ];
 
@@ -122,14 +142,26 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent("## ❌ Permission Manquante"),
       )
-      .addSeparatorComponents()
+      .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
           `Tu n'as pas la permission d'effectuer cette action ${
             serveur !== "all"
-              ? `pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** `
+              ? `pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** !`
               : "!"
           }`,
+        ),
+      );
+  } else if (userServers.length === 0 && !serveur) {
+    container = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Permission Manquante"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Tu n'es opérateur d'aucun serveur de NationsGlory, tu n'as donc pas accès à cette commande.",
         ),
       );
   }

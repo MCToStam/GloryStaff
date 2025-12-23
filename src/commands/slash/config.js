@@ -67,22 +67,6 @@ module.exports = {
 
     const type = interaction.options.getString("type").toLowerCase();
 
-    const typeMap = {
-      attentestaff: "Attente Staff",
-      candidature: "Candidature",
-      disband: "Disband",
-      doublelead: "Double Lead",
-      expansionterritoriale: "Expansion Territoriale",
-      forum: "Forum",
-      jail: "Jail",
-      joueurconnecte: "Joueur(s) Connecté(s)",
-      notation: "Notation",
-      onu: "ONU",
-      recap: "Récapitulatif",
-      routine: "Routine",
-      staff: "Staff",
-    };
-
     const configData = getData(`data/${serveur}/config-${type}.json`);
     const keys = Object.keys(configData);
 

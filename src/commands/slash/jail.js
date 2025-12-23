@@ -4,10 +4,15 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } = require("discord.js");
 const { createCanvas, loadImage } = require("canvas");
 const AbortController = require("abort-controller");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
+const {
+  errorStaffContainer,
+  discordStaff,
+} = require("../../../util/module/discordLink");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -42,6 +47,15 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const serveur = interaction.options.getString("serveur").toLowerCase();
+
+    const { errorContainer } = await errorStaffContainer(serveur);
+
+    if (errorContainer) {
+      return interaction.reply({
+        components: [errorContainer],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
+    }
 
     const criminelPotentiel = interaction.options.getString("criminel");
     const duree = interaction.options.getString("durée");
@@ -150,74 +164,28 @@ module.exports = {
       return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
     }
 
-    let pseudo;
-    try {
-      const response = await fetch(
-        `${config.glorybot_url}/api/get-ng?discordId=${interaction.user.id}`,
-      );
-      if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
-      const data = await response.json();
-
-      pseudo = data.pseudo || null;
-    } catch (e) {
-      pseudo = null;
-    }
-
-    if (!pseudo) {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          'Votre compte Discord n\'est pas reconnu, il vous faut être renseigné pour utiliser cette commande. Pour ce faire, il te suffit de te connecter à notre panel de contrôle. Une fois connecté avec ton compte Discord, va dans la partie "Profil" puis tu as un bouton afin de lier ton compte NationsGlory.',
-        )
-        .setFooter({ text: config.footer });
-
-      const panelButton = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setLabel("💻 Accéder au panel")
-          .setStyle(ButtonStyle.Link)
-          .setURL("https://glorybot.fr"),
-      );
-
-      return interaction.reply({
-        embeds: [erreurEmbed],
-        components: [panelButton],
-        ephemeral: true,
-      });
-    }
-
-    const staffData = getData(`data/${serveur}/staff-serveur.json`);
     const roleAutorise = configJail.jail.Grade.valeur;
 
-    const gradesHierarchie = [
-      "Administrateur",
-      "Super-Modérateur",
-      "Modérateur Plus",
-      "Modérateur",
-      "Modérateur Test",
-      "Guide",
-    ];
+    const gradeAutorise = {
+      Administrateur: "administrateur",
+      "Super-Modérateur": "super_moderateur",
+      "Modérateur Plus": "moderateur_plus",
+      Modérateur: "moderateur",
+      "Modérateur Test": "moderateur_test",
+      Guide: "guide",
+    };
 
-    const indexRoleAutorise = gradesHierarchie.indexOf(roleAutorise);
-    const utilisateurAutorise = gradesHierarchie
-      .slice(0, indexRoleAutorise + 1)
-      .some((grade) => staffData[grade] && staffData[grade].includes(pseudo));
+    const { pseudo, servers, container } = await discordStaff(
+      interaction.user.id,
+      serveur,
+      gradeAutorise[roleAutorise],
+    );
 
-    if (!utilisateurAutorise) {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          `Vous ne possédez pas le rôle ${
-            config.emojigrade[roleAutorise]
-          } **${roleAutorise}** sur le serveur <:NG${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }:${config.emoji[serveur.toLowerCase()]}> **${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }**.`,
-        )
-        .setFooter({ text: config.footer });
-      return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
+    if (container) {
+      return interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
     }
 
     await interaction.deferReply({ ephemeral: true });

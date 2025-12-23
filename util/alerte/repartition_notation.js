@@ -26,23 +26,6 @@ async function repartition_notation(client) {
         repartitionData["répartition"].Salon.valeur &&
         hasNumberKey
       ) {
-        let linkData;
-        try {
-          const response = await fetch(`${config.glorybot_url}/api/get-ng`);
-          const json = await response.json();
-
-          if (!json.success || !json.data) {
-            throw new Error("Réponse invalide de l'API get-ng");
-          }
-
-          linkData = json.data;
-        } catch (err) {
-          console.error(
-            "Erreur lors de la récupération des données depuis l'API get-ng:",
-            err,
-          );
-        }
-
         const numberKeysValues = (
           await Promise.all(
             repartitionData["répartition"].donnee.map(async (key) => {

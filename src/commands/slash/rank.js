@@ -15,6 +15,7 @@ const {
 const {
   errorStaffContainer,
   discordStaff,
+  discordLink,
 } = require("../../../util/module/discordLink");
 
 function getContrastTextColor(colorNumber) {
@@ -154,18 +155,7 @@ module.exports = {
 
     const rolesGrade = gradeChoisi.role || [];
 
-    let pseudonym;
-    try {
-      const response = await fetch(
-        `${config.glorybot_url}/api/get-ng?discordId=${membre.id}`,
-      );
-      if (!response.ok) throw new Error(`Erreur API: ${response.status}`);
-      const data = await response.json();
-
-      pseudonym = data.pseudo || null;
-    } catch (e) {
-      pseudonym = null;
-    }
+    let pseudonym = await discordLink(membre.id);
 
     let replyInteraction;
     if (pseudonym) {

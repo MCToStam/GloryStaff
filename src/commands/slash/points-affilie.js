@@ -38,14 +38,14 @@ module.exports = {
       "super_moderateur",
     );
 
-    const serveur = servers[0];
-
     if (container) {
-      return interaction.reply({
+      return await interaction.reply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
+
+    const serveur = servers[0];
 
     const rewards = [
       { emoji: "🎖️", points: 5, label: "Badge Viewer" },
