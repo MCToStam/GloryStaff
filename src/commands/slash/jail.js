@@ -175,7 +175,7 @@ module.exports = {
       Guide: "guide",
     };
 
-    const { pseudo, servers, container } = await discordStaff(
+    const { pseudonym, servers, container } = await discordStaff(
       interaction.user.id,
       serveur,
       gradeAutorise[roleAutorise],

@@ -28,7 +28,7 @@ module.exports = {
       Guide: "guide",
     };
 
-    const { pseudo, servers, container } = await discordStaff(
+    const { pseudonym, servers, container } = await discordStaff(
       interaction.user.id,
       serveur,
       gradeAutorise[roleAutorise],
@@ -61,7 +61,7 @@ module.exports = {
           jailedUser = group;
 
           jailData[group][entryIndex].jailed = true;
-          jailData[group][entryIndex].staff = pseudo;
+          jailData[group][entryIndex].staff = pseudonym;
           jailData[group][entryIndex].date = Math.floor(Date.now() / 1000);
           delete jailData[group][entryIndex].messageId;
           delete jailData[group][entryIndex].threadId;
