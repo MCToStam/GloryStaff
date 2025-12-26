@@ -822,10 +822,6 @@ app.post("/update-leaders", async (req, res) => {
   const filePath = path.join(__dirname, "data", "doublelead.json");
   const newData = req.body;
 
-  if (!Array.isArray(newData)) {
-    return res.status(400).json({ error: "Invalid data format" });
-  }
-
   fs.readFile(filePath, "utf8", (err, data) => {
     let existingData = [];
 
@@ -860,16 +856,10 @@ app.post("/update-leaders", async (req, res) => {
       }
     });
 
-    const leadersData = {};
-    updatedData.forEach((entry) => {
-      leadersData[entry.leader] = entry.servers;
-    });
-
     const multiServerLeaders = updatedData
-      .filter((entry) => {
-        const uniqueServers = new Set(entry.servers.map((s) => s.server));
-        return uniqueServers.size > 1;
-      })
+      .filter(
+        (entry) => Array.isArray(entry.servers) && entry.servers.length > 1,
+      )
       .map((entry) => ({
         leader: entry.leader,
         servers: entry.servers,
@@ -885,104 +875,104 @@ app.post("/update-leaders", async (req, res) => {
         }
 
         for (const { leader, servers } of multiServerLeaders) {
-          const leaderPseudos = leader.split("/");
-          let message;
+          const updatedEntry = updatedData.find(
+            (entry) => entry.leader === leader,
+          );
 
-          if (leaderPseudos.length === 1) {
-            const emoji = await getEmojiTete(client, leaderPseudos[0]);
-            message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays sur plusieurs serveurs :\n`;
-          } else if (leaderPseudos.length === 2) {
-            const emoji1 = await getEmojiTete(client, leaderPseudos[0]);
-            const emoji2 = await getEmojiTete(client, leaderPseudos[1]);
-            message = `Les joueurs ${emoji1} **${leaderPseudos[0]}** et ${emoji2} **${leaderPseudos[1]}** possèdent différents pays sur plusieurs serveurs :\n`;
-          } else {
-            const last = leaderPseudos.pop();
-            const emojis = await Promise.all(
-              leaderPseudos.map((p) => getEmojiTete(client, p)),
-            );
-            const lastEmoji = await getEmojiTete(client, last);
-
-            message = `Les joueurs ${leaderPseudos
-              .map((p, i) => `${emojis[i]} **${p}**`)
-              .join(
-                ", ",
-              )} et ${lastEmoji} **${last}** possèdent différents pays sur plusieurs serveurs :\n`;
-          }
-
-          for (const { compte, server, country } of servers) {
-            message += `<:NG${
-              server.charAt(0).toUpperCase() + server.slice(1)
-            }:${config.emoji[server.toLowerCase()]}> **${
-              server.charAt(0).toUpperCase() + server.slice(1)
-            }** : ${country} (${await getEmojiTete(
-              client,
-              compte,
-            )} ${compte})\n`;
-          }
-
+          const eligibleServersMap = new Map();
           for (const { server } of servers) {
+            const normalizedServer = server.toLowerCase();
+            if (eligibleServersMap.has(normalizedServer)) continue;
+
             const serverConfigPath = path.join(
               __dirname,
               "data",
               server,
               "config-doublelead.json",
             );
+            if (!fs.existsSync(serverConfigPath)) continue;
 
-            if (fs.existsSync(serverConfigPath)) {
-              const serverConfig = JSON.parse(
-                fs.readFileSync(serverConfigPath, "utf8"),
+            const serverConfig = JSON.parse(
+              fs.readFileSync(serverConfigPath, "utf8"),
+            );
+            if (
+              serverConfig.doublelead.active &&
+              serverConfig.doublelead.Salon.valeur &&
+              !updatedEntry.alerteServeur.includes(server)
+            ) {
+              eligibleServersMap.set(normalizedServer, serverConfig);
+            }
+          }
+
+          if (eligibleServersMap.size === 0) continue;
+
+          const leaderPseudos = [...new Set(servers.map((s) => s.compte))];
+          let message;
+
+          if (leaderPseudos.length === 1) {
+            const emoji = await getEmojiTete(client, leaderPseudos[0]);
+            message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays :\n`;
+          } else if (leaderPseudos.length === 2) {
+            const [p1, p2] = leaderPseudos;
+            const [e1, e2] = await Promise.all([
+              getEmojiTete(client, p1),
+              getEmojiTete(client, p2),
+            ]);
+            message = `Les joueurs ${e1} **${p1}** et ${e2} **${p2}** possèdent différents pays :\n`;
+          } else {
+            const last = leaderPseudos.pop();
+            const emojis = await Promise.all(
+              leaderPseudos.map((p) => getEmojiTete(client, p)),
+            );
+            const lastEmoji = await getEmojiTete(client, last);
+            message = `Les joueurs ${leaderPseudos
+              .map((p, i) => `${emojis[i]} **${p}**`)
+              .join(
+                ", ",
+              )} et ${lastEmoji} **${last}** possèdent différents pays :\n`;
+          }
+
+          for (const { compte, server, country } of servers) {
+            const emojiCompte = await getEmojiTete(client, compte);
+            message += `<:NG${server.charAt(0).toUpperCase() + server.slice(1)}:${config.emoji[server.toLowerCase()]}> **${server.charAt(0).toUpperCase() + server.slice(1)}** : ${country} (${emojiCompte} ${compte})\n`;
+          }
+
+          for (const [server, serverConfig] of eligibleServersMap.entries()) {
+            const channel = await client.channels.fetch(
+              serverConfig.doublelead.Salon.valeur,
+            );
+
+            const container = new ContainerBuilder()
+              .setAccentColor(config.couleur[server] || config.color)
+              .addTextDisplayComponents((t) =>
+                t.setContent(`## 🏴 Double Lead`),
+              )
+              .addSeparatorComponents((s) => s)
+              .addTextDisplayComponents((t) => t.setContent(message));
+
+            if (
+              Array.isArray(serverConfig.doublelead.Role.valeur) &&
+              serverConfig.doublelead.Role.valeur.length > 0
+            ) {
+              const roleMentions = serverConfig.doublelead.Role.valeur
+                .map((roleId) => `<@&${roleId}>`)
+                .join(", ");
+              const roleTextDisplay = new TextDisplayBuilder().setContent(
+                roleMentions,
               );
 
-              if (
-                serverConfig.doublelead.active &&
-                serverConfig.doublelead.Salon.valeur
-              ) {
-                const updatedEntry = updatedData.find(
-                  (entry) => entry.leader === leader,
-                );
-
-                if (!updatedEntry.alerteServeur.includes(server)) {
-                  const channel = await client.channels.fetch(
-                    serverConfig.doublelead.Salon.valeur,
-                  );
-
-                  const container = new ContainerBuilder()
-                    .setAccentColor(config.couleur[server] || config.color)
-                    .addTextDisplayComponents((t) =>
-                      t.setContent(`## 🏴 Double Lead`),
-                    )
-                    .addSeparatorComponents((s) => s)
-                    .addTextDisplayComponents((t) => t.setContent(message));
-
-                  if (
-                    Array.isArray(serverConfig.doublelead.Role.valeur) &&
-                    serverConfig.doublelead.Role.valeur.length > 0
-                  ) {
-                    const roleMentions = serverConfig.doublelead.Role.valeur
-                      .map((roleId) => `<@&${roleId}>`)
-                      .join(", ");
-
-                    const roleTextDisplay = new TextDisplayBuilder().setContent(
-                      roleMentions,
-                    );
-
-                    channel.send({
-                      components: [roleTextDisplay, container],
-                      flags:
-                        MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-                    });
-                  } else {
-                    channel.send({
-                      components: [container],
-                      flags:
-                        MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-                    });
-                  }
-
-                  updatedEntry.alerteServeur.push(server);
-                }
-              }
+              channel.send({
+                components: [roleTextDisplay, container],
+                flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+              });
+            } else {
+              channel.send({
+                components: [container],
+                flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+              });
             }
+
+            updatedEntry.alerteServeur.push(server);
           }
         }
 
@@ -996,7 +986,6 @@ app.post("/update-leaders", async (req, res) => {
                 .status(500)
                 .json({ error: "Error updating alert data" });
             }
-
             res.json({ message: "File updated successfully" });
           },
         );
