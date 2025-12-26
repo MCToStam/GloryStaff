@@ -6,6 +6,7 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -13,24 +14,23 @@ module.exports = {
     .setDescription("Affiche le punisher d'un joueur")
     .addStringOption((option) =>
       option
-        .setName("serveur")
-        .setDescription(
-          "Le serveur pour lequel afficher la liste des doubles lead",
-        )
-        .setRequired(true)
-        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs)
-        .setAutocomplete(false),
-    )
-    .addStringOption((option) =>
-      option
         .setName("joueur")
         .setDescription("Le joueur pour lequel afficher le punisher")
         .setRequired(true)
         .setAutocomplete(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur").toLowerCase();
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

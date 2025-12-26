@@ -13,18 +13,12 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("jail")
     .setDescription("Effectue un jail")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel faire un jail")
-        .setRequired(true)
-        .setAutocomplete(true),
-    )
     .addStringOption((option) =>
       option
         .setName("criminel")
@@ -43,10 +37,19 @@ module.exports = {
         .setName("lien_raison")
         .setDescription("Lien ou raison du jail")
         .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur").toLowerCase();
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

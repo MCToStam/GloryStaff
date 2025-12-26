@@ -8,18 +8,12 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("fullbuild")
     .setDescription("Valide un fullbuild")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel valider un fullbuild")
-        .setRequired(true)
-        .setAutocomplete(true),
-    )
     .addStringOption((option) =>
       option
         .setName("paysa")
@@ -33,10 +27,19 @@ module.exports = {
         .setDescription("Pays pour lequel le pays-a va s'étendre")
         .setRequired(true)
         .setAutocomplete(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur");
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

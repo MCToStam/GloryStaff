@@ -6,18 +6,12 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("config")
     .setDescription("Affiche la configuration d’un système")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel afficher la configuration")
-        .setRequired(true)
-        .setAutocomplete(true),
-    )
     .addStringOption((option) =>
       option
         .setName("type")
@@ -38,10 +32,19 @@ module.exports = {
           { name: "Routine", value: "routine" },
           { name: "Staff", value: "staff" },
         ),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur").toLowerCase();
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

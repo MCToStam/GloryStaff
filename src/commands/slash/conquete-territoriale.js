@@ -8,20 +8,12 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("conquête-territoriale")
     .setDescription("Valide une conquête territoriale")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription(
-          "Le serveur pour lequel valider une conquête territoriale",
-        )
-        .setRequired(true)
-        .setAutocomplete(true),
-    )
     .addStringOption((option) =>
       option
         .setName("paysa")
@@ -35,10 +27,19 @@ module.exports = {
         .setDescription("Pays annexé par le pays-a")
         .setRequired(true)
         .setAutocomplete(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur");
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

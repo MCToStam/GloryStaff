@@ -12,6 +12,7 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -23,12 +24,14 @@ module.exports = {
         .setDescription(
           "Le serveur pour lequel afficher la configuration des grades",
         )
-        .setRequired(true)
+        .setRequired(false)
         .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur").toLowerCase();
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

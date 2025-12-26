@@ -17,6 +17,7 @@ const {
   discordStaff,
   discordLink,
 } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 
 function getContrastTextColor(colorNumber) {
   const hex = colorNumber.toString(16).padStart(6, "0");
@@ -74,13 +75,6 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("derank")
     .setDescription("Dérank une personne")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel dérank une personne")
-        .setRequired(true)
-        .setAutocomplete(true),
-    )
     .addUserOption((option) =>
       option
         .setName("pseudo")
@@ -93,10 +87,19 @@ module.exports = {
         .setDescription("Le grade de l'utilisateur")
         .setRequired(true)
         .setAutocomplete(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("serveur")
+        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setRequired(false)
+        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = interaction.options.getString("serveur").toLowerCase();
+    const serveur =
+      interaction.options.getString("serveur")?.toLowerCase() ||
+      (await getServerCommand(interaction.guild.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 
