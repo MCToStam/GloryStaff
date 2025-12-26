@@ -17,6 +17,7 @@ const {
 
 async function repartition_notation(client) {
   for (const server of config.liste_serveur) {
+    console.log(server);
     try {
       const repartitionData = getData(`data/${server}/config-notation.json`);
       const keys = Object.keys(repartitionData["répartition"].donnee);
@@ -28,13 +29,16 @@ async function repartition_notation(client) {
       ) {
         const numberKeysValues = (
           await Promise.all(
-            repartitionData["répartition"].donnee.map(async (key) => {
-              const emoji = await getEmojiTete(client, key);
-              const emojiText = emoji.id
-                ? `<:${emoji.name}:${emoji.id}>`
-                : emoji.name;
-              return `${emojiText} ${key} : ${repartitionData["répartition"].donnee[key]}`;
-            }),
+            Object.entries(repartitionData["répartition"].donnee).map(
+              async ([key, value]) => {
+                const emoji = await getEmojiTete(client, key);
+                const emojiText = emoji.id
+                  ? `<:${emoji.name}:${emoji.id}>`
+                  : emoji.name;
+
+                return `${emojiText} ${key} : ${value}`;
+              },
+            ),
           )
         ).join("\n");
 
