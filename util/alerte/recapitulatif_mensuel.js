@@ -142,7 +142,7 @@ const prepareServerRankings = async () => {
   const weeklyStats = {};
 
   for (const file of files) {
-    const match = file.match(/classement-\d+-(\w+)-(\d+)\.json/);
+    const match = file.match(/classement-\d+-([^-]+)-(\d+)\.json/);
     if (!match) continue;
 
     const fileMonth = match[1];

@@ -17,7 +17,6 @@ const {
 
 async function repartition_notation(client) {
   for (const server of config.liste_serveur) {
-    console.log(server);
     try {
       const repartitionData = getData(`data/${server}/config-notation.json`);
       const keys = Object.keys(repartitionData["répartition"].donnee);
