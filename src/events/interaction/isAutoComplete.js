@@ -1,6 +1,7 @@
 const log = require("../../../util/module/log");
 const { getData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
+const { getServerCommand } = require("../../../util/getServerCommand");
 const config = require("../../../config");
 
 module.exports = async (client, interaction) => {
@@ -57,8 +58,9 @@ module.exports = async (client, interaction) => {
       }
     } else if (name === "grade") {
       try {
-        const serveur = interaction.options.getString("serveur");
-
+        const serveur =
+          interaction.options.getString("serveur") ||
+          (await getServerCommand(interaction.guild.id));
         if (!serveur) {
           return await interaction.respond([
             {
@@ -109,7 +111,9 @@ module.exports = async (client, interaction) => {
       }
     } else if (name === "role") {
       try {
-        const serveur = interaction.options.getString("serveur");
+        const serveur =
+          interaction.options.getString("serveur") ||
+          (await getServerCommand(interaction.guild.id));
         const memberId = interaction.user.id;
 
         if (!serveur) {
@@ -203,7 +207,9 @@ module.exports = async (client, interaction) => {
         console.log(error);
       }
     } else if (name === "staff") {
-      const serveur = interaction.options.getString("serveur");
+      const serveur =
+        interaction.options.getString("serveur") ||
+        (await getServerCommand(interaction.guild.id));
 
       if (!serveur) {
         return await interaction.respond([
@@ -257,7 +263,9 @@ module.exports = async (client, interaction) => {
 
       return interaction.respond(limitedOptions);
     } else if (name === "pays-a" || name === "pays-b") {
-      const serveur = interaction.options.getString("serveur");
+      const serveur =
+        interaction.options.getString("serveur") ||
+        (await getServerCommand(interaction.guild.id));
 
       if (!serveur || !config.liste_serveur.includes(serveur)) {
         return await interaction.respond([
@@ -315,22 +323,6 @@ module.exports = async (client, interaction) => {
           await interaction.respond(suggestions);
         }
       } catch (error) {}
-    } else if (name === "mois") {
-      let moisDisponibles = new Set();
-      const salaires = getData(`data/black/avocat/salaire.json`);
-
-      salaires.forEach((utilisateur) => {
-        Object.keys(utilisateur.salaire).forEach((mois) =>
-          moisDisponibles.add(mois),
-        );
-      });
-
-      const suggestions = [...moisDisponibles]
-        .filter((mois) => mois.toLowerCase().includes(value.toLowerCase()))
-        .slice(0, 25)
-        .map((mois) => ({ name: mois, value: mois }));
-
-      await interaction.respond(suggestions);
     }
   } catch (e) {
     await interaction.respond([]);
