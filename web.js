@@ -1,6 +1,6 @@
 const express = require("express");
 const { getData } = require("./util/module/getAndSaveData");
-const { discordStaff } = require("./util/module/discordLink");
+const { discordStaff, discordLink } = require("./util/module/discordLink");
 const { getEmojiTete } = require("./util/module/emoji");
 const bodyParser = require("body-parser");
 const {
@@ -211,6 +211,7 @@ app.post("/staff", async (req, res) => {
   const staffData = req.body;
 
   if (Array.isArray(staffData)) {
+    const promotions = [];
     for (const serverData of staffData) {
       const serveur = serverData.serveur;
 
@@ -271,7 +272,8 @@ app.post("/staff", async (req, res) => {
             );
             let staffData = {};
 
-            if (fs.existsSync(staffFilePath)) {
+            const staffFileExisted = fs.existsSync(staffFilePath);
+            if (staffFileExisted) {
               try {
                 staffData = JSON.parse(fs.readFileSync(staffFilePath, "utf8"));
               } catch (e) {
@@ -286,15 +288,10 @@ app.post("/staff", async (req, res) => {
               year: "numeric",
             });
 
-            let alreadyAssigned = false;
             let lastEntryForServer = null;
 
             for (const date of Object.keys(staffData)) {
               const entry = staffData[date];
-
-              if (entry.serveur === serveur && entry.grade === role) {
-                alreadyAssigned = true;
-              }
 
               if (entry.serveur === serveur) {
                 if (
@@ -317,6 +314,18 @@ app.post("/staff", async (req, res) => {
               console.log(
                 `➕ Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`,
               );
+
+              const wasJoueur =
+                !staffFileExisted ||
+                (lastEntryForServer && lastEntryForServer.grade === "Joueur");
+
+              if (wasJoueur && role !== "Joueur") {
+                promotions.push({
+                  staff: staffName,
+                  nouveau: role,
+                  serveur,
+                });
+              }
             }
 
             fs.writeFileSync(
@@ -539,206 +548,34 @@ app.post("/staff", async (req, res) => {
       }
     }
 
-    updateAllStaffWebhooks();
-    res.status(200).json({
-      message: "Données reçues et sauvegardées avec succès.",
-    });
-  } else {
-    res.status(400).json({
-      error: "Les données envoyées ne sont pas au format attendu.",
-    });
-  }
-});
+    console.log(promotions);
+    if (promotions.length > 0) {
+      const linkData = (await discordLink(false)).data;
+      const webhookUrl =
+        "https://discord.com/api/webhooks/1457682599664160839/E80BsT3fA1zN4DLIli82PqTWt-hjN8rFtcJyHb-K4gO2C6H_HZjtqoessoybjixwwYgV";
 
-app.post("/staff_old", async (req, res) => {
-  const staffData = req.body;
+      const message = promotions
+        .map((p) => {
+          const discordId = Object.keys(linkData).find(
+            (id) => linkData[id] === p.staff,
+          );
 
-  if (Array.isArray(staffData)) {
-    for (const serverData of staffData) {
-      const serveur = serverData.serveur;
+          return `${config.emoji_formate[p.serveur]} \`\`${p.staff}\`\` ${
+            discordId ? `(\`\`${discordId}\`\`) ` : ""
+          }devient ${p.nouveau}`;
+        })
+        .join("\n");
 
-      const processedData = {
-        Administrateur: serverData.admin.split(",").map((item) => item.trim()),
-        "Super-Modérateur": serverData.supermodo
-          .split(",")
-          .map((item) => item.trim()),
-        "Modérateur Plus": serverData.modoplus
-          .split(",")
-          .map((item) => item.trim()),
-        Modérateur: serverData.modo.split(",").map((item) => item.trim()),
-        "Modérateur Test": serverData.modotest
-          .split(",")
-          .map((item) => item.trim()),
-        Guide: serverData.guide.split(",").map((item) => item.trim()),
-      };
-
-      const staffDirectoryPath = path.join(__dirname, "data", serveur, "staff");
-      if (!fs.existsSync(staffDirectoryPath)) {
-        fs.mkdirSync(staffDirectoryPath, { recursive: true });
-      }
-
-      for (const role in processedData) {
-        processedData[role].forEach((staffName) => {
-          if (staffName) {
-            const staffFilePath = path.join(
-              staffDirectoryPath,
-              `${staffName}.json`,
-            );
-            let staffData = {};
-
-            if (fs.existsSync(staffFilePath)) {
-              staffData = JSON.parse(fs.readFileSync(staffFilePath, "utf8"));
-            }
-
-            if (!staffData[role]) {
-              const currentDate = new Date();
-              const formattedDate = currentDate.toLocaleDateString("fr-FR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              });
-              staffData[role] = formattedDate;
-              console.log(
-                `➕Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`,
-              );
-            }
-
-            fs.writeFileSync(
-              staffFilePath,
-              JSON.stringify(staffData, null, 2),
-              "utf8",
-            );
-          }
-        });
-      }
-
-      const serverFilePath = path.join(
-        __dirname,
-        "data",
-        serveur,
-        `staff-serveur.json`,
-      );
-
-      const serverDirectory = path.dirname(serverFilePath);
-      if (!fs.existsSync(serverDirectory)) {
-        fs.mkdirSync(serverDirectory, { recursive: true });
-      }
-
-      fs.writeFileSync(
-        serverFilePath,
-        JSON.stringify(processedData, null, 2),
-        "utf8",
-      );
-      console.log(`✅ Données sauvegardées pour le serveur ${serveur}`);
-
-      const configFilePath = path.join(
-        __dirname,
-        "data",
-        serveur,
-        "config-staff.json",
-      );
-      if (fs.existsSync(configFilePath)) {
-        const configStaff = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
-        if (
-          configStaff["Affichage Staff"].active &&
-          configStaff["Affichage Staff"].Salon.valeur &&
-          configStaff["Affichage Staff"].Message
-        ) {
-          try {
-            const channel = await client.channels.fetch(
-              configStaff["Affichage Staff"].Salon.valeur,
-            );
-            if (channel) {
-              const message = await channel.messages.fetch(
-                configStaff["Affichage Staff"].Message,
-              );
-              if (message) {
-                const description = `
-                                    **${
-                                      config.emojigrade["Administrateur"]
-                                    } Administrateurs (${
-                                      processedData["Administrateur"].length
-                                    }) :**\n${processedData["Administrateur"].join(", ") || "Aucun"}
-                                    \n**${
-                                      config.emojigrade["Super-Modérateur"]
-                                    } Super Modérateurs (${
-                                      processedData["Super-Modérateur"].length
-                                    }) :**\n${
-                                      processedData["Super-Modérateur"].join(
-                                        ", ",
-                                      ) || "Aucun"
-                                    }
-                                    \n**${
-                                      config.emojigrade["Modérateur Plus"]
-                                    } Modérateurs Plus (${
-                                      processedData["Modérateur Plus"].length
-                                    }) :**\n${
-                                      processedData["Modérateur Plus"].join(
-                                        ", ",
-                                      ) || "Aucun"
-                                    }
-                                    \n**${
-                                      config.emojigrade["Modérateur"]
-                                    } Modérateurs (${
-                                      processedData["Modérateur"].length
-                                    }) :**\n${processedData["Modérateur"].join(", ") || "Aucun"}
-                                    \n**${
-                                      config.emojigrade["Modérateur Test"]
-                                    } Modérateurs Tests (${
-                                      processedData["Modérateur Test"].length
-                                    }) :**\n${
-                                      processedData["Modérateur Test"].join(
-                                        ", ",
-                                      ) || "Aucun"
-                                    }
-                                    \n**${config.emojigrade["Guide"]} Guides (${
-                                      processedData["Guide"].length
-                                    }) :**\n${processedData["Guide"].join(", ") || "Aucun"}
-                                    \n\n*Dernière mise à jour : <t:${Math.floor(
-                                      Date.now() / 1000,
-                                    )}:R>*
-                                `;
-
-                const staffEmbed = new EmbedBuilder()
-                  .setAuthor({
-                    name: `Staff du serveur ${serveur}`,
-                    url: `https://nationsglory.fr/server/${serveur}/staff`,
-                  })
-                  .setThumbnail(
-                    `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
-                  )
-                  .setColor(config.couleur[serveur])
-                  .setDescription(description)
-                  .setFooter({ text: config.footer });
-
-                await message.edit({ embeds: [staffEmbed] });
-                console.log(
-                  `✅ Message mis à jour pour le serveur : ${serveur}`,
-                );
-              }
-            }
-          } catch (error) {
-            if (error.code === 10008) {
-              console.log(
-                `🗑️ Le message pour le serveur ${serveur} a été supprimé.`,
-              );
-              configStaff["Affichage Staff"].Message = false;
-              fs.writeFileSync(
-                configFilePath,
-                JSON.stringify(configStaff, null, 2),
-                "utf8",
-              );
-            } else {
-              console.error(
-                `Erreur lors de la mise à jour du message pour le serveur ${serveur}:`,
-                error,
-              );
-            }
-          }
-        }
-      }
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: message,
+        }),
+      });
     }
 
+    updateAllStaffWebhooks();
     res.status(200).json({
       message: "Données reçues et sauvegardées avec succès.",
     });
@@ -934,7 +771,11 @@ app.post("/update-leaders", async (req, res) => {
 
           for (const { compte, server, country } of servers) {
             const emojiCompte = await getEmojiTete(client, compte);
-            message += `<:NG${server.charAt(0).toUpperCase() + server.slice(1)}:${config.emoji[server.toLowerCase()]}> **${server.charAt(0).toUpperCase() + server.slice(1)}** : ${country} (${emojiCompte} ${compte})\n`;
+            message += `<:NG${
+              server.charAt(0).toUpperCase() + server.slice(1)
+            }:${config.emoji[server.toLowerCase()]}> **${
+              server.charAt(0).toUpperCase() + server.slice(1)
+            }** : ${country} (${emojiCompte} ${compte})\n`;
           }
 
           for (const [server, serverConfig] of eligibleServersMap.entries()) {
