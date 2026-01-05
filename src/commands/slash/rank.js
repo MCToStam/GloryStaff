@@ -91,7 +91,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("serveur")
-        .setDescription("Le serveur pour lequel afficher la configuration")
+        .setDescription("Le joueur pour lequel afficher le punisher")
         .setRequired(false)
         .setAutocomplete(true),
     ),
@@ -99,7 +99,7 @@ module.exports = {
   async execute(client, interaction, config) {
     const serveur =
       interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id));
+      (await getServerCommand(interaction.guild.id, interaction.user.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

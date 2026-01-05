@@ -23,14 +23,15 @@ module.exports = {
       option
         .setName("serveur")
         .setDescription("Le serveur pour lequel afficher la configuration")
+        .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs)
         .setRequired(false)
-        .setAutocomplete(true),
+        .setAutocomplete(false),
     ),
 
   async execute(client, interaction, config) {
     const serveur =
       interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id));
+      (await getServerCommand(interaction.guild.id, interaction.user.id));
 
     const { errorContainer } = await errorStaffContainer(serveur);
 

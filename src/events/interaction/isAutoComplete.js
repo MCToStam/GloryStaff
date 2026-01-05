@@ -60,7 +60,7 @@ module.exports = async (client, interaction) => {
       try {
         const serveur =
           interaction.options.getString("serveur") ||
-          (await getServerCommand(interaction.guild.id));
+          (await getServerCommand(interaction.guild.id, interaction.user.id));
         if (!serveur) {
           return await interaction.respond([
             {
@@ -113,7 +113,7 @@ module.exports = async (client, interaction) => {
       try {
         const serveur =
           interaction.options.getString("serveur") ||
-          (await getServerCommand(interaction.guild.id));
+          (await getServerCommand(interaction.guild.id, interaction.user.id));
         const memberId = interaction.user.id;
 
         if (!serveur) {
@@ -209,7 +209,7 @@ module.exports = async (client, interaction) => {
     } else if (name === "staff") {
       const serveur =
         interaction.options.getString("serveur") ||
-        (await getServerCommand(interaction.guild.id));
+        (await getServerCommand(interaction.guild.id, interaction.user.id));
 
       if (!serveur) {
         return await interaction.respond([
@@ -265,7 +265,7 @@ module.exports = async (client, interaction) => {
     } else if (name === "pays-a" || name === "pays-b") {
       const serveur =
         interaction.options.getString("serveur") ||
-        (await getServerCommand(interaction.guild.id));
+        (await getServerCommand(interaction.guild.id, interaction.user.id));
 
       if (!serveur || !config.liste_serveur.includes(serveur)) {
         return await interaction.respond([

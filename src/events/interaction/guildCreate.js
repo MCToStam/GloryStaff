@@ -1,11 +1,12 @@
 const { AuditLogEvent } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
+const { discordStaff } = require("../../../util/module/discordLink");
 const config = require("../../../config");
 const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
+  MessageFlags,
+  ContainerBuilder,
 } = require("discord.js");
 
 module.exports = async (client, guild) => {
@@ -25,22 +26,13 @@ module.exports = async (client, guild) => {
     const creationTimestamp = Math.floor(guild.createdTimestamp / 1000);
     const serverIconURL = guild.iconURL({ dynamic: true, size: 512 });
 
-    let isAuthorized = false;
+    const { pseudonym, servers, container } = await discordStaff(
+      inviter?.id,
+      "all",
+      "guide",
+    );
 
-    for (const serveur of config.liste_serveur) {
-      const staffData = getData(`data/${serveur}/staff.json`);
-
-      const isStaff = Object.values(staffData).some((ids) =>
-        ids.includes(inviter?.id),
-      );
-
-      if (isStaff) {
-        isAuthorized = true;
-        break;
-      }
-    }
-
-    if (config.developpeur.includes(inviter?.id) || isAuthorized) {
+    if (config.developpeur.includes(inviter?.id) || servers.length > 0) {
       const embed = {
         title: "Nouveau Serveur - Accès Autorisé",
         description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
@@ -51,10 +43,54 @@ module.exports = async (client, guild) => {
       try {
         await targetUser.send({ embeds: [embed] });
       } catch (e) {}
-      console.log(
-        `Le bot a été ajouté par ${inviter?.tag} dans un serveur autorisé : ${guild.name}`,
-      );
     } else {
+      let errorContainer;
+      if (!pseudonym) {
+        errorContainer = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent("## ❌ Compte non Lié"),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              "Ton compte Discord doit être lié à ton compte NationsGlory pour effectuer cette action.",
+            ),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addActionRowComponents(
+            new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setLabel("🔗 Lier son Compte")
+                .setURL("https://glorybot.fr/user/profile")
+                .setStyle(ButtonStyle.Link),
+            ),
+          );
+      } else {
+        errorContainer = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent("## ❌ Accès Refusé"),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              "GloryStaff est un robot uniquement disponible aux différents staffs de NationsGlory, il est donc formellement interdit de l'inviter sur un autre serveur Discord que ceux autorisés. Néanmoins, GloryBot est un robot accessible aux joueurs afin de vous aider dans votre parcours sur NationsGlory.",
+            ),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addActionRowComponents(
+            new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setLabel("🔗 Inviter GloryBot")
+                .setURL(
+                  "https://discord.com/oauth2/authorize?client_id=829422257130176523",
+                )
+                .setStyle(ButtonStyle.Link),
+            ),
+          );
+      }
+
       const embed = {
         title: "Nouveau Serveur - Accès Refusé",
         description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
@@ -63,32 +99,17 @@ module.exports = async (client, guild) => {
         color: config.errorcolor,
       };
 
-      const dmEmbed = new EmbedBuilder()
-        .setTitle("Accès Refusé")
-        .setDescription(
-          "GloryStaff est un robot uniquement disponible aux différents staffs de NationsGlory, il est donc formellement interdit de l'inviter sur un autre serveur Discord que ceux autorisés. Néanmoins, GloryBot est un robot accessible aux joueurs afin de vous aider dans votre parcours sur NationsGlory.",
-        )
-        .setFooter({ text: config.footer })
-        .setColor(config.errorcolor);
-
-      const actionRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setLabel("Inviter GloryBot")
-          .setURL(
-            "https://discord.com/oauth2/authorize?client_id=829422257130176523",
-          )
-          .setStyle(ButtonStyle.Link)
-          .setEmoji("1360717989267378477"),
-      );
       try {
-        await targetUser.send({ embeds: [embed] });
+        await targetUser.send({
+          embeds: [embed],
+        });
       } catch (e) {}
       try {
-        await inviter.send({ embeds: [dmEmbed], components: [actionRow] });
+        await inviter.send({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
       } catch (e) {}
-      console.log(
-        `Le bot a été ajouté par ${inviter?.tag} dans un serveur non autorisé : ${guild.name}`,
-      );
       await guild.leave();
     }
   } catch (error) {
