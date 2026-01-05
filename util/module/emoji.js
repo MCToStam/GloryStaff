@@ -25,7 +25,6 @@ async function scheduleDeleteEmoji(
       if (!client.application) await client.application.fetch();
       const emoji = await client.application.emojis.fetch(emojiId);
       if (emoji) await emoji.delete();
-      console.log(`🗑️ Emoji ${key} supprimé (planifié)`);
     } catch (e) {
       console.warn(`⚠️ Erreur suppression emoji ${key}:`, e.message);
     } finally {
@@ -196,7 +195,6 @@ async function checkEmojiCache(client) {
       try {
         const emoji = await client.application.emojis.fetch(emojiId);
         if (emoji) await emoji.delete();
-        console.log(`🗑️ Emoji ${key} supprimé (expiré)`);
       } catch {}
       delete emojisCache[key];
       await saveCache();

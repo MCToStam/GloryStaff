@@ -316,8 +316,7 @@ app.post("/staff", async (req, res) => {
               );
 
               const wasJoueur =
-                !staffFileExisted ||
-                (lastEntryForServer && lastEntryForServer.grade === "Joueur");
+                !lastEntryForServer || lastEntryForServer.grade === "Joueur";
 
               if (wasJoueur && role !== "Joueur") {
                 promotions.push({
@@ -548,7 +547,6 @@ app.post("/staff", async (req, res) => {
       }
     }
 
-    console.log(promotions);
     if (promotions.length > 0) {
       const linkData = (await discordLink(false)).data;
       const webhookUrl =
