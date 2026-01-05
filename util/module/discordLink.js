@@ -170,21 +170,6 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
 }
 
 async function errorStaffContainer(serveur) {
-  if (!serveur) {
-    const errorContainer = new ContainerBuilder()
-      .setAccentColor(config.colors.error)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("## ❌ Aucun Serveur"),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          "Aucun serveur par défaut n'a été trouvé sur ce serveur Discord, veuillez en spécifier un manuellement.",
-        ),
-      );
-    return { errorContainer };
-  }
-
   if (serveur === "non-lie") {
     const errorContainer = new ContainerBuilder()
       .setAccentColor(config.colors.error)
@@ -206,7 +191,7 @@ async function errorStaffContainer(serveur) {
             .setStyle(ButtonStyle.Link),
         ),
       );
-    return { errorContainer };
+    return errorContainer;
   }
 
   if (serveur !== "all" && !config.liste_serveur.includes(serveur)) {
@@ -222,7 +207,7 @@ async function errorStaffContainer(serveur) {
         ),
       );
 
-    return { errorContainer };
+    return errorContainer;
   }
 
   const capitalizedServeur = serveur.charAt(0).toUpperCase() + serveur.slice(1);
@@ -241,10 +226,10 @@ async function errorStaffContainer(serveur) {
         ),
       );
 
-    return { errorContainer };
+    return errorContainer;
   }
 
-  return { errorContainer: false };
+  return false;
 }
 
 module.exports = { discordLink, discordStaff, errorStaffContainer };

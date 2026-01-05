@@ -7,14 +7,11 @@ const {
 } = require("discord.js");
 const { getEmojiTete } = require("../../../util/module/emoji");
 const { getData } = require("../../../util/module/getAndSaveData");
-const {
-  errorStaffContainer,
-  discordStaff,
-  discordLink,
-} = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const { discordLink } = require("../../../util/module/discordLink");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("staff")
     .setDescription("Affiche la liste des staffs")
@@ -34,31 +31,8 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur =
-      interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id, interaction.user.id));
-
-    const { errorContainer } = await errorStaffContainer(serveur);
-
-    if (errorContainer) {
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
-
-    const { pseudonym, servers, container } = await discordStaff(
-      interaction.user.id,
-      serveur,
-      "super_moderateur",
-    );
-
-    if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    const serveur = await proxyCommande(interaction);
+    if (!serveur) return;
 
     const joueur = interaction.options.getString("staff");
 

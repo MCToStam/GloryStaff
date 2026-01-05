@@ -10,14 +10,9 @@ const {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  MessageFlags,
 } = require("discord.js");
-const {
-  errorStaffContainer,
-  discordStaff,
-  discordLink,
-} = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const { discordLink } = require("../../../util/module/discordLink");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 function getContrastTextColor(colorNumber) {
   const hex = colorNumber.toString(16).padStart(6, "0");
@@ -72,6 +67,7 @@ function drawRoundedHexagonPath(ctx, x, y, width, height, radius) {
 }
 
 module.exports = {
+  config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("rank")
     .setDescription("Rank une personne")
@@ -97,31 +93,8 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur =
-      interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id, interaction.user.id));
-
-    const { errorContainer } = await errorStaffContainer(serveur);
-
-    if (errorContainer) {
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
-
-    const {
-      pseudonym: pseudo_staff,
-      servers,
-      container,
-    } = await discordStaff(interaction.user.id, serveur, "super_moderateur");
-
-    if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    const serveur = await proxyCommande(interaction);
+    if (!serveur) return;
 
     const grade = interaction.options.getString("grade");
     const membre = interaction.options.getUser("pseudo");

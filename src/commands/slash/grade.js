@@ -8,13 +8,10 @@ const {
   MessageFlags,
   StringSelectMenuBuilder,
 } = require("discord.js");
-const {
-  errorStaffContainer,
-  discordStaff,
-} = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("grade")
     .setDescription("Configure les différents grades")
@@ -29,31 +26,8 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur =
-      interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id, interaction.user.id));
-
-    const { errorContainer } = await errorStaffContainer(serveur);
-
-    if (errorContainer) {
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
-
-    const { pseudonym, servers, container } = await discordStaff(
-      interaction.user.id,
-      serveur,
-      "super_moderateur",
-    );
-
-    if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    const serveur = await proxyCommande(interaction);
+    if (!serveur) return;
 
     const configGrade = getData(`data/${serveur}/grade.json`);
 

@@ -3,9 +3,10 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
-const { discordStaff } = require("../../../util/module/discordLink");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("points-affilie")
     .setDescription("Affiche les récompenses des points affiliés")
@@ -27,25 +28,13 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
+    const serveur = await proxyCommande(interaction);
+    if (!serveur) return;
+
     const pointsInput = interaction.options.getInteger("points");
     const euroInput = interaction.options.getInteger("euro");
     const points = pointsInput ? parseInt(pointsInput, 10) : null;
     const euros = euroInput ? parseInt(euroInput, 10) : null;
-
-    const { pseudonym, servers, container } = await discordStaff(
-      interaction.user.id,
-      "all",
-      "super_moderateur",
-    );
-
-    if (container) {
-      return await interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
-
-    const serveur = servers[0];
 
     const rewards = [
       { emoji: "🎖️", points: 5, label: "Badge Viewer" },

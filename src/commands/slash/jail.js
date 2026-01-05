@@ -51,7 +51,7 @@ module.exports = {
       interaction.options.getString("serveur")?.toLowerCase() ||
       (await getServerCommand(interaction.guild.id, interaction.user.id));
 
-    const { errorContainer } = await errorStaffContainer(serveur);
+    const errorContainer = await errorStaffContainer(serveur);
 
     if (errorContainer) {
       return interaction.reply({

@@ -5,13 +5,10 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
-const {
-  errorStaffContainer,
-  discordStaff,
-} = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  config: { permission: "guide" },
   data: new SlashCommandBuilder()
     .setName("double-lead")
     .setDescription("Affiche la liste des doubles lead")
@@ -26,29 +23,8 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur =
-      interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id, interaction.user.id));
-
-    const { errorContainer } = await errorStaffContainer(serveur);
-    if (errorContainer) {
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
-
-    const { container } = await discordStaff(
-      interaction.user.id,
-      serveur,
-      "super_moderateur",
-    );
-    if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    const serveur = await proxyCommande(interaction);
+    if (!serveur) return;
 
     const data = getData(`data/doublelead.json`);
 

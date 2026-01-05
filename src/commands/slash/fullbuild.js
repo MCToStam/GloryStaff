@@ -1,16 +1,9 @@
-const {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  MessageFlags,
-} = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const { getData } = require("../../../util/module/getAndSaveData");
-const {
-  errorStaffContainer,
-  discordStaff,
-} = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("fullbuild")
     .setDescription("Valide un fullbuild")
@@ -37,31 +30,8 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur =
-      interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id, interaction.user.id));
-
-    const { errorContainer } = await errorStaffContainer(serveur);
-
-    if (errorContainer) {
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
-
-    const { pseudonym, servers, container } = await discordStaff(
-      interaction.user.id,
-      serveur,
-      "super_moderateur",
-    );
-
-    if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    const serveur = await proxyCommande(interaction);
+    if (!serveur) return;
 
     const paysa = interaction.options.getString("pays-a");
     const paysb = interaction.options.getString("pays-b");
