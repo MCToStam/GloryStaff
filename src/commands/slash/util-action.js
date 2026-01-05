@@ -100,8 +100,7 @@ module.exports = {
     .setDescription("Actionner une fonction depuis util"),
 
   async execute(client, interaction, config) {
-    const userId = interaction.user.id;
-    if (userId !== "719072181631320145") {
+    if (!config.developpeur.includes(interaction.user.id)) {
       const error = new EmbedBuilder()
         .setColor(config.colors.error)
         .setTitle("Erreur")

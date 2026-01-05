@@ -20,7 +20,7 @@ async function proxyCommande(interaction) {
   if (!serveur)
     serveur = await getServerCommand(interaction.guild.id, interaction.user.id);
 
-  if (serveur && typeof serveur === String) {
+  if (serveur && typeof serveur === "string") {
     const errorContainer = await errorStaffContainer(serveur);
 
     if (errorContainer) {
