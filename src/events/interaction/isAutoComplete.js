@@ -204,14 +204,13 @@ module.exports = async (client, interaction) => {
         await interaction.respond(suggestions);
       } catch (error) {
         await interaction.respond([]);
-        console.log(error);
       }
     } else if (name === "staff") {
       const serveur =
         interaction.options.getString("serveur") ||
         (await getServerCommand(interaction.guild.id, interaction.user.id));
 
-      if (!serveur) {
+      if (!serveur || typeof serveur !== "string") {
         return await interaction.respond([
           {
             name: "Il te faut sélectionner un serveur",
@@ -220,18 +219,13 @@ module.exports = async (client, interaction) => {
         ]);
       }
 
-      const staffData = getData(`data/${serveur}/staff.json`);
-
-      const isAdmin = staffData["Administrateur"]?.includes(
+      const { servers } = await discordStaff(
         interaction.user.id,
+        serveur,
+        "guide",
       );
-      const isSM = staffData["Super-Modérateur"]?.includes(interaction.user.id);
 
-      if (
-        !isAdmin &&
-        !isSM &&
-        !config.developpeur.includes(interaction.user.id)
-      ) {
+      if (!servers.includes(serveur)) {
         return interaction.respond([
           {
             name: "Tu n'effectuer n'a pas le droit d'effectuer ceci !",
@@ -262,7 +256,7 @@ module.exports = async (client, interaction) => {
       const limitedOptions = filteredOptions.slice(0, 25);
 
       return interaction.respond(limitedOptions);
-    } else if (name === "pays-a" || name === "pays-b") {
+    } else if (name === "paysa" || name === "paysb") {
       const serveur =
         interaction.options.getString("serveur") ||
         (await getServerCommand(interaction.guild.id, interaction.user.id));

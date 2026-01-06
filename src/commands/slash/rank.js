@@ -93,7 +93,7 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
+    const serveur = await proxyCommande(client, interaction, config);
     if (!serveur) return;
 
     const grade = interaction.options.getString("grade");

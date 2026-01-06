@@ -8,7 +8,7 @@ const {
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
-  config: { permission: "guide" },
+  config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("double-lead")
     .setDescription("Affiche la liste des doubles lead")
@@ -23,9 +23,10 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
-
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur } = interaction.parametre;
     const data = getData(`data/doublelead.json`);
 
     const matchingLeaders = data.filter((entry) =>
@@ -58,7 +59,11 @@ module.exports = {
       });
     }
 
-    await interaction.deferReply({});
+    if (interaction.isMessageComponent()) {
+      await interaction.deferUpdate();
+    } else {
+      await interaction.deferReply();
+    }
 
     const linesFinal = await Promise.all(
       matchingLeaders.map(async (entry) => {

@@ -28,13 +28,12 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
-
-    const pointsInput = interaction.options.getInteger("points");
-    const euroInput = interaction.options.getInteger("euro");
-    const points = pointsInput ? parseInt(pointsInput, 10) : null;
-    const euros = euroInput ? parseInt(euroInput, 10) : null;
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur, points, euro } = interaction.parametre;
+    const point = points ? parseInt(points, 10) : null;
+    const euros = euro ? parseInt(euro, 10) : null;
 
     const rewards = [
       { emoji: "🎖️", points: 5, label: "Badge Viewer" },
@@ -45,7 +44,7 @@ module.exports = {
 
     let description = "";
 
-    if (!points && !euros) {
+    if (!point && !euros) {
       description = rewards
         .map((r) => `${r.emoji} **${r.points} points** → ${r.label}`)
         .join("\n");
@@ -108,17 +107,17 @@ module.exports = {
           )} vidéo${Math.ceil(best.points / 15) > 1 ? "s" : ""}\n` +
           `➡️ Donne **${best.euros}€**`;
       }
-    } else if (points) {
+    } else if (point) {
       const availableRewards = rewards
-        .filter((r) => points >= r.points)
+        .filter((r) => point >= r.points)
         .sort((a, b) => b.points - a.points);
 
       if (availableRewards.length === 0) {
-        description = `❌ Avec **${points} points**, aucune récompense n'est disponible.`;
+        description = `❌ Avec **${point} points**, aucune récompense n'est disponible.`;
       } else {
         description = availableRewards
           .map((r) => {
-            const count = Math.floor(points / r.points);
+            const count = Math.floor(point / r.points);
             return `${r.emoji} **${r.points} points** → ${r.label}\n↪ ${
               r.euro
                 ? `**${count * r.euro}€**`
@@ -141,9 +140,16 @@ module.exports = {
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) => t.setContent(description));
 
-    return interaction.reply({
-      components: [pointsContainer],
-      flags: MessageFlags.IsComponentsV2,
-    });
+    if (interaction.isMessageComponent()) {
+      return interaction.update({
+        components: [pointsContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    } else {
+      return interaction.reply({
+        components: [pointsContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
   },
 };

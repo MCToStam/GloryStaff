@@ -1,5 +1,12 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  ContainerBuilder,
+  MessageFlags,
+  TextDisplayBuilder,
+} = require("discord.js");
 const { getData } = require("../../../util/module/getAndSaveData");
+const { getEmojiDrapeau, getEmojiTete } = require("../../../util/module/emoji");
+const { discordLink } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
@@ -30,96 +37,123 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
-
-    const paysa = interaction.options.getString("pays-a");
-    const paysb = interaction.options.getString("pays-b");
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur, paysa, paysb } = interaction.parametre;
 
     const configExpansion = getData(
       `data/${serveur}/config-expansionterritoriale.json`,
     );
 
     if (!configExpansion["Conquête Territoriale"]?.active) {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          `Le système de conquête territoriale n'est pas configuré sur le serveur <:NG${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }:${config.emoji[serveur.toLowerCase()]}> **${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`,
+      const container = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((t) =>
+          t.setContent("## ❌ Système Désactivé"),
         )
-        .setFooter({ text: config.footer });
-      return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `Le système de Conquête Territoriale est désactivé sur le serveur ${
+              config.emoji_formate[serveur]
+            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}.`,
+          ),
+        );
+
+      return interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
     }
 
     if (!configExpansion["Conquête Territoriale"]?.Salon.valeur) {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          `Le système de conquête territoriale n'est pas complètement configuré sur le serveur <:NG${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }:${config.emoji[serveur.toLowerCase()]}> **${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`,
+      const container = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((t) =>
+          t.setContent("## ❌ Configuration Invalide"),
         )
-        .setFooter({ text: config.footer });
-      return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `Le système de Conquête Territoriale n'est pas correctement configuré sur le serveur ${
+              config.emoji_formate[serveur]
+            } ${
+              serveur.charAt(0).toUpperCase() + serveur.slice(1)
+            }, le choix du salon est manquant.`,
+          ),
+        );
+
+      return interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle("✈️ Conquête Territoriale")
-      .setColor(config.couleur[serveur])
-      .setDescription(
-        `<@${interaction.user.id}> vient de valider la conquête territoriale du pays **${paysa}**. Ce pays a donc annexé le pays **${paysb}**.`,
+    if (interaction.isMessageComponent()) {
+      await interaction.deferUpdate();
+    } else {
+      await interaction.deferReply();
+    }
+
+    const pseudo = await discordLink(interaction.user.id);
+    const tete = await getEmojiTete(client, pseudo);
+    const drapeauA = await getEmojiDrapeau(client, serveur, paysa);
+    const drapeauB = await getEmojiDrapeau(client, serveur, paysb);
+
+    const container = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) =>
+        t.setContent("## ✈️ Conquête Territoriale"),
       )
-      .setFooter({ text: config.footer })
-      .setThumbnail(
-        `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${paysa}`,
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
+          `${tete} **${pseudo}** vient de valider la conquête territoriale du pays ${drapeauA} **${paysa}**. Ce pays a donc annexé le pays ${drapeauB} **${paysb}**.`,
+        ),
       );
 
-    const salon = interaction.client.channels.fetch(
+    const salon = await client.channels.fetch(
       configExpansion["Conquête Territoriale"]?.Salon.valeur,
     );
 
-    const roleIds = configExpansion["Conquête Territoriale"]?.Role.valeur;
+    let message;
+    if (configExpansion["Conquête Territoriale"].Role.valeur.length > 0) {
+      const roleMentions = configExpansion["Conquête Territoriale"]?.Role.valeur
+        .map((roleId) => `<@&${roleId}>`)
+        .join(", ");
 
-    const roleMentions =
-      Array.isArray(roleIds) && roleIds.length > 0
-        ? roleIds.map((roleId) => `<@&${roleId}>`).join(", ")
-        : undefined;
-
-    const message = await salon.send({
-      embeds: [embed],
-      content: roleMentions,
-    });
+      const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
+      message = await salon.send({
+        components: [roleTextDisplay, container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    } else {
+      message = await salon.send({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
 
     const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
 
-    const userEmbed = new EmbedBuilder()
-      .setTitle("✈️ Conquête Territoriale")
-      .setColor(config.couleur[serveur])
-      .setDescription(
-        `La conquête territoriale est correctement validé et a été envoyé ici : ${messageLink}`,
+    const userContainer = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) =>
+        t.setContent("## ✈️ Conquête Territoriale"),
       )
-      .setFooter({ text: config.footer });
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
+          `La conquête territoriale est correctement validé et a été envoyé ici : ${messageLink}`,
+        ),
+      );
 
-    interaction.reply({ embeds: [userEmbed], ephemeral: true });
+    interaction.editReply({
+      components: [userContainer],
+      flags: MessageFlags.IsComponentsV2,
+    });
 
-    if (salon.type === "GUILD_NEWS") {
-      try {
-        await message.crosspost();
-        console.log(
-          `📣 Message publié dans le salon d’annonce pour ${serveur}`,
-        );
-      } catch (err) {
-        console.warn(
-          `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
-        );
-      }
-    }
+    if (salon.type === "GUILD_NEWS") await message.crosspost();
   },
 };

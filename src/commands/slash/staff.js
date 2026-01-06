@@ -31,12 +31,12 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur, staff } = interaction.parametre;
 
-    const joueur = interaction.options.getString("staff");
-
-    if (!joueur) {
+    if (!staff) {
       const linkData = (await discordLink(false))?.data;
       const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
 
@@ -108,13 +108,21 @@ module.exports = {
           ),
         );
 
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-        allowedMentions: { parse: [] },
-      });
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+          allowedMentions: { parse: [] },
+        });
+      } else {
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+          allowedMentions: { parse: [] },
+        });
+      }
     } else {
-      const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
+      const staffData = getData(`data/${serveur}/staff/${staff}.json`);
       if (!staffData) {
         const container = new ContainerBuilder()
           .setAccentColor(config.colors.error)
@@ -122,7 +130,7 @@ module.exports = {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur <:NG${serveur
+              `Le joueur "**${staff}**" n'existe pas ou ne fait pas partie du staff du serveur <:NG${serveur
                 .charAt(0)
                 .toUpperCase()}${serveur.slice(1)}:${
                 config.emoji[serveur]
@@ -130,25 +138,36 @@ module.exports = {
             ),
           );
 
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
+        if (interaction.isMessageComponent()) {
+          return interaction.update({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          return interaction.reply({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
       }
 
       const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
       const gradeDuJoueur =
         Object.entries(fullStaffData).find(
-          ([, members]) => Array.isArray(members) && members.includes(joueur),
+          ([, members]) => Array.isArray(members) && members.includes(staff),
         )?.[0] || "Inconnu";
 
-      await interaction.deferReply({});
+      if (interaction.isMessageComponent()) {
+        await interaction.deferUpdate();
+      } else {
+        await interaction.deferReply();
+      }
 
       const linkedDiscordIdData = (await discordLink(false)).data;
       const linkedDiscordId = Object.keys(linkedDiscordIdData).find(
         (id) =>
           typeof linkedDiscordIdData[id] === "string" &&
-          linkedDiscordIdData[id].toLowerCase() === joueur.toLowerCase(),
+          linkedDiscordIdData[id].toLowerCase() === staff.toLowerCase(),
       );
 
       const blameLevels = ["Blâme 1", "Blâme 2", "Blâme 3"];
@@ -172,7 +191,7 @@ module.exports = {
           const timeout = setTimeout(() => controller.abort(), 5000);
           try {
             const res = await fetch(
-              `https://publicapi.nationsglory.fr/user/${joueur}`,
+              `https://publicapi.nationsglory.fr/user/${staff}`,
               {
                 headers: {
                   Authorization: `Bearer ${config.apitoken_backup}`,
@@ -194,13 +213,13 @@ module.exports = {
           const res = await fetch(
             `${
               config.glorybot_url
-            }/api/get-bedrock?pseudo_ng=${encodeURIComponent(joueur)}`,
+            }/api/get-bedrock?pseudo_ng=${encodeURIComponent(staff)}`,
           );
           if (!res.ok) return null;
           const data = await res.json();
           return data.pseudo_mc || null;
         })(),
-        getEmojiTete(client, joueur),
+        getEmojiTete(client, staff),
       ]);
 
       const jailData = getData(`data/${serveur}/config-jail.json`);
@@ -281,7 +300,7 @@ module.exports = {
         .setAccentColor(config.couleur[serveur] || config.color)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `## ${emojiTete} Gestion Staff - ${joueur.replace(/_/g, "\\_")}`,
+            `## ${emojiTete} Gestion Staff - ${staff.replace(/_/g, "\\_")}`,
           ),
         )
         .addSeparatorComponents((s) => s);
@@ -333,7 +352,7 @@ module.exports = {
           )
           .setButtonAccessory((button) =>
             button
-              .setCustomId(`gestionstaff_liaisondiscord-${joueur}`)
+              .setCustomId(`gestionstaff_liaisondiscord-${staff}`)
               .setLabel(
                 linkedDiscordId ? "Modifier la Liaison" : "Ajouter une Liaison",
               )
@@ -353,7 +372,7 @@ module.exports = {
             )
             .setButtonAccessory((button) =>
               button
-                .setCustomId(`gestionstaff_liaisonminecraft-${joueur}`)
+                .setCustomId(`gestionstaff_liaisonminecraft-${staff}`)
                 .setLabel(
                   linkedMinecraftPseudonym
                     ? "Modifier la Liaison"
@@ -373,7 +392,7 @@ module.exports = {
           )
           .setButtonAccessory((button) =>
             button
-              .setCustomId(`gestionstaff_blame-${joueur}`)
+              .setCustomId(`gestionstaff_blame-${staff}`)
               .setLabel("Afficher ou Modifier les Blâmes")
               .setStyle(ButtonStyle.Primary),
           ),
@@ -384,7 +403,7 @@ module.exports = {
       container.addActionRowComponents((row) =>
         row.setComponents(
           new StringSelectMenuBuilder()
-            .setCustomId(`gestionstaff-${joueur}`)
+            .setCustomId(`gestionstaff-${staff}`)
             .setPlaceholder("Choisit une option")
             .setOptions(optionsMenu),
         ),

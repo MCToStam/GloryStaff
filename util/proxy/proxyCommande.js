@@ -8,12 +8,27 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../util/module/discordLink");
-const config = require("../../config");
 
-async function proxyCommande(interaction) {
-  const commandFile = require(
-    `../../src/commands/slash/${interaction.commandName}.js`,
+async function proxyCommande(client, interaction, config) {
+  const commandName = interaction.commandName
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .toLowerCase();
+  const argsSansServeur = interaction.options.data
+    .filter((opt) => opt.name !== "serveur")
+    .map((opt) => {
+      return {
+        name: opt.name,
+        value: opt.value,
+      };
+    });
+
+  interaction.parametre = Object.fromEntries(
+    argsSansServeur.map((arg) => [arg.name, arg.value]),
   );
+
+  const commandFile = require(`../../src/commands/slash/${commandName}.js`);
   const permission = commandFile?.config?.permission;
 
   let serveur = interaction.options.getString("serveur")?.toLowerCase();
@@ -38,26 +53,32 @@ async function proxyCommande(interaction) {
       );
 
       if (container) {
-        interaction.reply({
+        return interaction.reply({
           components: [container],
           flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
-        return;
       }
     }
-    return serveur;
+
+    interaction.parametre.serveur = serveur;
+
+    await commandFile.proxy(client, interaction, config);
   } else if (serveur && Array.isArray(serveur)) {
     const options = serveur
       .filter((srv) => config.liste_serveur.includes(srv))
       .map((srv) => ({
         label: srv.charAt(0).toUpperCase() + srv.slice(1),
-        value: `selectServeur_${srv}`,
+        value: `selectServeur-${srv}`,
         emoji: config.emoji[srv],
       }));
 
+    const encodedArgs = argsSansServeur
+      .map((arg) => `${arg.name}=${arg.value}`)
+      .join("-");
+
     const container = new ContainerBuilder()
       .setAccentColor(config.colors.error)
-      .addTextDisplayComponents((t) => t.setContent("## ❌ Aucun Serveur"))
+      .addTextDisplayComponents((t) => t.setContent("## ❌ Plusieurs Serveurs"))
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>
         t.setContent(
@@ -68,17 +89,18 @@ async function proxyCommande(interaction) {
       .addActionRowComponents((row) =>
         row.setComponents(
           new StringSelectMenuBuilder()
-            .setCustomId("selectServeur")
+            .setCustomId(
+              `selectServeur-${commandName.replace(/-/g, "_")}-${encodedArgs}`,
+            )
             .setPlaceholder("Choisit un serveur")
             .setOptions(options),
         ),
       );
 
-    interaction.reply({
+    return interaction.reply({
       components: [container],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      flags: MessageFlags.IsComponentsV2,
     });
-    return;
   } else {
     const container = new ContainerBuilder()
       .setAccentColor(config.colors.error)
@@ -92,11 +114,10 @@ async function proxyCommande(interaction) {
         ),
       );
 
-    interaction.reply({
+    return interaction.reply({
       components: [container],
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
-    return;
   }
 }
 

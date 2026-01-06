@@ -26,20 +26,24 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur, joueur } = interaction.parametre;
 
-    const pseudo = interaction.options.getString("joueur");
-
-    await interaction.deferReply({});
+    if (interaction.isMessageComponent()) {
+      await interaction.deferUpdate();
+    } else {
+      await interaction.deferReply();
+    }
 
     const searchRes = await fetch(
-      `https://apiv2.nationsglory.fr/forums/userSearch?search=${pseudo}`,
+      `https://apiv2.nationsglory.fr/forums/userSearch?search=${joueur}`,
     );
     const similarUsers = await searchRes.json();
 
     const foundUser = similarUsers.find(
-      (user) => user.username.toLowerCase() === pseudo.toLowerCase(),
+      (user) => user.username.toLowerCase() === joueur.toLowerCase(),
     );
 
     if (!foundUser) {
@@ -64,15 +68,20 @@ module.exports = {
       return interaction.editReply({ embeds: [errorembed], ephemeral: false });
     }
 
-    const joueur = foundUser.username;
+    const vraiJoueur = foundUser.username;
 
     const serveursCibles = serveur !== "all" ? [serveur] : config.liste_serveur;
 
-    const sanctions = await ensureSanctions(joueur, 7, config, serveursCibles);
+    const sanctions = await ensureSanctions(
+      vraiJoueur,
+      7,
+      config,
+      serveursCibles,
+    );
     const maxPage = Math.max(1, Math.ceil(sanctions.length / 7));
 
     const sanctionContainer = await getPunisherContainer(
-      joueur,
+      vraiJoueur,
       sanctions,
       1,
       maxPage,

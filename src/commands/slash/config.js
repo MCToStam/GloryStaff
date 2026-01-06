@@ -39,10 +39,10 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
-
-    const type = interaction.options.getString("type").toLowerCase();
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur, type } = interaction.parametre;
 
     const configData = getData(`data/${serveur}/config-${type}.json`);
     const keys = Object.keys(configData);
@@ -55,17 +55,30 @@ module.exports = {
         configData,
         type,
       );
-
-      await interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
     } else {
       const container = await containerMultiple(serveur, type, configData);
-      await interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
     }
   },
 };

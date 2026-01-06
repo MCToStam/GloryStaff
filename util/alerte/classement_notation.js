@@ -125,7 +125,7 @@ async function classement_notation(client) {
             );
 
           let sentMessage;
-          if (classementConfig.Role.valeur) {
+          if (classementConfig.Role.valeur.length > 0) {
             const roleMentions = classementConfig.Role.valeur
               .map((roleId) => `<@&${roleId}>`)
               .join(", ");

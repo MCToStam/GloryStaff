@@ -22,8 +22,10 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(interaction);
-    if (!serveur) return;
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur } = interaction.parametre;
 
     const data = getData(`data/${serveur}/dossierDisband.json`);
 
@@ -75,9 +77,16 @@ module.exports = {
       ),
     );
 
-    return await interaction.reply({
-      components: [dossierDisbandContainer],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-    });
+    if (interaction.isMessageComponent()) {
+      return interaction.update({
+        components: [dossierDisbandContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    } else {
+      return interaction.reply({
+        components: [dossierDisbandContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
   },
 };
