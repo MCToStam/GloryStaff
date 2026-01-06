@@ -14,20 +14,13 @@ module.exports = {
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("grade")
-    .setDescription("Configure les différents grades")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription(
-          "Le serveur pour lequel afficher la configuration des grades",
-        )
-        .setRequired(false)
-        .setAutocomplete(true),
-    ),
+    .setDescription("Configure les différents grades"),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(client, interaction, config);
-    if (!serveur) return;
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur } = interaction.parametre;
 
     const configGrade = getData(`data/${serveur}/grade.json`);
 
@@ -95,10 +88,16 @@ module.exports = {
       ),
     );
 
-    await interaction.reply({
-      components: [gradeContainer],
-      flags: MessageFlags.IsComponentsV2,
-      ephemeral: true,
-    });
+    if (interaction.isMessageComponent()) {
+      return interaction.update({
+        components: [gradeContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    } else {
+      return interaction.reply({
+        components: [gradeContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
   },
 };

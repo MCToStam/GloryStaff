@@ -11,16 +11,7 @@ module.exports = {
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("double-lead")
-    .setDescription("Affiche la liste des doubles lead")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription(
-          "Le serveur pour lequel afficher la liste des doubles lead",
-        )
-        .setRequired(false)
-        .setAutocomplete(true),
-    ),
+    .setDescription("Affiche la liste des doubles lead"),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);

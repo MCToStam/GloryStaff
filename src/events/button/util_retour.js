@@ -42,15 +42,27 @@ function scanUtil() {
     (e) => e.isFile() && e.name.endsWith(".js"),
   )) {
     const filePath = path.join(utilPath, entry.name);
+
+    delete require.cache[require.resolve(filePath)];
     const mod = require(filePath);
 
-    for (const [name, fn] of Object.entries(mod)) {
-      if (typeof fn === "function") {
-        actions.push({
-          label: `${entry.name} → ${name}`,
-          value: `util_fonction-:${entry.name}:${name}`,
-          args: getFunctionArgs(fn),
-        });
+    if (typeof mod === "function") {
+      const fnName = mod.name && mod.name.length ? mod.name : "default";
+
+      actions.push({
+        label: `${entry.name} → ${fnName}`,
+        value: `util_fonction-:root:${entry.name}:${fnName}`,
+        args: getFunctionArgs(mod),
+      });
+    } else if (typeof mod === "object" && mod !== null) {
+      for (const [name, fn] of Object.entries(mod)) {
+        if (typeof fn === "function") {
+          actions.push({
+            label: `${entry.name} → ${name}`,
+            value: `util_fonction-:root:${entry.name}:${name}`,
+            args: getFunctionArgs(fn),
+          });
+        }
       }
     }
   }

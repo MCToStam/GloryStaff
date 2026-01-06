@@ -30,9 +30,10 @@ function getFunctionArgs(fn) {
 }
 
 function loadFunction({ file, name, folder }) {
-  const basePath = folder
-    ? path.join(__dirname, "../../../util", folder, file)
-    : path.join(__dirname, "../../../util", file);
+  const basePath =
+    folder && folder !== "root"
+      ? path.join(__dirname, "../../../util", folder, file)
+      : path.join(__dirname, "../../../util", file);
 
   if (!fs.existsSync(basePath)) {
     throw new Error("Fichier util introuvable");

@@ -5,28 +5,12 @@ const {
 } = require("discord.js");
 const config = require("../../config");
 
-async function containerMultiple(serveur, file, configData) {
-  const typeMap = {
-    attentestaff: "Attente Staff",
-    candidature: "Candidature",
-    disband: "Disband",
-    doublelead: "Double Lead",
-    expansionterritoriale: "Expansion Territoriale",
-    forum: "Forum",
-    jail: "Jail",
-    joueurconnecte: "Joueur(s) Connecté(s)",
-    notation: "Notation",
-    onu: "ONU",
-    recap: "Récapitulatif",
-    routine: "Routine",
-    staff: "Staff",
-  };
-
+async function containerMultiple(guildId, serveur, type, configData) {
   let description = "";
   let first = true;
 
-  for (const [system, settings] of Object.entries(configData)) {
-    const status = settings.active
+  for (const [system, settings] of Object.entries(configData.systeme)) {
+    const status = settings.active[guildId]
       ? "<:actif:1318501209803325491>"
       : "<:inactif:1318501225141895188>";
     description += `${first ? "" : "\n"}**- ${system} : ${status}**`;
@@ -36,7 +20,11 @@ async function containerMultiple(serveur, file, configData) {
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
-      t.setContent(`## Configuration - ${typeMap[file] || file}`),
+      t.setContent(
+        `## ${configData.emoji ? `${configData.emoji} ` : ""}Configuration - ${
+          configData.nom
+        }`,
+      ),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(description))
@@ -44,14 +32,32 @@ async function containerMultiple(serveur, file, configData) {
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId(`config_select_subconfig-${file}`)
+          .setCustomId(`config_subconfig-${type}`)
           .setPlaceholder("Choisissez un module")
           .addOptions(
-            Object.keys(configData).map((system) => ({
-              label: system,
-              description: `Configurer ${system}`,
-              value: `config_select_subconfig-${file}-${system}`,
-            })),
+            Object.keys(configData.systeme).map((system) => {
+              const emojiRaw = configData.systeme[system].emoji;
+
+              let emoji;
+              if (emojiRaw) {
+                const match = emojiRaw.match(/^<(a?):(\w+):(\d+)>$/);
+
+                if (match) {
+                  emoji = {
+                    animated: Boolean(match[1]),
+                    name: match[2],
+                    id: match[3],
+                  };
+                }
+              }
+
+              return {
+                label: system,
+                description: `Configurer ${system}`,
+                value: `config_subconfig-${type}-${system}`,
+                ...(emoji && { emoji }),
+              };
+            }),
           ),
       ),
     );

@@ -83,22 +83,15 @@ module.exports = {
         .setDescription("Le grade de l'utilisateur")
         .setRequired(true)
         .setAutocomplete(true),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le joueur pour lequel afficher le punisher")
-        .setRequired(false)
-        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
-    const serveur = await proxyCommande(client, interaction, config);
-    if (!serveur) return;
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur, grade, pseudo } = interaction.parametre;
 
-    const grade = interaction.options.getString("grade");
-    const membre = interaction.options.getUser("pseudo");
-    const utilisateur = interaction.guild.members.cache.get(membre.id);
+    const utilisateur = interaction.guild.members.cache.get(pseudo);
 
     const gradeConfig = getData(`data/${serveur}/grade.json`);
 
@@ -131,15 +124,19 @@ module.exports = {
 
     const rolesGrade = gradeChoisi.role || [];
 
-    let pseudonym = await discordLink(membre.id);
+    let pseudonym = await discordLink(pseudo);
 
     let replyInteraction;
     if (pseudonym) {
-      await interaction.deferReply();
+      if (interaction.isMessageComponent()) {
+        await interaction.deferUpdate();
+      } else {
+        await interaction.deferReply();
+      }
       replyInteraction = interaction;
     } else {
       const modal = new ModalBuilder()
-        .setCustomId("rankModal_" + membre.id)
+        .setCustomId("rankModal_" + pseudo)
         .setTitle("Choisissez le pseudonyme de la personne");
 
       const pseudonymInput = new TextInputBuilder()
@@ -154,7 +151,7 @@ module.exports = {
       await interaction.showModal(modal);
 
       const filter = (i) =>
-        i.customId === "rankModal_" + membre.id &&
+        i.customId === "rankModal_" + pseudo &&
         i.user.id === interaction.user.id;
 
       try {
@@ -169,7 +166,7 @@ module.exports = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            discord_id: membre.id,
+            discord_id: pseudo,
             pseudo_ng: pseudonym,
           }),
         });
@@ -203,7 +200,11 @@ module.exports = {
           });
         }
 
-        await submitted.deferReply();
+        if (interaction.isMessageComponent()) {
+          await submitted.deferUpdate();
+        } else {
+          await submitted.deferReply();
+        }
         replyInteraction = submitted;
       } catch (e) {
         console.log("Modal non soumis ou erreur :", e);
@@ -461,7 +462,7 @@ module.exports = {
     });
 
     for (const guild of interaction.client.guilds.cache.values()) {
-      const member = guild.members.cache.get(membre.id);
+      const member = guild.members.cache.get(pseudo);
       if (!member) continue;
 
       try {

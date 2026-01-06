@@ -61,7 +61,7 @@ module.exports = async (client, interaction) => {
         const serveur =
           interaction.options.getString("serveur") ||
           (await getServerCommand(interaction.guild.id, interaction.user.id));
-        if (!serveur) {
+        if (!serveur || typeof serveur !== "string") {
           return await interaction.respond([
             {
               name: "Il te faut sélectionner un serveur",

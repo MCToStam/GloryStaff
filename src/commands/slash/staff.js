@@ -21,13 +21,6 @@ module.exports = {
         .setDescription("Le serveur pour lequel afficher la liste des staffs")
         .setRequired(false)
         .setAutocomplete(true),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("staff")
-        .setDescription("Le membre du staff à configurer")
-        .setRequired(false)
-        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {

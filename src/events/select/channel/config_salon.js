@@ -8,17 +8,20 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [_, file, systemName] = interaction.customId.split("-");
+    const [_, type, systemName] = interaction.customId.split("-");
 
     const serveur = await getServeur(interaction);
-    const configData = getData(`data/${serveur}/config-${file}.json`);
-    configData[systemName].Salon.valeur = interaction.values[0];
-    saveData(`data/${serveur}/config-${file}.json`, configData);
+    const configData = getData(`data/${serveur}/config.json`);
+    const typeData = configData.find((c) => c.nom === type);
+    typeData.systeme[systemName].Salon.valeur[interaction.guild.id] =
+      interaction.values[0];
+    saveData(`data/${serveur}/config.json`, configData);
     const container = await containerSingle(
+      interaction.guild.id,
       serveur,
       systemName,
-      configData,
-      file,
+      typeData,
+      type,
     );
 
     await interaction.update({

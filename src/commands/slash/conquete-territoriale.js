@@ -27,13 +27,6 @@ module.exports = {
         .setDescription("Pays annexé par le pays-a")
         .setRequired(true)
         .setAutocomplete(true),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel afficher la configuration")
-        .setRequired(false)
-        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {

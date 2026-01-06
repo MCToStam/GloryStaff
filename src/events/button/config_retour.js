@@ -8,12 +8,18 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [_, file] = interaction.customId.split("-");
+    const [_, type] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
-    const configData = getData(`data/${serveur}/config-${file}.json`);
+    const configData = getData(`data/${serveur}/config.json`);
+    const typeData = configData.find((c) => c.nom === type);
 
-    const container = await containerMultiple(serveur, file, configData);
+    const container = await containerMultiple(
+      interaction.guild.id,
+      serveur,
+      type,
+      typeData,
+    );
 
     await interaction.update({
       components: [container],

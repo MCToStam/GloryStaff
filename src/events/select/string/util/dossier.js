@@ -9,12 +9,12 @@ const fs = require("fs");
 const path = require("path");
 
 function getFunctionArgs(fn) {
-  const str = fn
+  const fnStr = fn
     .toString()
     .replace(/\/\*.*?\*\//gs, "")
     .replace(/\/\/.*$/gm, "");
 
-  const match = str.match(/\(([^)]*)\)/);
+  const match = fnStr.match(/\(([^)]*)\)/);
   if (!match) return [];
 
   return match[1]
@@ -31,8 +31,6 @@ function getFolderFunctions(folder) {
   const files = fs.readdirSync(utilPath, { withFileTypes: true });
 
   for (const file of files) {
-    if (!file.isFile() || !file.name.endsWith(".js")) continue;
-
     const filePath = path.join(utilPath, file.name);
 
     delete require.cache[require.resolve(filePath)];
@@ -62,54 +60,50 @@ function getFolderFunctions(folder) {
   return actions;
 }
 
-module.exports = {
-  data: {
-    name: "util_dossier",
-  },
+exports.execute = async (client, interaction, config) => {
+  const folder = interaction.values[0].split(":")[1];
+  const actions = getFolderFunctions(folder);
 
-  async execute(client, interaction, config) {
-    const folder = interaction.values[0].split(":")[1];
-    const actions = getFolderFunctions(folder);
-
-    if (!actions.length) {
-      return interaction.reply({
-        content: "❌ Aucune fonction trouvée dans ce dossier",
-        ephemeral: true,
-      });
-    }
-
-    const options = actions.slice(0, 25).map((a) => ({
-      label: a.label,
-      value: a.value,
-      description: a.args.length
-        ? `args: ${a.args.join(", ")}`
-        : "aucun argument",
-    }));
-
-    const container = new ContainerBuilder()
-      .setAccentColor(config.colors.normal)
-      .addTextDisplayComponents((t) => t.setContent(`## 📁 util/${folder}`))
-      .addSeparatorComponents((s) => s)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId("util_fonction")
-            .setPlaceholder("Choisissez une fonction")
-            .addOptions(options),
-        ),
-      )
-      .addSeparatorComponents((s) => s)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setLabel("🚪 Retour")
-            .setStyle(ButtonStyle.Secondary)
-            .setCustomId("util_retour"),
-        ),
-      );
-
-    await interaction.update({
-      components: [container],
+  if (!actions.length) {
+    return interaction.reply({
+      content: "❌ Aucune fonction trouvée dans ce dossier",
+      ephemeral: true,
     });
-  },
+  }
+
+  const options = actions.slice(0, 25).map((a) => ({
+    label: a.label,
+    value: a.value,
+    description: a.args.length
+      ? `args: ${a.args.join(", ")}`
+      : "aucun argument",
+  }));
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.colors.statut)
+    .addTextDisplayComponents((t) => t.setContent(`## 📁 util/${folder}`))
+    .addSeparatorComponents((s) => s)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId("util_fonction")
+          .setPlaceholder("Choisissez une fonction")
+          .addOptions(options),
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("🚪 Retour")
+          .setStyle(ButtonStyle.Secondary)
+          .setCustomId("util_retour"),
+      ),
+    );
+
+  await interaction.update({
+    components: [container],
+  });
 };
+
+exports.data = { name: "util_dossier" };

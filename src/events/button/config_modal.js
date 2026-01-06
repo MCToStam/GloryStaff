@@ -13,15 +13,16 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [_, file, systemName, key] = interaction.customId.split("-");
+    const [_, type, systemName, key] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
-    const configData = getData(`data/${serveur}/config-${file}.json`);
+    const configData = getData(`data/${serveur}/config.json`);
+    const typeData = configData.find((c) => c.nom === type);
 
-    const data = configData[systemName][key];
+    const data = typeData.systeme[systemName][key];
 
     const modal = new ModalBuilder()
-      .setCustomId(`config_modal-${file}-${systemName}-${key}`)
+      .setCustomId(`config_modal-${type}-${systemName}-${key}`)
       .setTitle(`Mettre à jour les données`);
 
     data.questions.forEach((q, index) => {
@@ -35,7 +36,7 @@ module.exports = {
             .setPlaceholder(q.placeholder || "")
             .setRequired(q.obligatoire)
             .setMaxLength(q.maxCara || 100)
-            .setValue(q.valeur || ""),
+            .setValue(q.valeur[interaction.guild.id] || ""),
         );
 
       modal.addLabelComponents(input);

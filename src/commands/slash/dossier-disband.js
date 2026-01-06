@@ -12,14 +12,7 @@ module.exports = {
   config: { permission: "guide" },
   data: new SlashCommandBuilder()
     .setName("dossier-disband")
-    .setDescription("Affiche la liste des dossiers disband")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel afficher les dossiers disband")
-        .setRequired(false)
-        .setAutocomplete(true),
-    ),
+    .setDescription("Affiche la liste des dossiers disband"),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);

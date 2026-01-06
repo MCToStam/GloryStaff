@@ -15,70 +15,74 @@ module.exports = {
         .setDescription("Le type de configuration à afficher")
         .setRequired(true)
         .addChoices(
-          { name: "Attente Staff", value: "attentestaff" },
-          { name: "Candidature", value: "candidature" },
-          { name: "Disband", value: "disband" },
-          { name: "Double Lead", value: "doublelead" },
-          { name: "Expansion Territoriale", value: "expansionterritoriale" },
-          { name: "Forum", value: "forum" },
-          { name: "Jail", value: "jail" },
-          { name: "Joueur(s) Connecté(s)", value: "joueurconnecte" },
-          { name: "Notation", value: "notation" },
-          { name: "ONU", value: "onu" },
-          { name: "Récapitulatif", value: "recap" },
-          { name: "Routine", value: "routine" },
-          { name: "Staff", value: "staff" },
+          { name: "Attente Staff", value: "Attente Staff" },
+          { name: "Candidature", value: "Candidature" },
+          { name: "Disband", value: "Disband" },
+          { name: "Double Lead", value: "Double Lead" },
+          { name: "Expansion Territoriale", value: "Expansion Territoriale" },
+          { name: "Forum", value: "Forum" },
+          { name: "Jail", value: "Jail" },
+          { name: "Joueur(s) Connecté(s)", value: "Joueur(s) Connecté(s)" },
+          { name: "Notation", value: "Notation" },
+          { name: "ONU", value: "ONU" },
+          { name: "Récapitulatif", value: "Récapitulatif" },
+          { name: "Routine", value: "Routine" },
+          { name: "Staff", value: "Staff" },
         ),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel afficher la configuration")
-        .setRequired(false)
-        .setAutocomplete(true),
     ),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    const { serveur, type } = interaction.parametre;
+    try {
+      const { serveur, type } = interaction.parametre;
 
-    const configData = getData(`data/${serveur}/config-${type}.json`);
-    const keys = Object.keys(configData);
+      const configData = getData(`data/${serveur}/config.json`);
+      const typeData = configData.find((c) => c.nom === type);
+      const keys = Object.keys(typeData.systeme);
 
-    if (keys.length === 1) {
-      const systemName = keys[0];
-      const container = await containerSingle(
-        serveur,
-        systemName,
-        configData,
-        type,
-      );
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
+      if (keys.length === 1) {
+        const systemName = keys[0];
+        const container = await containerSingle(
+          interaction.guild.id,
+          serveur,
+          systemName,
+          typeData,
+          type,
+        );
+        if (interaction.isMessageComponent()) {
+          return interaction.update({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          return interaction.reply({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
       } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
+        const container = await containerMultiple(
+          interaction.guild.id,
+          serveur,
+          type,
+          typeData,
+        );
+        if (interaction.isMessageComponent()) {
+          return interaction.update({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          return interaction.reply({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
       }
-    } else {
-      const container = await containerMultiple(serveur, type, configData);
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      }
+    } catch (e) {
+      console.log(e);
     }
   },
 };
