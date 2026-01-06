@@ -243,8 +243,6 @@ async function generateGradesContainer(client, serveur, idCat) {
 }
 
 async function handleInteraction(interaction, client, config) {
-  // This function centralizes the logic extracted from the original grade.js.
-  // It mirrors the behavior: detect serveur from message accent color, load roleData, and handle buttons/selects/modals.
   try {
     const color = interaction.message?.components?.[0]?.data?.accent_color;
     const serveur = Object.keys(config.couleur).find((key) => {

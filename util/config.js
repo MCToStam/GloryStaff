@@ -75,7 +75,6 @@ function nettoyerValeurs(obj, client) {
   if (typeof obj !== "object" || obj === null) return obj;
 
   if (Array.isArray(obj)) {
-    // Si c'est un tableau d'IDs de rôle
     if (obj.length > 0 && typeof obj[0] === "string") {
       const firstId = obj[0];
       const role = client.guilds.cache
@@ -87,28 +86,28 @@ function nettoyerValeurs(obj, client) {
         return { valeur: {} };
       }
     }
-    return obj; // tableau normal
+    return obj;
   }
 
   const resultat = {};
 
   for (const [key, value] of Object.entries(obj)) {
     if (key === "valeur") {
-      if (
+      if (value === false) {
+        resultat[key] = {};
+      } else if (
         Array.isArray(value) &&
         (value.length === 0 || (value.length === 1 && value[0] === false))
       ) {
         resultat[key] = {};
       } else if (typeof value === "string") {
-        // ID de channel
         const channel = client.channels.cache.get(value);
         if (channel) {
           resultat[key] = { [channel.guild.id]: value };
         } else {
-          resultat[key] = {}; // si non trouvé
+          resultat[key] = {};
         }
       } else if (Array.isArray(value)) {
-        // ID de rôle
         if (value.length > 0 && typeof value[0] === "string") {
           const role = client.guilds.cache
             .map((g) => g.roles.cache.get(value[0]))
@@ -158,10 +157,8 @@ function genererConfigsServeurs(client) {
         for (const [systeme, data] of Object.entries(contenuBrut)) {
           const nettoye = nettoyerValeurs(data, client);
 
-          // Gestion de la clé "active"
           let active = {};
 
-          // Fonction pour chercher le premier serveur dans les valeurs
           function trouverServeur(obj) {
             if (typeof obj !== "object" || obj === null) return null;
 
@@ -174,7 +171,6 @@ function genererConfigsServeurs(client) {
               if (serveurId) return serveurId;
             }
 
-            // Recherche récursive
             for (const val of Object.values(obj)) {
               if (typeof val === "object") {
                 const res = trouverServeur(val);
@@ -186,7 +182,7 @@ function genererConfigsServeurs(client) {
 
           const serveurId = trouverServeur(nettoye);
           if (serveurId) {
-            active[serveurId] = data.active ?? false; // si data.active n'existe pas, met false
+            active[serveurId] = data.active ?? false;
           }
 
           contenuFinal[systeme] = {

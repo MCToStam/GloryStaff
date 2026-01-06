@@ -39,7 +39,7 @@ module.exports = {
       const thirtyOneDays = 31 * 24 * 60 * 60 * 1000;
 
       const changements = r.activite.changement_chef_30d
-        .filter((c) => now - c.date * 1000 <= thirtyOneDays) // uniquement < 31j
+        .filter((c) => now - c.date * 1000 <= thirtyOneDays)
         .map((c) => {
           const date = new Date(c.date * 1000);
           const dateFormat = new Intl.DateTimeFormat("fr-FR", {
