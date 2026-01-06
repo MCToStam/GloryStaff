@@ -121,53 +121,65 @@ async function findSanctionServer(pseudonyme, sanction) {
 }
 
 async function sendSanctionMessage(
-  channelId,
-  roleIds,
+  active,
+  salon,
+  role,
   message,
   titre,
   serveur,
   client,
 ) {
-  const channel = client.channels.cache.get(channelId);
-  if (!channel)
-    return console.error(
-      `[SANCTION] Salon ${channelId} introuvable pour ${serveur}`,
-    );
-
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) => t.setContent(`## 🔨 ${titre}`))
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(message));
 
-  let roleTextDisplay;
-  if (roleIds) {
-    const roleMentions = roleIds.map((roleId) => `<@&${roleId}>`).join(", ");
+  for (const [guildId, isActive] of Object.entries(active)) {
+    if (!isActive) continue;
 
-    roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
-  }
-  let components = [container];
-  if (roleIds) components = [roleTextDisplay, container];
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) continue;
 
-  try {
-    await channel.send({
-      components,
-      flags: MessageFlags.IsComponentsV2,
-    });
-  } catch (err) {
-    console.error(`[SANCTION] Erreur envoi embed sur ${serveur}:`, err.message);
+    const channelId = salon[guildId];
+    if (!channelId) continue;
+
+    const channel = guild.channels.cache.get(channelId);
+    if (!channel) continue;
+
+    const roleIds = role[guildId] || [];
+    const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+    const components = [container];
+
+    if (roleMentions.length > 0) {
+      components.push(new TextDisplayBuilder().setContent(roleMentions));
+    }
+
+    try {
+      const sentMessage = await channel.send({
+        components,
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+
+      console.log(
+        `✅ Message nouvelle sanction envoyé | serveur ${serveur} | guild ${guildId}`,
+      );
+    } catch (err) {
+      console.error(
+        `❌ Erreur envoi nouvelle sanction | serveur ${serveur} | guild ${guildId}`,
+        err,
+      );
+    }
   }
 }
 
 async function sanction(client, serveur) {
-  const configStaff = getData(`data/${serveur}/config-staff.json`);
-  const ancienConfigStaff = getData(`data/${serveur}/sanction-config.json`);
-
-  if (
-    !configStaff["Sanction Staff"].active ||
-    !configStaff["Sanction Staff"].Salon?.valeur
-  )
-    return;
+  const dataFile = getData(`data/${serveur}/config.json`);
+  const configData = dataFile.find((c) => c.nom === "Staff");
+  const configSanction = configData.systeme["Sanction Staff"];
 
   console.log(`[SANCTION] Vérification des sanctions sur ${serveur}`);
 
@@ -235,8 +247,9 @@ async function sanction(client, serveur) {
       newSanctions.length > 1 ? "Nouvelles Sanctions" : "Nouvelle Sanction";
 
     await sendSanctionMessage(
-      configStaff["Sanction Staff"].Salon.valeur,
-      configStaff["Sanction Staff"].Role.valeur,
+      configSanction.active,
+      configSanction.Salon.valeur,
+      configSanction.Role.valeur,
       embedMessage,
       titre,
       serveur,
@@ -246,8 +259,6 @@ async function sanction(client, serveur) {
     data.lastSanction = newSanctions[newSanctions.length - 1];
     saveData(dataPath, data);
   }
-
-  saveData(`data/${serveur}/sanction-config.json`, ancienConfigStaff);
 }
 
 module.exports = { sanction };

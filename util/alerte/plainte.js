@@ -57,12 +57,7 @@ function convertirEnTimestamp(dateStr) {
   );
 }
 
-async function sendMessageWithEmbed(
-  salon,
-  container,
-  roles = [],
-  rolePingDone = false,
-) {
+async function sendMessage(salon, container, roles = [], rolePingDone = false) {
   const roleMentions = roles.map((roleId) => `<@&${roleId}>`).join(", ");
 
   const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
@@ -77,16 +72,12 @@ async function sendMessageWithEmbed(
 async function plainte(client) {
   for (const server of config.liste_serveur) {
     try {
-      const config_forum = getData(`data/${server}/config-forum.json`);
-      if (
-        !config_forum?.Plainte?.Forum ||
-        !config_forum?.Plainte?.active ||
-        !config_forum?.Plainte?.Salon?.valeur
-      )
-        continue;
+      const allConfig = getData(`data/${server}/config.json`);
+      const configData = allConfig.find((c) => c.nom === "Forum");
+      const plainteConfig = configData.systeme;
       await new Promise((res) => setTimeout(res, 5000));
 
-      const data = await (await fetch(config_forum.Plainte.Forum)).text();
+      const data = await (await fetch(plainteConfig.Plainte.Forum)).text();
       const $ = cheerio.load(data);
 
       const complaints = $("tr")
@@ -119,14 +110,28 @@ async function plainte(client) {
       const nouvellesPlaintes = complaints.filter(
         (c) => !plaintesExistantes.some((p) => p.lien === c.lien),
       );
+      const plaintesAvantUpdate = [...plaintesExistantes];
 
-      if (nouvellesPlaintes.length && config_forum.Plainte?.active) {
-        const salon = client.channels.cache.get(
-          config_forum.Plainte.Salon.valeur,
-        );
-        if (!salon) console.warn(`⚠️ Salon introuvable pour ${server}`);
-        else {
-          let rolePingDone = false;
+      if (nouvellesPlaintes.length) {
+        let rolePingDone = {};
+
+        for (const [guildId, isActive] of Object.entries(
+          plainteConfig.Plainte.active,
+        )) {
+          if (!isActive) continue;
+
+          const guild = client.guilds.cache.get(guildId);
+          if (!guild) continue;
+
+          const channelId = plainteConfig.Plainte.Salon.valeur[guildId];
+          if (!channelId) continue;
+
+          const channel = guild.channels.cache.get(channelId);
+          if (!channel) continue;
+
+          const roleIds = plainteConfig.Plainte.Role.valeur[guildId] || [];
+          const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
           for (const plainte of nouvellesPlaintes) {
             const emoji = await getEmojiTete(client, plainte.auteur);
             const container = new ContainerBuilder()
@@ -150,55 +155,96 @@ async function plainte(client) {
                 ),
               );
 
-            const sent = await sendMessageWithEmbed(
-              salon,
-              container,
-              config_forum.Plainte.Role?.valeur,
-              rolePingDone,
-            );
-            rolePingDone = true;
-            plainte.message.push({
-              guildId: salon.guild.id,
-              channelId: salon.id,
-              messageId: sent.id,
-            });
+            const components = [container];
 
-            if (salon.type === "GUILD_NEWS")
-              await sent.crosspost().catch(() => {});
+            if (roleMentions.length > 0 && !rolePingDone[guildId]) {
+              components.push(
+                new TextDisplayBuilder().setContent(roleMentions),
+              );
+            }
+
+            let sentMessage;
+            try {
+              sentMessage = await channel.send({
+                components,
+                flags: MessageFlags.IsComponentsV2,
+              });
+
+              if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+
+              console.log(
+                `✅ Message plainte envoyé | serveur ${server} | guild ${guildId}`,
+              );
+            } catch (err) {
+              console.error(
+                `❌ Erreur envoi nouvelle plainte | serveur ${server} | guild ${guildId}`,
+                err,
+              );
+            }
+
+            if (!sentMessage) continue;
+            rolePingDone[guildId] = true;
+            plainte.message.push({
+              guildId: channel.guild.id,
+              channelId: channel.id,
+              messageId: sentMessage.id,
+            });
           }
         }
-        plaintesExistantes.push(...nouvellesPlaintes);
-        saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
       }
+
+      plaintesExistantes.push(...nouvellesPlaintes);
+      saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
       const plaintesInitiales = [...plaintesExistantes];
 
-      if (
-        config_forum["Plainte non traitée"]?.active &&
-        config_forum["Plainte non traitée"]?.Temps?.valeur
-      ) {
-        const salonNonTraitee = client.channels.cache.get(
-          config_forum["Plainte non traitée"].Salon.valeur,
+      const plainteNonTraiteeConfig = plainteConfig["Plainte non traitée"];
+
+      for (const [guildId, isActive] of Object.entries(
+        plainteNonTraiteeConfig.active,
+      )) {
+        if (!isActive) continue;
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) continue;
+
+        const channelId = plainteNonTraiteeConfig.Salon?.valeur?.[guildId];
+        if (!channelId) continue;
+
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) continue;
+
+        const delaiJour = Number(
+          plainteNonTraiteeConfig.Temps?.valeur?.[guildId],
         );
-        const délai = Math.floor(
-          DateTime.now()
-            .minus({ days: +config_forum["Plainte non traitée"].Temps.valeur })
-            .toSeconds(),
+        if (!delaiJour) continue;
+
+        const roleIds = plainteNonTraiteeConfig.Role?.valeur?.[guildId] || [];
+        const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+        const timestampLimite = Math.floor(
+          DateTime.now().minus({ days: delaiJour }).toSeconds(),
         );
-        let rolePingDone = false;
+
+        let rolePingDone = {};
 
         for (const plainte of plaintesExistantes.filter(
-          (p) => p.date < délai && !p.alerteEnvoyee,
+          (p) => p.date < timestampLimite && !p?.alerteEnvoyee?.[guildId],
         )) {
           const emoji = await getEmojiTete(client, plainte.auteur);
+
           const container = new ContainerBuilder()
             .setAccentColor(config.couleur[server])
             .addTextDisplayComponents((t) =>
-              t.setContent(`## 🚨 Plainte non Traitée`),
+              t.setContent(`## 🚨 Plainte non traitée`),
             )
             .addSeparatorComponents((s) => s)
             .addTextDisplayComponents((t) =>
               t.setContent(
-                `📌 **Titre :** ${plainte.titre}\n${emoji} **Auteur :** ${plainte.auteur}\n\n*Postée depuis plus de ${config_forum["Plainte non traitée"].Temps.valeur} jours*`,
+                `📌 **Titre :** ${plainte.titre}\n` +
+                  `${emoji} **Auteur :** ${plainte.auteur}\n\n` +
+                  `*Postée depuis plus de ${delaiJour} jour${
+                    delaiJour > 1 ? "s" : ""
+                  }*`,
               ),
             )
             .addSeparatorComponents((s) => s)
@@ -206,33 +252,70 @@ async function plainte(client) {
               new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
                   .setURL(plainte.lien)
-                  .setLabel("🔗 Aller sur la Plainte")
+                  .setLabel("🔗 Aller sur la plainte")
                   .setStyle(ButtonStyle.Link),
               ),
             );
 
-          await sendMessageWithEmbed(
-            salonNonTraitee,
-            container,
-            config_forum["Plainte non traitée"].Role?.valeur,
-            rolePingDone,
-          );
-          plainte.alerteEnvoyee = rolePingDone = true;
-        }
+          const components = [container];
 
-        saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
+          if (roleMentions && !rolePingDone[guildId]) {
+            components.push(new TextDisplayBuilder().setContent(roleMentions));
+          }
+
+          let sent;
+          try {
+            sent = await channel.send({
+              components,
+              flags: MessageFlags.IsComponentsV2,
+            });
+
+            console.log(
+              `✅ Alerte plainte non traitée | serveur ${server} | guild ${guildId}`,
+            );
+          } catch (err) {
+            console.error(
+              `❌ Erreur alerte plainte non traitée | serveur ${server} | guild ${guildId}`,
+              err,
+            );
+            continue;
+          }
+
+          plainte.alerteEnvoyee ??= {};
+          plainte.alerteEnvoyee[guildId] = true;
+          rolePingDone[guildId] = true;
+        }
       }
 
-      for (const plainte of plaintesInitiales.filter(
+      saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
+
+      for (const plainte of plaintesAvantUpdate.filter(
         (p) => !complaints.some((c) => c.lien === p.lien),
       )) {
-        for (const msg of plainte.message || []) {
-          const channel = client.channels.cache.get(msg.channelId);
-          if (channel)
-            channel.messages
-              .fetch(msg.messageId)
-              .then((m) => m?.deletable && m.delete().catch(() => {}))
-              .catch(() => {});
+        if (!Array.isArray(plainte.message)) continue;
+
+        for (const { channelId, messageId } of plainte.message) {
+          try {
+            const channel = await client.channels
+              .fetch(channelId)
+              .catch(() => null);
+            if (!channel?.isTextBased()) continue;
+
+            const message = await channel.messages
+              .fetch(messageId)
+              .catch(() => null);
+            if (!message?.deletable) continue;
+
+            await message.delete();
+            console.log(
+              `🗑️ Message plainte supprimé | channel ${channelId} | message ${messageId}`,
+            );
+          } catch (err) {
+            console.error(
+              `❌ Erreur suppression message plainte (${messageId})`,
+              err,
+            );
+          }
         }
       }
 
