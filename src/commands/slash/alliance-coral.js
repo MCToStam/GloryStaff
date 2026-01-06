@@ -1,4 +1,5 @@
 const { getData } = require("../../../util/module/getAndSaveData");
+const { discordStaff } = require("../../../util/module/discordLink");
 const {
   SlashCommandBuilder,
   ContainerBuilder,
@@ -18,17 +19,17 @@ module.exports = {
 
     const data = getData(`data/${serveur}/alliance/donnee.json`);
 
-    const staffData = getData(`data/${serveur}/staff.json`);
-
     const userId = interaction.user.id;
-    const isStaff = Object.values(staffData).some((ids) =>
-      ids.includes(userId),
+    const { servers } = await discordStaff(
+      interaction.user.id,
+      "coral",
+      "super_moderateur",
     );
     const allianceChef = data.find(
       (a) => Array.isArray(a.chef) && a.chef.includes(userId),
     );
 
-    if (!isStaff && !allianceChef) {
+    if (!servers.includes("coral") && !allianceChef) {
       const erreurContainer = new ContainerBuilder()
         .setAccentColor(config.errorcolor)
         .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))

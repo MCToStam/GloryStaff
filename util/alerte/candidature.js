@@ -10,26 +10,34 @@ const {
 
 const moisFR = {
   janvier: 0,
-  février: 1,
+  fevrier: 1,
   mars: 2,
   avril: 3,
   mai: 4,
   juin: 5,
   juillet: 6,
-  août: 7,
+  aout: 7,
   septembre: 8,
   octobre: 9,
   novembre: 10,
-  décembre: 11,
+  decembre: 11,
 };
 
 function parseFrenchDate(dateStr) {
-  const regex = /(\d{1,2}) (\w+) (\d{4}) à (\d{2}):(\d{2})/;
+  const regex = /(\d{1,2}) ([a-zA-ZÀ-ÿ]+) (\d{4}) à (\d{2}):(\d{2})/;
   const match = dateStr.match(regex);
   if (!match) return null;
+
   const [, jour, mois, annee, heure, minute] = match;
-  const monthIndex = moisFR[mois.toLowerCase()];
+  const monthIndex =
+    moisFR[
+      mois
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+    ];
   if (monthIndex === undefined) return null;
+
   const date = new Date(
     Number(annee),
     monthIndex,
@@ -130,27 +138,13 @@ async function getCandidatureContent(url, serveur) {
 
 async function sendCandidatures(client, AllCandidatures) {
   for (const { serveur, role, candidature } of AllCandidatures) {
-    const data = getData(`data/${serveur}/config-candidature.json`);
-    const roleData = data[role];
-    if (!roleData) continue;
+    const data = getData(`data/${serveur}/config.json`);
+    const configData = data.find((c) => c.nom === "Candidature");
+    const roleData = configData.systeme[role];
 
-    const channelId = roleData.Salon.valeur;
-    let channel;
-    try {
-      channel = await client.channels.fetch(channelId);
-    } catch (e) {
-      console.log("Impossible de fetch le salon:", e.message);
-    }
-
-    if (!channel) {
-      console.log("Salon introuvable malgré le fetch");
-      continue;
-    }
-
-    const isNew = !candidature.messageId;
     if (
-      isNew ||
-      (candidature.messageId &&
+      candidature.messageId.length === 0 ||
+      (candidature.messageId.length !== 0 &&
         candidature.badgeColor !== candidature.savedBadgeColor)
     ) {
       try {
@@ -375,107 +369,136 @@ async function sendCandidatures(client, AllCandidatures) {
           components: components,
         };
 
-        if (isNew) {
+        if (candidature.messageId.length === 0) {
           const candidatureDetailsContainer = await getCandidatureContent(
             candidature.lien,
             serveur,
           );
 
-          const roleMention =
-            roleData.Role.valeur && Array.isArray(roleData.Role.valeur)
-              ? roleData.Role.valeur.map((r) => `<@&${r}>`).join(" ")
+          const activeData = roleData.active || {};
+          const salonsData = roleData.Salon?.valeur || {};
+          const rolesData = roleData.Role?.valeur || {};
+
+          for (const [guildId, isActive] of Object.entries(activeData)) {
+            if (!isActive) continue;
+            if (!salonsData[guildId]) continue;
+
+            let channel;
+            try {
+              channel = await client.channels.fetch(salonsData[guildId]);
+            } catch (e) {
+              console.log(
+                `Impossible de fetch le salon ${salonsData[guildId]}:`,
+                e.message,
+              );
+              continue;
+            }
+
+            if (!channel) {
+              console.log(
+                `Salon introuvable malgré le fetch : ${salonsData[guildId]}`,
+              );
+              continue;
+            }
+
+            const roleMentionArray = rolesData[guildId] || [];
+            const roleMention = roleMentionArray.length
+              ? roleMentionArray.map((r) => `<@&${r}>`).join(" ")
               : null;
 
-          const headerComponents = roleMention
-            ? [{ type: 10, content: roleMention }, candidatureContainer]
-            : [candidatureContainer];
+            const headerComponents = roleMention
+              ? [{ type: 10, content: roleMention }, candidatureContainer]
+              : [candidatureContainer];
 
-          if (channel.type === 0) {
-            const sent = await channel.send({
-              components: headerComponents,
-              flags: MessageFlags.IsComponentsV2,
-            });
-            candidature.messageId = sent.id;
-            candidature.savedBadgeColor = candidature.badgeColor;
-
-            const thread = await sent.startThread({
-              name: `Candidature ${role} - ${candidature.auteur}`,
-            });
-
-            await thread.send({
-              components: [candidatureDetailsContainer],
-              flags: MessageFlags.IsComponentsV2,
-            });
-          } else if (channel.type === 15) {
-            const thread = await channel.threads.create({
-              name: `Candidature ${role} - ${candidature.auteur}`,
-              message: {
+            if (channel.type === 0) {
+              const sent = await channel.send({
                 components: headerComponents,
                 flags: MessageFlags.IsComponentsV2,
-              },
-            });
-
-            await thread.send({
-              components: [candidatureDetailsContainer],
-              flags: MessageFlags.IsComponentsV2,
-            });
-
-            let mainMessage;
-            if (thread.appliedMessage) {
-              mainMessage = thread.appliedMessage;
-            } else {
-              const fetched = await thread.messages.fetch({ limit: 1 });
-              mainMessage = fetched.first();
-            }
-
-            if (mainMessage) {
-              candidature.messageId = mainMessage.id;
+              });
+              candidature.messageId.push(sent.id);
               candidature.savedBadgeColor = candidature.badgeColor;
-            } else {
-              console.warn(
-                "Impossible de récupérer le message principal du thread forum",
-              );
-            }
-          } else {
-            console.warn(`⚠️ Channel ${channelId} n'est ni texte ni forum.`);
-          }
-        } else if (
-          candidature.messageId &&
-          candidature.badgeColor !== candidature.savedBadgeColor
-        ) {
-          let msg = null;
 
-          if (channel.type === 0) {
-            msg = await channel.messages
-              .fetch(candidature.messageId)
-              .catch(() => null);
-          } else if (channel.type === 15) {
-            const thread = channel.threads.cache.find(
-              (t) => t.id === candidature.messageId,
-            );
+              const thread = await sent.startThread({
+                name: `Candidature ${role} - ${candidature.auteur}`,
+              });
 
-            if (thread) {
+              await thread.send({
+                components: [candidatureDetailsContainer],
+                flags: MessageFlags.IsComponentsV2,
+              });
+            } else if (channel.type === 15) {
+              const thread = await channel.threads.create({
+                name: `Candidature ${role} - ${candidature.auteur}`,
+                message: {
+                  components: headerComponents,
+                  flags: MessageFlags.IsComponentsV2,
+                },
+              });
+
+              await thread.send({
+                components: [candidatureDetailsContainer],
+                flags: MessageFlags.IsComponentsV2,
+              });
+
+              let mainMessage;
               if (thread.appliedMessage) {
-                msg = thread.appliedMessage;
+                mainMessage = thread.appliedMessage;
               } else {
-                const fetched = await thread.messages
-                  .fetch({ limit: 1 })
-                  .catch(() => null);
-                msg = fetched?.first() || null;
+                const fetched = await thread.messages.fetch({ limit: 1 });
+                mainMessage = fetched.first();
+              }
+
+              if (mainMessage) {
+                candidature.messageId.push(mainMessage.id);
+                candidature.savedBadgeColor = candidature.badgeColor;
+              } else {
+                console.warn(
+                  "Impossible de récupérer le message principal du thread forum",
+                );
               }
             }
           }
+        }
 
-          if (msg) {
-            await msg.edit({ components: [candidatureContainer] });
-            candidature.savedBadgeColor = candidature.badgeColor;
+        if (
+          candidature.messageId.length !== 0 &&
+          candidature.badgeColor !== candidature.savedBadgeColor
+        ) {
+          const salonsData = roleData.Salon?.valeur || {};
+          for (const [guildId, channelId] of Object.entries(salonsData)) {
+            if (!channelId) continue;
+
+            let channel;
+            try {
+              channel = await client.channels.fetch(channelId);
+            } catch {
+              continue;
+            }
+            if (!channel) continue;
+
+            for (const msgId of candidature.messageId) {
+              let msg = null;
+              if (channel.type === 0) {
+                msg = await channel.messages.fetch(msgId).catch(() => null);
+              } else if (channel.type === 15) {
+                const thread = channel.threads.cache.get(msgId);
+                if (thread) {
+                  msg =
+                    thread.appliedMessage ||
+                    (await thread.messages
+                      .fetch({ limit: 1 })
+                      .then((f) => f.first())
+                      .catch(() => null));
+                }
+              }
+              if (msg) await msg.edit({ components: [candidatureContainer] });
+            }
           }
+
+          candidature.savedBadgeColor = candidature.badgeColor;
         }
       } catch (err) {
-        console.error(
-          `❌ Erreur envoi/édition candidature dans ${channelId}`,
-          err,
-        );
+        console.error(`❌ Erreur envoi/édition candidature :`, err);
       }
     }
   }
@@ -483,12 +506,12 @@ async function sendCandidatures(client, AllCandidatures) {
   const serveurs = [...new Set(AllCandidatures.map((c) => c.serveur))];
 
   for (const serveur of serveurs) {
-    const data = getData(`data/${serveur}/config-candidature.json`);
+    const data = getData(`data/${serveur}/config.json`);
+    const configData = data.find((c) => c.nom === "Candidature");
     const roles = ["Guide", "Modérateur", "Builder"];
 
     for (const role of roles) {
-      const roleData = data[role];
-      if (!roleData) continue;
+      const roleData = configData.systeme[role];
 
       const allCandsForRole = AllCandidatures.filter(
         (c) => c.role === role && c.serveur === serveur,
@@ -505,7 +528,7 @@ async function sendCandidatures(client, AllCandidatures) {
       }));
     }
 
-    saveData(`data/${serveur}/config-candidature.json`, data);
+    saveData(`data/${serveur}/config.json`, data);
   }
 }
 
@@ -513,15 +536,14 @@ async function fetchNewCandidatures() {
   let AllCandidatures = [];
 
   for (const serveur of config.liste_serveur) {
-    const data = getData(`data/${serveur}/config-candidature.json`);
+    const data = getData(`data/${serveur}/config.json`);
+    const configData = data.find((c) => c.nom === "Candidature");
     const roles = ["Guide", "Modérateur", "Builder"];
 
     let modified = false;
 
     for (const roleName of roles) {
-      const roleData = data[roleName];
-      if (!roleData?.active || !roleData.lien || !roleData.Salon.valeur)
-        continue;
+      const roleData = configData.systeme[roleName];
 
       try {
         const response = await fetch(roleData.lien);
@@ -566,7 +588,7 @@ async function fetchNewCandidatures() {
               auteur,
               timestamp,
               badgeColor,
-              messageId: existing?.messageId || null,
+              messageId: existing?.messageId || [],
               savedBadgeColor: existing?.savedBadgeColor || badgeColor || null,
             };
 
@@ -597,7 +619,7 @@ async function fetchNewCandidatures() {
     }
 
     if (modified) {
-      saveData(`data/${serveur}/config-candidature.json`, data);
+      saveData(`data/${serveur}/config.json`, data);
     }
   }
 

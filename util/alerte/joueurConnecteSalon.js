@@ -3,34 +3,43 @@ const getServerPlayer = require("../module/getServerPlayer");
 const { getData } = require("../module/getAndSaveData");
 
 async function joueurConnecteSalon(client) {
-  for (const server of config.liste_serveur) {
+  for (const serveur of config.liste_serveur) {
     try {
-      const joueurConnecteConfigData = getData(
-        `data/${server}/config-joueurconnecte.json`,
+      const dataConfig = getData(`data/${serveur}/config.json`);
+      const configData = dataConfig.find(
+        (c) => c.nom === "Joueur(s) Connecté(s)",
       );
 
-      if (
-        joueurConnecteConfigData &&
-        joueurConnecteConfigData["joueurconnecte"].active &&
-        joueurConnecteConfigData["joueurconnecte"].Salon.valeur &&
-        joueurConnecteConfigData["joueurconnecte"]["Texte Affiché"].questions[0]
-          .valeur
-      ) {
-        const data = await getServerPlayer(server);
-        const nbJoueur = data.nombre;
+      const jcConfig = configData.systeme.joueurconnecte;
 
-        const channel = await client.channels.fetch(
-          joueurConnecteConfigData["joueurconnecte"].Salon.valeur,
-        );
+      const data = await getServerPlayer(serveur);
+      const nbJoueur = data.nombre;
 
-        const texte = joueurConnecteConfigData["joueurconnecte"][
-          "Texte Affiché"
-        ].questions[0].valeur.replace("{nombre}", String(nbJoueur));
+      for (const [guildId, isActive] of Object.entries(jcConfig.active || {})) {
+        if (!isActive) continue;
 
-        await channel.setName(texte).catch(console.error);
+        const channelId = jcConfig.Salon?.valeur?.[guildId];
+        if (!channelId) continue;
+
+        try {
+          const channel = await client.channels.fetch(channelId);
+          if (!channel) continue;
+
+          const texteTemplate =
+            jcConfig["Texte Affiché"]?.questions?.[0]?.valeur?.[guildId];
+          if (!texteTemplate) continue;
+          const texte = texteTemplate.replace("{nombre}", String(nbJoueur));
+
+          await channel.setName(texte);
+        } catch (err) {
+          console.error(
+            `❌ Erreur salon joueur connecté | serveur ${serveur} | guild ${guildId}`,
+            err,
+          );
+        }
       }
     } catch (e) {
-      console.log("[ERREUR JOUEUR CONNECTE SALON]", e);
+      console.error("[ERREUR JOUEUR CONNECTE SALON]", serveur);
     }
   }
 }
