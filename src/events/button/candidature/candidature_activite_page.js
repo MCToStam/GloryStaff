@@ -8,7 +8,6 @@ const {
   ButtonBuilder,
 } = require("discord.js");
 const { getEmojiTete } = require("../../../../util/module/emoji");
-const { getData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
 const { generateConnexionGraph } = require("../../../../util/connexion");
 

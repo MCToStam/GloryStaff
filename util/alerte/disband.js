@@ -48,6 +48,11 @@ async function disband_14h00(client) {
     const configDisband = configGlobale.find((c) => c.nom === "Disband");
     const configPillage = configDisband.systeme["Pays Pillable ( 14h )"];
 
+    if (
+      !Object.values(configPillage.active || {}).some((value) => value === true)
+    )
+      continue;
+
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
@@ -278,6 +283,9 @@ async function disband_18h15(client) {
     const configGlobale = getData(`data/${serveur}/config.json`);
     const configDisband = configGlobale.find((c) => c.nom === "Disband");
     const config18h = configDisband.systeme["Pays Disband ( 18h15 )"];
+
+    if (!Object.values(config18h.active || {}).some((value) => value === true))
+      continue;
 
     const responseJson = await fetch(
       `https://apiv2.nationsglory.fr/mods/country_list/${serveur}`,

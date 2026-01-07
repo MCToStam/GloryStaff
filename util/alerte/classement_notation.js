@@ -35,6 +35,13 @@ async function classement_notation(client) {
     const configData = dataConfig.find((c) => c.nom === "Notations");
     const classementConfig = configData.systeme.Classement;
 
+    if (
+      !Object.values(classementConfig.active || {}).some(
+        (value) => value === true,
+      )
+    )
+      continue;
+
     try {
       const topCountries = data
         .slice(0, 3)

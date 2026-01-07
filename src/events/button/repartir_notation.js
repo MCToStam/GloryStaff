@@ -280,10 +280,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
         await Promise.all(
           Array.from(cache.entries()).map(async ([s, range]) => {
             const emoji = await getEmojiTete(client, s);
-            const emojiText = emoji.id
-              ? `<:${emoji.name}:${emoji.id}>`
-              : emoji.name;
-            return `${emojiText} **${s}** : ${range}`;
+            return `${emoji} **${s}** : ${range}`;
           }),
         )
       ).join("\n");

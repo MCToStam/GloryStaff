@@ -12,6 +12,9 @@ async function joueurConnecteSalon(client) {
 
       const jcConfig = configData.systeme.joueurconnecte;
 
+      if (!Object.values(jcConfig.active || {}).some((value) => value === true))
+        continue;
+
       const data = await getServerPlayer(serveur);
       const nbJoueur = data.nombre;
 
