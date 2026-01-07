@@ -147,12 +147,12 @@ async function guerre(client) {
                 ),
               );
 
-            const components = [container];
-            if (roleMentions && !rolePingDone[guildId]) {
-              components.push(
+            let components = [container];
+            if (roleMentions && !rolePingDone[guildId])
+              components = [
                 new TextDisplayBuilder().setContent(roleMentions),
-              );
-            }
+                container,
+              ];
 
             let sent;
             try {
@@ -243,10 +243,12 @@ async function guerre(client) {
               ),
             );
 
-          const components = [container];
-          if (roleMentions && !rolePingDone) {
-            components.push(new TextDisplayBuilder().setContent(roleMentions));
-          }
+          let components = [container];
+          if (roleMentions && !rolePingDone[guildId])
+            components = [
+              new TextDisplayBuilder().setContent(roleMentions),
+              container,
+            ];
 
           try {
             await channel.send({

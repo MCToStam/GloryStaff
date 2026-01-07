@@ -383,23 +383,7 @@ async function sendCandidatures(client, AllCandidatures) {
             if (!isActive) continue;
             if (!salonsData[guildId]) continue;
 
-            let channel;
-            try {
-              channel = await client.channels.fetch(salonsData[guildId]);
-            } catch (e) {
-              console.log(
-                `Impossible de fetch le salon ${salonsData[guildId]}:`,
-                e.message,
-              );
-              continue;
-            }
-
-            if (!channel) {
-              console.log(
-                `Salon introuvable malgré le fetch : ${salonsData[guildId]}`,
-              );
-              continue;
-            }
+            const channel = await client.channels.fetch(salonsData[guildId]);
 
             const roleMentionArray = rolesData[guildId] || [];
             const roleMention = roleMentionArray.length

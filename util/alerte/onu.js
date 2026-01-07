@@ -50,7 +50,7 @@ async function checkONU(client) {
   const now = getDateFrance();
 
   for (const serveur of config.liste_serveur) {
-    const data = await getData(`data/${serveur}/config-onu.json`);
+    const data = getData(`data/${serveur}/config-onu.json`);
     if (!data || !data["Alerte"]) continue;
 
     const nowKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;

@@ -16,47 +16,60 @@ const {
 } = require("discord.js");
 
 async function repartition_notation(client) {
+  const now = new Date();
+  const day = now.getDay();
+  const daysSinceMonday = (day + 6) % 7;
+  const lastMonday = new Date(now);
+  lastMonday.setDate(now.getDate() - daysSinceMonday);
+
+  const jour = String(lastMonday.getDate()).padStart(2, "0");
+  const mois = String(lastMonday.getMonth() + 1).padStart(2, "0");
+
   for (const server of config.liste_serveur) {
+    const imagePath = config.liste_serveur_bedrock.includes(server)
+      ? getAbsolutePath("data/ordredesnotations_bedrock.png")
+      : getAbsolutePath("data/ordredesnotations_java.png");
+
+    const attachment = new AttachmentBuilder(imagePath, {
+      name: "ordre-des-notations.png",
+    });
+
     try {
-      const repartitionData = getData(`data/${server}/config-notation.json`);
-      const keys = Object.keys(repartitionData["répartition"].donnee);
-      const hasNumberKey = keys.some((key) => key);
-      if (
-        repartitionData["répartition"].active &&
-        repartitionData["répartition"].Salon.valeur &&
-        hasNumberKey
-      ) {
+      const configGlobale = getData(`data/${server}/config.json`);
+      const configNotation = configGlobale.find((c) => c.nom === "Notations");
+      const configRepartition = configNotation.systeme.répartition;
+
+      for (const [guildId, isActive] of Object.entries(
+        configRepartition.active || {},
+      )) {
+        if (!isActive) continue;
+
+        const donnee = configRepartition.donnee[guildId];
+        if (!donnee) continue;
+
+        const channelId = configRepartition.Salon?.valeur?.[guildId];
+        if (!channelId) continue;
+
+        const channel = await client.channels.fetch(channelId);
+        if (!channel) continue;
+
+        const roleIds = configRepartition.Role?.valeur?.[guildId] || [];
+        const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
         const numberKeysValues = (
           await Promise.all(
-            Object.entries(repartitionData["répartition"].donnee).map(
+            Object.entries(configRepartition.donnee[guildId]).map(
               async ([key, value]) => {
                 const emoji = await getEmojiTete(client, key);
                 const emojiText = emoji.id
                   ? `<:${emoji.name}:${emoji.id}>`
                   : emoji.name;
 
-                return `${emojiText} ${key} : ${value}`;
+                return `${emojiText} ${key.replace(/_/g, "\\_")} : ${value}`;
               },
             ),
           )
         ).join("\n");
-
-        const imagePath = config.liste_serveur_bedrock.includes(server)
-          ? getAbsolutePath("data/ordredesnotations_bedrock.png")
-          : getAbsolutePath("data/ordredesnotations_java.png");
-
-        const attachment = new AttachmentBuilder(imagePath, {
-          name: "ordre-des-notations.png",
-        });
-
-        const now = new Date();
-        const day = now.getDay();
-        const daysSinceMonday = (day + 6) % 7;
-        const lastMonday = new Date(now);
-        lastMonday.setDate(now.getDate() - daysSinceMonday);
-
-        const jour = String(lastMonday.getDate()).padStart(2, "0");
-        const mois = String(lastMonday.getMonth() + 1).padStart(2, "0");
 
         const repartitionContainer = new ContainerBuilder()
           .setAccentColor(config.couleur[server])
@@ -86,29 +99,31 @@ async function repartition_notation(client) {
             ),
           );
 
-        const salon = client.channels.cache.get(
-          repartitionData["répartition"].Salon.valeur,
-        );
-        if (repartitionData["répartition"]?.Role.valeur) {
-          const roleMentions = repartitionData["répartition"].Role.valeur
-            .map((roleId) => `<@&${roleId}>`)
-            .join(", ");
+        let components = [repartitionContainer];
+        if (roleMentions)
+          components = [
+            new TextDisplayBuilder().setContent(roleMentions),
+            repartitionContainer,
+          ];
 
-          const roleTextDisplay = new TextDisplayBuilder().setContent(
-            roleMentions,
+        try {
+          const sent = await channel.send({
+            components,
+            files: [attachment],
+            flags: MessageFlags.IsComponentsV2,
+          });
+
+          if (channel.type === "GUILD_NEWS")
+            await sent.crosspost().catch(() => {});
+
+          console.log(
+            `✅ Message notations répartition envoyé | serveur ${server} | guild ${guildId}`,
           );
-
-          await salon.send({
-            files: [attachment],
-            components: [roleTextDisplay, repartitionContainer],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        } else {
-          await salon.send({
-            files: [attachment],
-            components: [repartitionContainer],
-            flags: MessageFlags.IsComponentsV2,
-          });
+        } catch (err) {
+          console.error(
+            `❌ Erreur envoi notations répartition | serveur ${server} | guild ${guildId}`,
+            err,
+          );
         }
       }
     } catch (e) {

@@ -26,7 +26,7 @@ async function discordLink(discordId) {
   } catch (err) {}
 
   try {
-    const localData = (await getData("data/api_get_ng.json")) ?? {};
+    const localData = getData("data/api_get_ng.json") ?? {};
     return discordId ? (localData[discordId] ?? null) : localData;
   } catch (err) {
     console.error(

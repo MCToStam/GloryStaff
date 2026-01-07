@@ -23,7 +23,7 @@ module.exports = {
           { name: "Forum", value: "Forum" },
           { name: "Jail", value: "Jail" },
           { name: "Joueur(s) Connecté(s)", value: "Joueur(s) Connecté(s)" },
-          { name: "Notation", value: "Notation" },
+          { name: "Notations", value: "Notations" },
           { name: "ONU", value: "ONU" },
           { name: "Récapitulatif", value: "Récapitulatif" },
           { name: "Routine", value: "Routine" },

@@ -64,7 +64,7 @@ module.exports = {
 async function modeAutomatique(client, interaction, config, serveur) {
   await interaction.deferReply({ ephemeral: true });
 
-  const staffData = await getData(`data/${serveur}/staff-serveur.json`);
+  const staffData = getData(`data/${serveur}/staff-serveur.json`);
   const staffList = [
     ...(staffData["Administrateur"] || []),
     ...(staffData["Super-Modérateur"] || []),
@@ -72,8 +72,9 @@ async function modeAutomatique(client, interaction, config, serveur) {
 
   staffList.sort(() => Math.random() - 0.5);
 
-  const configNotationPath = `data/${serveur}/config-notation.json`;
-  const configNotation = (await getData(configNotationPath)) || {};
+  const configNotationPath = `data/${serveur}/config.json`;
+  const configGlobale = getData(configNotationPath);
+  const configNotation = configGlobale.find((c) => c.nom === "Notations");
 
   const totalNumbers = ["alpha", "sigma", "omega", "delta", "epsilon"].includes(
     serveur,
@@ -91,8 +92,9 @@ async function modeAutomatique(client, interaction, config, serveur) {
     current += size;
   });
 
-  configNotation["répartition"].donnee = repartition;
-  saveData(configNotationPath, configNotation);
+  configNotation.systeme["répartition"].donnee[interaction.guild.id] =
+    repartition;
+  saveData(configNotationPath, configGlobale);
 
   const embedDescription = await Promise.all(
     Object.entries(repartition).map(async ([staff, range]) => {
@@ -121,7 +123,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
 const manualCache = new Map();
 
 async function modeManuel(client, interaction, config, serveur, subId) {
-  const staffData = await getData(`data/${serveur}/staff-serveur.json`);
+  const staffData = getData(`data/${serveur}/staff-serveur.json`);
   const staffList = [
     ...(staffData["Administrateur"] || []),
     ...(staffData["Super-Modérateur"] || []),
@@ -256,16 +258,22 @@ async function modeManuel(client, interaction, config, serveur, subId) {
 
     const nextIndex = index + 1;
     if (nextIndex >= total) {
-      const configNotationPath = `data/${serveur}/config-notation.json`;
-      const configNotation = (await getData(configNotationPath)) || {};
-      for (const key of Object.keys(configNotation["répartition"].donnee)) {
-        delete configNotation["répartition"].donnee[key];
+      const configNotationPath = `data/${serveur}/config.json`;
+      const configGlobale = getData(configNotationPath);
+      const configNotation = configGlobale.find((c) => c.nom === "Notations");
+      for (const key of Object.keys(
+        configNotation.systeme["répartition"].donnee[interaction.guild.id],
+      )) {
+        delete configNotation.systeme["répartition"].donnee[
+          interaction.guild.id
+        ][key];
       }
 
       for (const [s, range] of cache.entries()) {
-        configNotation["répartition"].donnee[s] = range;
+        configNotation.systeme["répartition"].donnee[interaction.guild.id][s] =
+          range;
       }
-      saveData(configNotationPath, configNotation);
+      saveData(configNotationPath, configGlobale);
       manualCache.delete(serveur);
 
       const repartitionText = (

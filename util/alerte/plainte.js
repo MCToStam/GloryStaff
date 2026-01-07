@@ -57,18 +57,6 @@ function convertirEnTimestamp(dateStr) {
   );
 }
 
-async function sendMessage(salon, container, roles = [], rolePingDone = false) {
-  const roleMentions = roles.map((roleId) => `<@&${roleId}>`).join(", ");
-
-  const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
-  let components = [container];
-  if (!rolePingDone) components = [roleTextDisplay, container];
-  return await salon.send({
-    components,
-    flags: MessageFlags.IsComponentsV2,
-  });
-}
-
 async function plainte(client) {
   for (const server of config.liste_serveur) {
     try {
@@ -155,13 +143,12 @@ async function plainte(client) {
                 ),
               );
 
-            const components = [container];
-
-            if (roleMentions.length > 0 && !rolePingDone[guildId]) {
-              components.push(
+            let components = [container];
+            if (roleMentions && !rolePingDone[guildId])
+              components = [
                 new TextDisplayBuilder().setContent(roleMentions),
-              );
-            }
+                container,
+              ];
 
             let sentMessage;
             try {
@@ -257,11 +244,12 @@ async function plainte(client) {
               ),
             );
 
-          const components = [container];
-
-          if (roleMentions && !rolePingDone[guildId]) {
-            components.push(new TextDisplayBuilder().setContent(roleMentions));
-          }
+          let components = [container];
+          if (roleMentions && !rolePingDone[guildId])
+            components = [
+              new TextDisplayBuilder().setContent(roleMentions),
+              container,
+            ];
 
           let sent;
           try {
