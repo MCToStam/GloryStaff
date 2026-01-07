@@ -2,7 +2,6 @@ const fs = require("node:fs");
 const path = require("node:path");
 const Canvas = require("canvas");
 const config = require("../../config");
-const { log } = require("node:console");
 
 const cachePath = path.join(__dirname, "..", "..", "data", "emojisCache.json");
 let emojisCache = JSON.parse(fs.readFileSync(cachePath, "utf8"));
@@ -66,7 +65,6 @@ async function createOrFetchEmoji(client, key, buffer, extraData = {}) {
 
 async function getEmojiDrapeau(client, serveur, pays) {
   const key = `${serveur.toLowerCase()}_${pays.toLowerCase()}`;
-  const now = Date.now();
 
   if (!client.application) await client.application.fetch();
 
@@ -87,10 +85,7 @@ async function getEmojiDrapeau(client, serveur, pays) {
   pendingEmojis[key] = (async () => {
     const url = `${config.glorybot_url}/api/drapeau?serveur=${serveur}&pays=${pays}`;
     const response = await fetch(url);
-    if (!response.ok)
-      throw new Error(
-        `Impossible de récupérer l'image pour ${pays} et ${serveur}`,
-      );
+    if (!response.ok) return null;
     const buffer = Buffer.from(await response.arrayBuffer());
 
     return await createOrFetchEmoji(client, key, buffer, { nom: key });
@@ -106,7 +101,6 @@ async function getEmojiDrapeau(client, serveur, pays) {
 
 async function getEmojiTete(client, joueur) {
   const key = joueur.toLowerCase();
-  const now = Date.now();
 
   if (!client.application) await client.application.fetch();
 
@@ -127,8 +121,7 @@ async function getEmojiTete(client, joueur) {
   pendingEmojis[key] = (async () => {
     const url = `https://skins.nationsglory.fr/face/${joueur}/3d/4`;
     const response = await fetch(url);
-    if (!response.ok)
-      throw new Error(`Impossible de récupérer l'image pour ${joueur}`);
+    if (!response.ok) return null;
     const buffer = Buffer.from(await response.arrayBuffer());
 
     return await createOrFetchEmoji(client, key, buffer, { nom: key });

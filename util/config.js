@@ -2,71 +2,97 @@ const fs = require("fs");
 const path = require("path");
 const config = require("../config");
 
-const AUTRE_EMOJI = {};
+const AUTRE_EMOJI = {
+  Guide: "<:guide:1441505228007411783>",
+  Modérateur: "<:moderateur:1441505230394228897>",
+  Builder: "<:builder:1458468397963808872>",
+  "Pays Pillable ( 14h )": false,
+  "Pays Disband ( 18h15 )": false,
+  doublelead: "<:doublelead:1458459662851637554>",
+  "Full Build": false,
+  "Conquête Territoriale": false,
+  Plainte: false,
+  Guerre: false,
+  "Plainte non traitée": false,
+  "Guerre non traitée": false,
+  jail: "<:jail:1441734907260043264>",
+  Classement: false,
+  Répartition: false,
+  Alerte: false,
+  "Rappel 1": false,
+  "Rappel 2": false,
+  "Rappel 3": false,
+  "Récapitulatif Hebdomadaire": false,
+  "Récapitulatif Mensuel": false,
+  routine: "<:routine:1441734905980649695>",
+  "Affichage Staff": false,
+  "Sanction Staff": false,
+  joueurconnecte: "<:joueursconnectes:1458459673974800589>",
+};
 const SYSTEMES_CONFIG = {
   attentestaff: {
     nom: "Attente Staff",
-    emoji: false,
+    emoji: "<:attentestaff:1458459659043078154>",
     permission: "guide",
   },
   candidature: {
     nom: "Candidature",
-    emoji: false,
+    emoji: "<:candidature:1458459660343447735>",
     permission: "guide",
   },
   disband: {
     nom: "Disband",
-    emoji: false,
+    emoji: "<:disband:1458459661782220892>",
     permission: "guide",
   },
   doublelead: {
     nom: "Double Lead",
-    emoji: false,
+    emoji: "<:doublelead:1458459662851637554>",
     permission: "super_moderateur",
   },
   expansionterritoriale: {
     nom: "Expansion Territoriale",
-    emoji: false,
+    emoji: "<:expantionterritoriale:1458459664768303268>",
     permission: "super_moderateur",
   },
   forum: {
     nom: "Forum",
-    emoji: false,
+    emoji: "<:forum:1458459666282582170>",
     permission: "moderateur_test",
   },
   jail: {
     nom: "Jail",
-    emoji: false,
+    emoji: "<:jail:1441734907260043264>",
     permission: "moderateur_test",
   },
   notation: {
     nom: "Notations",
-    emoji: false,
+    emoji: "<:notations:1458460474017321204>",
     permission: "guide",
   },
   onu: {
     nom: "ONU",
-    emoji: false,
+    emoji: "<:onu:1458459668165824543>",
     permission: "guide",
   },
   recap: {
     nom: "Récapitulatif",
-    emoji: false,
+    emoji: "<:recapitulatif:1458459670346858683>",
     permission: "guide",
   },
   routine: {
     nom: "Routine",
-    emoji: false,
+    emoji: "<:routine:1441734905980649695>",
     permission: "moderateur_plus",
   },
   staff: {
     nom: "Staff",
-    emoji: false,
+    emoji: "<:gestionstaff:1458459672058265610>",
     permission: "super_moderateur",
   },
   joueurconnecte: {
     nom: "Joueur(s) Connecté(s)",
-    emoji: false,
+    emoji: "<:joueursconnectes:1458459673974800589>",
     permission: "guide",
   },
 };
@@ -147,6 +173,12 @@ function genererConfigsServeurs(client) {
     for (const fichier of fichiersConfig) {
       const cheminFichier = path.join(dossierServeur, fichier);
       const nomSysteme = fichier.replace("config-", "").replace(".json", "");
+      if (
+        nomSysteme === "radio" ||
+        nomSysteme === "role" ||
+        nomSysteme === "changelogs"
+      )
+        continue;
 
       try {
         const contenuBrut = JSON.parse(fs.readFileSync(cheminFichier, "utf8"));
@@ -185,7 +217,19 @@ function genererConfigsServeurs(client) {
             active[serveurId] = data.active ?? false;
           }
 
-          contenuFinal[systeme] = {
+          if (
+            data.donnee &&
+            typeof data.donnee === "object" &&
+            Object.keys(data.donnee).length > 0
+          ) {
+            data.donnee = { [serveurId]: data.donnee };
+          }
+
+          let vraiSysteme = systeme;
+          if (systeme === "classement") vraiSysteme = "Classement";
+          if (systeme === "répartition") vraiSysteme = "Répartition";
+
+          contenuFinal[vraiSysteme] = {
             emoji: AUTRE_EMOJI[systeme] || false,
             ...nettoye,
             active,

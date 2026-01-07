@@ -4,6 +4,9 @@ const { getEmojiDrapeau, getEmojiTete } = require("../../util/module/emoji");
 const { DateTime } = require("luxon");
 const cheerio = require("cheerio");
 const {
+  ContainerBuilder,
+  TextDisplayBuilder,
+  MessageFlags,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
@@ -41,228 +44,209 @@ async function fetchAndParseCountriesHTML(serveur) {
 
 async function disband_14h00(client) {
   for (const serveur of config.liste_serveur) {
-    const configuration = getData(`data/${serveur}/config-disband.json`);
-    const messageConfig = configuration["Pays Pillable ( 14h )"];
+    const configGlobale = getData(`data/${serveur}/config.json`);
+    const configDisband = configGlobale.find((c) => c.nom === "Disband");
+    const configPillage = configDisband.systeme["Pays Pillable ( 14h )"];
 
-    if (messageConfig?.active && messageConfig?.Salon.valeur) {
-      const channelId = messageConfig.Salon.valeur;
-      const channel = await client.channels.fetch(channelId);
+    const container = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) =>
+        t.setContent("## 💥 C'est l'heure des disbands !"),
+      )
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
+          "L'intégralité des pays soumis aux disbands est désormais disponible au pillage. C'est-à-dire que vous pouvez vous rendre dans ces pays et récupérer l'intégralité des ressources disponibles dans les coffres et ainsi casser des blocs. Il faut savoir que les pays sont pillables à partir de 14h, ils sont régénérés et supprimés à 18h.\n\nVoici les 4 différentes raisons de disband :\n- Inactivité du chef et du/des officier(s) de plus de 14 jours\n- Pays ayant moins de 6 membres\n- Pays sans fhome durant une semaine consécutive\n- Inactivité au serveur du pays durant plus d'un mois, après la mise en garde du staff\n\nSi tu ne peux pas te connecter pendant un long moment et tu as peur de te faire disband, alors effectue la commande ```/f absence add <vacation/other> <JJ/MM/YYYY de début> <JJ/MM/YYYY de fin>```",
+        ),
+      )
+      .addSeparatorComponents((s) => s)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("Wiki Disband")
+            .setURL(
+              "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
+            )
+            .setStyle(ButtonStyle.Link)
+            .setEmoji("1319374787570831421"),
+          new ButtonBuilder()
+            .setLabel("Wiki Absence")
+            .setURL(
+              "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
+            )
+            .setStyle(ButtonStyle.Link)
+            .setEmoji("1319374787570831421"),
+        ),
+      );
 
-      if (channel) {
+    let disbandData;
+    try {
+      const response = await fetch(
+        `${config.glorybot_url}/api/disband?serveur=${serveur}`,
+        {
+          headers: {
+            Authorization: `Bearer ${config.glorybot_token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      disbandData = await response.json();
+    } catch (err) {
+      console.error("Erreur lors de la récupération des pays disband :", err);
+      return;
+    }
+
+    const uniqueCountries = new Set();
+    const memberCountries = [];
+    const inactiveCountries = [];
+    const fhomeCountries = [];
+
+    for (const country of disbandData) {
+      if (!country.name) continue;
+
+      if (country.reason === "member" && !uniqueCountries.has(country.name)) {
+        memberCountries.push(country);
+        uniqueCountries.add(country.name);
+      } else if (
+        country.reason === "inactivity" &&
+        !uniqueCountries.has(country.name)
+      ) {
+        inactiveCountries.push(country);
+        uniqueCountries.add(country.name);
+      } else if (
+        country.reason === "fhome" &&
+        !uniqueCountries.has(country.name)
+      ) {
+        fhomeCountries.push(country);
+        uniqueCountries.add(country.name);
+      }
+    }
+
+    async function formatCountriesWithFlags(list) {
+      const result = [];
+      for (const country of list) {
         try {
-          if (messageConfig.Prévisualisation.valeur !== "Oui") {
-            const embed = new EmbedBuilder()
-              .setTitle("💥 C'est l'heure des disbands !")
-              .setDescription(
-                "L'intégralité des pays soumis aux disbands est désormais disponible au pillage. C'est-à-dire que vous pouvez vous rendre dans ces pays et récupérer l'intégralité des ressources disponibles dans les coffres et ainsi casser des blocs. Il faut savoir que les pays sont pillables à partir de 14h, ils sont régénérés et supprimés à 18h.\n\nVoici les 4 différentes raisons de disband :\n- Inactivité du chef et du/des officier(s) de plus de 14 jours\n- Pays ayant moins de 6 membres\n- Pays sans fhome durant une semaine consécutive\n- Inactivité au serveur du pays durant plus d'un mois, après la mise en garde du staff\n\nSi tu ne peux pas te connecter pendant un long moment et tu as peur de te faire disband, alors effectue la commande ```/f absence add <vacation/other> <JJ/MM/YYYY de début> <JJ/MM/YYYY de fin>```",
-              )
-              .setColor(config.couleur[serveur])
-              .setFooter({ text: config.footer });
-
-            const actionRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setLabel("Wiki Disband")
-                .setURL(
-                  "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
-                )
-                .setStyle(ButtonStyle.Link)
-                .setEmoji("1319374787570831421"),
-              new ButtonBuilder()
-                .setLabel("Wiki Absence")
-                .setURL(
-                  "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
-                )
-                .setStyle(ButtonStyle.Link)
-                .setEmoji("1319374787570831421"),
-            );
-
-            const options = {
-              embeds: [embed],
-              components: [actionRow],
-            };
-
-            if (
-              messageConfig.Role.valeur &&
-              Array.isArray(messageConfig.Role.valeur) &&
-              messageConfig.Role.valeur.length > 0
-            ) {
-              options.content = messageConfig.Role.valeur
-                .map((roleId) => `<@&${roleId}>`)
-                .join(", ");
-            }
-            const sentMessage = await channel.send(options);
-            if (channel.type === "GUILD_NEWS") {
-              try {
-                await sentMessage.crosspost();
-                console.log(
-                  `📣 Message publié dans le salon d’annonce pour ${serveur}`,
-                );
-              } catch (err) {
-                console.warn(
-                  `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
-                );
-              }
-            }
+          const emoji = await getEmojiDrapeau(
+            client,
+            serveur,
+            country.name.toLowerCase(),
+          );
+          if (emoji) {
+            result.push(`<:${emoji.name}:${emoji.id}> ${country.name}`);
           } else {
-            let disbandData;
-            try {
-              const response = await fetch(
-                `${config.glorybot_url}/api/disband?serveur=${serveur}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${config.glorybot_token}`,
-                    "Content-Type": "application/json",
-                  },
-                },
-              );
-              disbandData = await response.json();
-            } catch (err) {
-              console.error(
-                "Erreur lors de la récupération des pays disband :",
-                err,
-              );
-              return;
-            }
-
-            const uniqueCountries = new Set();
-            const memberCountries = [];
-            const inactiveCountries = [];
-            const fhomeCountries = [];
-
-            for (const country of disbandData) {
-              if (!country.name) continue;
-
-              if (
-                country.reason === "member" &&
-                !uniqueCountries.has(country.name)
-              ) {
-                memberCountries.push(country);
-                uniqueCountries.add(country.name);
-              } else if (
-                country.reason === "inactivity" &&
-                !uniqueCountries.has(country.name)
-              ) {
-                inactiveCountries.push(country);
-                uniqueCountries.add(country.name);
-              } else if (
-                country.reason === "fhome" &&
-                !uniqueCountries.has(country.name)
-              ) {
-                fhomeCountries.push(country);
-                uniqueCountries.add(country.name);
-              }
-            }
-
-            async function formatCountriesWithFlags(list) {
-              const result = [];
-              for (const country of list) {
-                try {
-                  const emoji = await getEmojiDrapeau(
-                    client,
-                    serveur,
-                    country.name.toLowerCase(),
-                  );
-                  if (emoji) {
-                    result.push(`<:${emoji.name}:${emoji.id}> ${country.name}`);
-                  } else {
-                    result.push(`${country.name}`);
-                  }
-                } catch (err) {
-                  console.error(`Erreur pour le pays ${country.name}:`, err);
-                  result.push(`${country.name}`);
-                }
-              }
-              return result.join("\n");
-            }
-
-            let description = "";
-
-            if (memberCountries.length > 0) {
-              const formatted = await formatCountriesWithFlags(memberCountries);
-              description += `**Moins de 6 membres :**\n${formatted}`;
-            }
-            if (inactiveCountries.length > 0) {
-              const formatted =
-                await formatCountriesWithFlags(inactiveCountries);
-              description += `\n\n**Inactivité :**\n${formatted}`;
-            }
-            if (fhomeCountries.length > 0) {
-              const formatted = await formatCountriesWithFlags(fhomeCountries);
-              description += `\n\n**F Home :**\n${formatted}`;
-            }
-
-            description +=
-              "\n\nCes pays sont désormais disponible au pillage. C'est-à-dire que vous pouvez vous rendre dans ces pays et récupérer l'intégralité des ressources disponibles dans les coffres et ainsi casser des blocs. Il faut savoir que les pays sont pillables à partir de 14h, ils sont régénérés et supprimés à 18h.\n\nVoici les 4 différentes raisons de disband :\n- Inactivité du chef et du/des officier(s) de plus de 14 jours\n- Pays ayant moins de 6 membres\n- Pays sans fhome durant une semaine consécutive\n- Inactivité au serveur du pays durant plus d'un mois, après la mise en garde du staff\n\nSi tu ne peux pas te connecter pendant un long moment et tu as peur de te faire disband, alors effectue la commande ```/f absence add <vacation/other> <JJ/MM/YYYY de début> <JJ/MM/YYYY de fin>```\n\n*À savoir que cette liste est une approximation, elle ne prend pas en compte les absences et peut avoir des erreurs.*";
-
-            if (
-              inactiveCountries.length === 0 &&
-              memberCountries.length === 0 &&
-              fhomeCountries.length === 0
-            ) {
-              description =
-                "L'intégralité des pays soumis aux disbands est désormais disponible au pillage. C'est-à-dire que vous pouvez vous rendre dans ces pays et récupérer l'intégralité des ressources disponibles dans les coffres et ainsi casser des blocs. Il faut savoir que les pays sont pillables à partir de 14h, ils sont régénérés et supprimés à 18h.\n\nVoici les 4 différentes raisons de disband :\n- Inactivité du chef et du/des officier(s) de plus de 14 jours\n- Pays ayant moins de 6 membres\n- Pays sans fhome durant une semaine consécutive\n- Inactivité au serveur du pays durant plus d'un mois, après la mise en garde du staff\n\nSi tu ne peux pas te connecter pendant un long moment et tu as peur de te faire disband, alors effectue la commande ```/f absence add <vacation/other> <JJ/MM/YYYY de début> <JJ/MM/YYYY de fin>```";
-            }
-
-            const embed = new EmbedBuilder()
-              .setTitle("💥 C'est l'heure des disbands !")
-              .setDescription(description)
-              .setColor(config.couleur[serveur])
-              .setFooter({ text: config.footer });
-
-            const actionRow = new ActionRowBuilder().addComponents(
-              new ButtonBuilder()
-                .setLabel("Wiki Disband")
-                .setURL(
-                  "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
-                )
-                .setStyle(ButtonStyle.Link)
-                .setEmoji("1319374787570831421"),
-              new ButtonBuilder()
-                .setLabel("Wiki Absence")
-                .setURL(
-                  "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
-                )
-                .setStyle(ButtonStyle.Link)
-                .setEmoji("1319374787570831421"),
-            );
-
-            const options = {
-              embeds: [embed],
-              components: [actionRow],
-            };
-
-            if (
-              messageConfig.Role.valeur &&
-              Array.isArray(messageConfig.Role.valeur) &&
-              messageConfig.Role.valeur.length > 0
-            ) {
-              options.content = messageConfig.Role.valeur
-                .map((roleId) => `<@&${roleId}>`)
-                .join(", ");
-            }
-            const sentMessage = await channel.send(options);
-            if (channel.type === "GUILD_NEWS") {
-              try {
-                await sentMessage.crosspost();
-                console.log(
-                  `📣 Message publié dans le salon d’annonce pour ${serveur}`,
-                );
-              } catch (err) {
-                console.warn(
-                  `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
-                );
-              }
-            }
+            result.push(`${country.name}`);
           }
         } catch (err) {
-          console.error("❌ Erreur lors de l'action des disbands :", err);
+          console.error(`Erreur pour le pays ${country.name}:`, err);
+          result.push(`${country.name}`);
         }
+      }
+      return result.join("\n");
+    }
+
+    let description = "";
+
+    if (memberCountries.length > 0) {
+      const formatted = await formatCountriesWithFlags(memberCountries);
+      description += `**Moins de 6 membres :**\n${formatted}`;
+    }
+    if (inactiveCountries.length > 0) {
+      const formatted = await formatCountriesWithFlags(inactiveCountries);
+      description += `\n\n**Inactivité :**\n${formatted}`;
+    }
+    if (fhomeCountries.length > 0) {
+      const formatted = await formatCountriesWithFlags(fhomeCountries);
+      description += `\n\n**F Home :**\n${formatted}`;
+    }
+
+    description +=
+      "\n\nCes pays sont désormais disponible au pillage. C'est-à-dire que vous pouvez vous rendre dans ces pays et récupérer l'intégralité des ressources disponibles dans les coffres et ainsi casser des blocs. Il faut savoir que les pays sont pillables à partir de 14h, ils sont régénérés et supprimés à 18h.\n\nVoici les 4 différentes raisons de disband :\n- Inactivité du chef et du/des officier(s) de plus de 14 jours\n- Pays ayant moins de 6 membres\n- Pays sans fhome durant une semaine consécutive\n- Inactivité au serveur du pays durant plus d'un mois, après la mise en garde du staff\n\nSi tu ne peux pas te connecter pendant un long moment et tu as peur de te faire disband, alors effectue la commande ```/f absence add <vacation/other> <JJ/MM/YYYY de début> <JJ/MM/YYYY de fin>```\n*À savoir que cette liste est une approximation, elle ne prend pas en compte les absences et peut avoir des erreurs.*";
+
+    if (
+      inactiveCountries.length === 0 &&
+      memberCountries.length === 0 &&
+      fhomeCountries.length === 0
+    ) {
+      description =
+        "L'intégralité des pays soumis aux disbands est désormais disponible au pillage. C'est-à-dire que vous pouvez vous rendre dans ces pays et récupérer l'intégralité des ressources disponibles dans les coffres et ainsi casser des blocs. Il faut savoir que les pays sont pillables à partir de 14h, ils sont régénérés et supprimés à 18h.\n\nVoici les 4 différentes raisons de disband :\n- Inactivité du chef et du/des officier(s) de plus de 14 jours\n- Pays ayant moins de 6 membres\n- Pays sans fhome durant une semaine consécutive\n- Inactivité au serveur du pays durant plus d'un mois, après la mise en garde du staff\n\nSi tu ne peux pas te connecter pendant un long moment et tu as peur de te faire disband, alors effectue la commande ```/f absence add <vacation/other> <JJ/MM/YYYY de début> <JJ/MM/YYYY de fin>```";
+    }
+
+    const containerPrevisualisation = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) =>
+        t.setContent("## 💥 C'est l'heure des disbands !"),
+      )
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) => t.setContent(description))
+      .addSeparatorComponents((s) => s)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("Wiki Disband")
+            .setURL(
+              "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
+            )
+            .setStyle(ButtonStyle.Link)
+            .setEmoji("1319374787570831421"),
+          new ButtonBuilder()
+            .setLabel("Wiki Absence")
+            .setURL(
+              "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
+            )
+            .setStyle(ButtonStyle.Link)
+            .setEmoji("1319374787570831421"),
+        ),
+      );
+
+    for (const [guildId, isActive] of Object.entries(configPillage.active)) {
+      if (!isActive) continue;
+
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) continue;
+
+      const previsualisation =
+        configPillage.Prévisualisation.valeur[guildId] || "Oui";
+
+      const channelId = configPillage.Salon.valeur[guildId];
+      if (!channelId) continue;
+
+      const channel = guild.channels.cache.get(channelId);
+      if (!channel) continue;
+
+      const roleIds = configPillage.Role.valeur[guildId] || [];
+      const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+      let components = [
+        previsualisation === "Oui" ? containerPrevisualisation : container,
+      ];
+      if (roleMentions.length > 0)
+        components = [
+          new TextDisplayBuilder().setContent(roleMentions),
+          previsualisation === "Oui" ? containerPrevisualisation : container,
+        ];
+
+      try {
+        const sentMessage = await channel.send({
+          components,
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+
+        console.log(
+          `✅ Message disband pillage | serveur ${serveur} | guild ${guildId}`,
+        );
+      } catch (err) {
+        console.error(
+          `❌ Erreur envoi disband pillage | serveur ${serveur} | guild ${guildId}`,
+          err,
+        );
       }
     }
   }
 }
 
-async function disband_17h59(client) {
+async function disband_17h59() {
   const countrySnapshot = {};
   for (const serveur of config.liste_serveur) {
     try {
@@ -291,175 +275,177 @@ async function disband_18h15(client) {
   if (!savedCountries) savedCountries = {};
 
   for (const serveur of config.liste_serveur) {
-    const configuration = getData(`data/${serveur}/config-disband.json`);
-    const messageConfig = configuration["Pays Disband ( 18h15 )"];
+    const configGlobale = getData(`data/${serveur}/config.json`);
+    const configDisband = configGlobale.find((c) => c.nom === "Disband");
+    const config18h = configDisband.systeme["Pays Disband ( 18h15 )"];
 
-    if (messageConfig?.active && messageConfig?.Salon.valeur) {
-      const channelId = messageConfig.Salon.valeur;
-      const channel = await client.channels.fetch(channelId);
+    const responseJson = await fetch(
+      `https://apiv2.nationsglory.fr/mods/country_list/${serveur}`,
+    );
+    const newJsonCountries = await responseJson.json();
 
-      if (channel) {
-        try {
-          const responseJson = await fetch(
-            `https://apiv2.nationsglory.fr/mods/country_list/${serveur}`,
-          );
-          const newJsonCountries = await responseJson.json();
+    const newHtmlCountries = await fetchAndParseCountriesHTML(serveur);
+    saveData(`data/new_country_list_${serveur}.json`, newHtmlCountries);
 
-          const newHtmlCountries = await fetchAndParseCountriesHTML(serveur);
-          saveData(`data/new_country_list_${serveur}.json`, newHtmlCountries);
+    const oldJsonCountries = savedCountries[serveur]?.jsonCountries || [];
+    const oldJsonNames = new Set(oldJsonCountries.map((c) => c.name));
 
-          const oldJsonCountries = savedCountries[serveur]?.jsonCountries || [];
-          const oldJsonNames = new Set(oldJsonCountries.map((c) => c.name));
+    const addedJsonCountries = newJsonCountries.filter(
+      (c) => !oldJsonNames.has(c.name),
+    );
 
-          const addedJsonCountries = newJsonCountries.filter(
-            (c) => !oldJsonNames.has(c.name),
-          );
+    const oldHtmlCountries = savedCountries[serveur]?.htmlCountries || [];
 
-          const oldHtmlCountries = savedCountries[serveur]?.htmlCountries || [];
+    const oldNameDatePairs = new Set(
+      oldHtmlCountries.map((c) => `${c.nom}|${c.date}`),
+    );
 
-          const oldNameDatePairs = new Set(
-            oldHtmlCountries.map((c) => `${c.nom}|${c.date}`),
-          );
+    const addedHtmlCountries = newHtmlCountries.filter(
+      (c) => !oldNameDatePairs.has(`${c.nom}|${c.date}`),
+    );
 
-          const addedHtmlCountries = newHtmlCountries.filter(
-            (c) => !oldNameDatePairs.has(`${c.nom}|${c.date}`),
-          );
+    const today = DateTime.local().setLocale("fr").startOf("day");
+    const todayHtmlCountries = addedHtmlCountries.filter((c) => {
+      const parsedDate = DateTime.fromFormat(c.date, "dd LLLL yyyy", {
+        locale: "fr",
+      }).startOf("day");
+      return parsedDate.equals(today);
+    });
 
-          const today = DateTime.local().setLocale("fr").startOf("day");
-          const todayHtmlCountries = addedHtmlCountries.filter((c) => {
-            const parsedDate = DateTime.fromFormat(c.date, "dd LLLL yyyy", {
-              locale: "fr",
-            }).startOf("day");
-            return parsedDate.equals(today);
-          });
+    let description =
+      "L'intégralité des pays qui étaient disponibles au pillage à 14h ont été supprimés.";
 
-          let description =
-            "L'intégralité des pays qui étaient disponibles au pillage à 14h ont été supprimés.";
+    const formattedJsonCountries = [];
 
-          const formattedJsonCountries = [];
+    for (const c of addedJsonCountries.sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )) {
+      try {
+        const flagEmoji = await getEmojiDrapeau(
+          client,
+          serveur,
+          c.name.toLowerCase(),
+        );
 
-          for (const c of addedJsonCountries.sort((a, b) =>
-            a.name.localeCompare(b.name),
-          )) {
-            try {
-              const flagEmoji = await getEmojiDrapeau(
-                client,
-                serveur,
-                c.name.toLowerCase(),
-              );
+        const flag = flagEmoji ? `<:${flagEmoji.name}:${flagEmoji.id}> ` : "";
+        formattedJsonCountries.push(`${flag}${c.name}`);
+      } catch (err) {
+        console.error(
+          `Erreur lors de la récupération de l'emoji pour ${c.name}:`,
+          err,
+        );
+        formattedJsonCountries.push(`${c.name}`);
+      }
+    }
 
-              const flag = flagEmoji
-                ? `<:${flagEmoji.name}:${flagEmoji.id}> `
-                : "";
-              formattedJsonCountries.push(`${flag}${c.name}`);
-            } catch (err) {
-              console.error(
-                `Erreur lors de la récupération de l'emoji pour ${c.name}:`,
-                err,
-              );
-              formattedJsonCountries.push(`${c.name}`);
-            }
+    if (formattedJsonCountries.length > 0) {
+      description += `\n\n${formattedJsonCountries.join("\n")}`;
+    }
+
+    const formattedHtmlCountries = [];
+
+    for (const c of todayHtmlCountries.sort((a, b) =>
+      a.nom.localeCompare(b.nom),
+    )) {
+      try {
+        const flagEmoji = await getEmojiDrapeau(
+          client,
+          serveur,
+          c.nom.toLowerCase(),
+        );
+
+        let headEmoji = null;
+        if (c.chef) {
+          try {
+            headEmoji = await getEmojiTete(client, c.chef);
+          } catch (err) {
+            console.error(
+              `Erreur lors de la récupération de l'emoji tête pour ${c.chef}:`,
+              err,
+            );
           }
-
-          if (formattedJsonCountries.length > 0) {
-            description += `\n\n${formattedJsonCountries.join("\n")}`;
-          }
-
-          const formattedHtmlCountries = [];
-
-          for (const c of todayHtmlCountries.sort((a, b) =>
-            a.nom.localeCompare(b.nom),
-          )) {
-            try {
-              const flagEmoji = await getEmojiDrapeau(
-                client,
-                serveur,
-                c.nom.toLowerCase(),
-              );
-
-              let headEmoji = null;
-              if (c.chef) {
-                try {
-                  headEmoji = await getEmojiTete(client, c.chef);
-                } catch (err) {
-                  console.error(
-                    `Erreur lors de la récupération de l'emoji tête pour ${c.chef}:`,
-                    err,
-                  );
-                }
-              }
-
-              const flag = flagEmoji
-                ? `<:${flagEmoji.name}:${flagEmoji.id}> `
-                : "";
-              const head = headEmoji
-                ? `<:${headEmoji.name}:${headEmoji.id}> `
-                : "";
-              const leaderInfo = c.chef ? `\n↪ Créé par ${head}${c.chef}` : "";
-
-              formattedHtmlCountries.push(`${flag}${c.nom}${leaderInfo}`);
-            } catch (err) {
-              console.error(`Erreur pour le pays ${c.nom}:`, err);
-              formattedHtmlCountries.push(c.nom);
-            }
-          }
-
-          if (formattedHtmlCountries.length > 0) {
-            description += `\n${formattedHtmlCountries.join("\n")}`;
-          }
-
-          const embed = new EmbedBuilder()
-            .setTitle("💥 Les pays sont supprimés !")
-            .setDescription(description)
-            .setColor(config.couleur[serveur])
-            .setFooter({ text: config.footer });
-
-          const actionRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setLabel("Wiki Disband")
-              .setURL(
-                "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
-              )
-              .setStyle(ButtonStyle.Link)
-              .setEmoji("1319374787570831421"),
-            new ButtonBuilder()
-              .setLabel("Wiki Absence")
-              .setURL(
-                "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
-              )
-              .setStyle(ButtonStyle.Link)
-              .setEmoji("1319374787570831421"),
-          );
-
-          const options = {
-            embeds: [embed],
-            components: [actionRow],
-          };
-          if (
-            messageConfig.Role.valeur &&
-            Array.isArray(messageConfig.Role.valeur) &&
-            messageConfig.Role.valeur.length > 0
-          ) {
-            options.content = messageConfig.Role.valeur
-              .map((roleId) => `<@&${roleId}>`)
-              .join(", ");
-          }
-          const sentMessage = await channel.send(options);
-          if (channel.type === "GUILD_NEWS") {
-            try {
-              await sentMessage.crosspost();
-              console.log(
-                `📣 Message publié dans le salon d’annonce pour ${serveur}`,
-              );
-            } catch (err) {
-              console.warn(
-                `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
-              );
-            }
-          }
-        } catch (err) {
-          console.error("❌ Erreur lors de l'action des disbands :", err);
         }
+
+        const flag = flagEmoji ? `<:${flagEmoji.name}:${flagEmoji.id}> ` : "";
+        const head = headEmoji ? `<:${headEmoji.name}:${headEmoji.id}> ` : "";
+        const leaderInfo = c.chef ? `\n↪ Créé par ${head}${c.chef}` : "";
+
+        formattedHtmlCountries.push(`${flag}${c.nom}${leaderInfo}`);
+      } catch (err) {
+        console.error(`Erreur pour le pays ${c.nom}:`, err);
+        formattedHtmlCountries.push(c.nom);
+      }
+    }
+
+    if (formattedHtmlCountries.length > 0) {
+      description += `\n${formattedHtmlCountries.join("\n")}`;
+    }
+
+    const container = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) =>
+        t.setContent("## 💥 Les pays sont supprimés !"),
+      )
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) => t.setContent(description))
+      .addSeparatorComponents((s) => s)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("Wiki Disband")
+            .setURL(
+              "https://wiki.nationsglory.fr/fr/article/les-disbands-java-fqxmmr/",
+            )
+            .setStyle(ButtonStyle.Link)
+            .setEmoji("1319374787570831421"),
+          new ButtonBuilder()
+            .setLabel("Wiki Absence")
+            .setURL(
+              "https://wiki.nationsglory.fr/fr/article/gerer-son-pays-java-1lm9j56/#1-les-absences",
+            )
+            .setStyle(ButtonStyle.Link)
+            .setEmoji("1319374787570831421"),
+        ),
+      );
+
+    for (const [guildId, isActive] of Object.entries(config18h.active)) {
+      if (!isActive) continue;
+
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) continue;
+
+      const channelId = config18h.Salon.valeur[guildId];
+      if (!channelId) continue;
+
+      const channel = guild.channels.cache.get(channelId);
+      if (!channel) continue;
+
+      const roleIds = config18h.Role.valeur[guildId] || [];
+      const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+      let components = [container];
+      if (roleMentions.length > 0)
+        components = [
+          new TextDisplayBuilder().setContent(roleMentions),
+          container,
+        ];
+
+      try {
+        const sentMessage = await channel.send({
+          components,
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+
+        console.log(
+          `✅ Message disband 18h15 | serveur ${serveur} | guild ${guildId}`,
+        );
+      } catch (err) {
+        console.error(
+          `❌ Erreur envoi disband 18h15 | serveur ${serveur} | guild ${guildId}`,
+          err,
+        );
       }
     }
   }

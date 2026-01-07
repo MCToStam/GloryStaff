@@ -20,9 +20,9 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
       t.setContent(
-        `## ${settings.emoji ? `${settings.emoji} ` : ""}Configuration - ${
-          systemName
-        }`,
+        `## ${
+          settings.emoji ? `${settings.emoji} ` : ""
+        }Configuration - ${systemName}`,
       ),
     )
     .addSeparatorComponents((s) => s)
@@ -134,7 +134,9 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
 
         if (item.questions && Array.isArray(item.questions)) {
           item.questions.forEach((q) => {
-            textContent += `\n- ${q.texte}\n*${q.valeur[guildId] || "Aucune valeur donnée"}*`;
+            textContent += `\n- ${q.texte}\n*${
+              q.valeur[guildId] || "Aucune valeur donnée"
+            }*`;
           });
         }
 
@@ -169,14 +171,14 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
     .addSeparatorComponents((s) => s)
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
-        ...(Object.keys(configData.systeme).length > 1
-          ? [
-              new ButtonBuilder()
-                .setCustomId(`config_retour-${type}`)
-                .setLabel("🚪 Retour")
-                .setStyle(ButtonStyle.Secondary),
-            ]
-          : []),
+        new ButtonBuilder()
+          .setCustomId(
+            `config_retour-${
+              Object.keys(configData.systeme).length > 1 ? "back" : "home"
+            }-${type}`,
+          )
+          .setLabel("🚪 Retour")
+          .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId(`config_toggle-${systemName}-${type}`)
           .setLabel(

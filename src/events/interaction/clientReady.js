@@ -98,7 +98,7 @@ module.exports = async (client, interaction) => {
   cron.schedule(
     "59 17 * * 3,6",
     async () => {
-      await disband_17h59(client);
+      await disband_17h59();
     },
     {
       timezone: "Europe/Paris",

@@ -33,7 +33,7 @@ async function classement_notation(client) {
 
     const dataConfig = getData(`data/${serveur}/config.json`);
     const configData = dataConfig.find((c) => c.nom === "Notations");
-    const classementConfig = configData.systeme.classement;
+    const classementConfig = configData.systeme.Classement;
 
     try {
       const topCountries = data

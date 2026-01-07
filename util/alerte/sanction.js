@@ -150,11 +150,12 @@ async function sendSanctionMessage(
     const roleIds = role[guildId] || [];
     const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
-    const components = [container];
-
-    if (roleMentions.length > 0) {
-      components.push(new TextDisplayBuilder().setContent(roleMentions));
-    }
+    let components = [container];
+    if (roleMentions.length > 0)
+      components = [
+        new TextDisplayBuilder().setContent(roleMentions),
+        container,
+      ];
 
     try {
       const sentMessage = await channel.send({

@@ -13,9 +13,39 @@ async function containerMultiple(guildId, serveur, type, configData) {
     const status = settings.active[guildId]
       ? "<:actif:1318501209803325491>"
       : "<:inactif:1318501225141895188>";
-    description += `${first ? "" : "\n"}**- ${system} : ${status}**`;
+    description += `${first ? "" : "\n"}**${settings.emoji || "-"} ${system} : ${status}**`;
     first = false;
   }
+
+  const options = Object.keys(configData.systeme).map((system) => {
+    const emojiRaw = configData.systeme[system].emoji;
+    let emoji;
+
+    if (emojiRaw) {
+      const match = emojiRaw.match(/^<(a?):(\w+):(\d+)>$/);
+      if (match) {
+        emoji = {
+          animated: Boolean(match[1]),
+          name: match[2],
+          id: match[3],
+        };
+      }
+    }
+
+    return {
+      label: system,
+      description: `Configurer ${system}`,
+      value: `config_subconfig-second-${type}-${system}`,
+      ...(emoji && { emoji }),
+    };
+  });
+
+  options.push({
+    label: "Accueil",
+    description: "Revenir au menu de configuration",
+    value: "config_subconfig-home",
+    emoji: "🚪",
+  });
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -34,31 +64,7 @@ async function containerMultiple(guildId, serveur, type, configData) {
         new StringSelectMenuBuilder()
           .setCustomId(`config_subconfig-${type}`)
           .setPlaceholder("Choisissez un module")
-          .addOptions(
-            Object.keys(configData.systeme).map((system) => {
-              const emojiRaw = configData.systeme[system].emoji;
-
-              let emoji;
-              if (emojiRaw) {
-                const match = emojiRaw.match(/^<(a?):(\w+):(\d+)>$/);
-
-                if (match) {
-                  emoji = {
-                    animated: Boolean(match[1]),
-                    name: match[2],
-                    id: match[3],
-                  };
-                }
-              }
-
-              return {
-                label: system,
-                description: `Configurer ${system}`,
-                value: `config_subconfig-${type}-${system}`,
-                ...(emoji && { emoji }),
-              };
-            }),
-          ),
+          .addOptions(options),
       ),
     );
 

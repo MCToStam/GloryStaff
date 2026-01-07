@@ -37,7 +37,7 @@ async function repartition_notation(client) {
     try {
       const configGlobale = getData(`data/${server}/config.json`);
       const configNotation = configGlobale.find((c) => c.nom === "Notations");
-      const configRepartition = configNotation.systeme.répartition;
+      const configRepartition = configNotation.systeme.Répartition;
 
       for (const [guildId, isActive] of Object.entries(
         configRepartition.active || {},
