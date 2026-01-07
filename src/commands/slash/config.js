@@ -35,54 +35,50 @@ module.exports = {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    try {
-      const { serveur, type } = interaction.parametre;
+    const { serveur, type } = interaction.parametre;
 
-      const configData = getData(`data/${serveur}/config.json`);
-      const typeData = configData.find((c) => c.nom === type);
-      const keys = Object.keys(typeData.systeme);
+    const configData = getData(`data/${serveur}/config.json`);
+    const typeData = configData.find((c) => c.nom === type);
+    const keys = Object.keys(typeData.systeme);
 
-      if (keys.length === 1) {
-        const systemName = keys[0];
-        const container = await containerSingle(
-          interaction.guild.id,
-          serveur,
-          systemName,
-          typeData,
-          type,
-        );
-        if (interaction.isMessageComponent()) {
-          return interaction.update({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        } else {
-          return interaction.reply({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        }
+    if (keys.length === 1) {
+      const systemName = keys[0];
+      const container = await containerSingle(
+        interaction.guild.id,
+        serveur,
+        systemName,
+        typeData,
+        type,
+      );
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
       } else {
-        const container = await containerMultiple(
-          interaction.guild.id,
-          serveur,
-          type,
-          typeData,
-        );
-        if (interaction.isMessageComponent()) {
-          return interaction.update({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        } else {
-          return interaction.reply({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        }
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
       }
-    } catch (e) {
-      console.log(e);
+    } else {
+      const container = await containerMultiple(
+        interaction.guild.id,
+        serveur,
+        type,
+        typeData,
+      );
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
     }
   },
 };

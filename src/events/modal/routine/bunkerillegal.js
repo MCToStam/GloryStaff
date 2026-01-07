@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require("discord.js");
+const { MessageFlags } = require("discord.js");
 
 module.exports = {
   data: {
@@ -10,9 +10,8 @@ module.exports = {
       interaction.fields.getTextInputValue("routine_coordonne");
     const pseudo = interaction.fields.getTextInputValue("routine_pseudo");
 
-    const oldEmbed = interaction.message.embeds[0];
-
-    let description = oldEmbed.description || "";
+    const container = interaction.message.components[0];
+    let description = container.components[2].data.content || "";
 
     const infractionMarker = "**Infractions :**";
     const infractionIndex = description.indexOf(infractionMarker);
@@ -27,15 +26,11 @@ module.exports = {
     const newInfraction = `\n> Bunker Illégal de ${pseudo} : ${coordonnees}`;
 
     const newDescription = `${beforeInfractions}${newInfraction}${afterInfractions}`;
-
-    const updatedEmbed = new EmbedBuilder(oldEmbed).setDescription(
-      newDescription,
-    );
+    container.components[2].data.content = newDescription;
 
     await interaction.update({
-      embeds: [updatedEmbed],
-      files: [],
-      ephemeral: true,
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
     });
   },
 };

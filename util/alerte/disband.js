@@ -27,10 +27,7 @@ async function fetchAndParseCountriesHTML(serveur) {
     $("#tablepays tbody tr").each((i, row) => {
       const $row = $(row);
       const name = $row.find("td a span").text().trim();
-      const url = $row.find("td a").attr("href");
       const leader = $row.find("td").eq(1).text().trim();
-      const leader_url = $row.find("td").eq(1).find("a").attr("href");
-      const membres = parseInt($row.find("td").eq(2).text().trim(), 10);
       const date_fondation = $row.find("td").eq(3).text().trim();
 
       countries.push({ nom: name, chef: leader, date: date_fondation });

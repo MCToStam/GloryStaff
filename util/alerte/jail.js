@@ -70,7 +70,7 @@ async function jail(client) {
                     if (channel.isThread()) {
                       const jailRoles = jailConfigData.jail?.Role.valeur;
 
-                      if (jailRoles) {
+                      if (jailRoles.length) {
                         const roleMentions = jailRoles
                           .map((roleId) => `<@&${roleId}>`)
                           .join(", ");

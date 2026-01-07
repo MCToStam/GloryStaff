@@ -1,79 +1,89 @@
 const {
   SlashCommandBuilder,
-  EmbedBuilder,
   StringSelectMenuBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
-const { createCanvas, loadImage } = require("canvas");
 const { getData } = require("../../../util/module/getAndSaveData");
-const {
-  errorStaffContainer,
-  discordStaff,
-} = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const { discordStaff } = require("../../../util/module/discordLink");
+const { getEmojiTete } = require("../../../util/module/emoji");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("routine")
-    .setDescription("Effectue une routine")
-    .addStringOption((option) =>
-      option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel faire une routine")
-        .setRequired(false)
-        .setAutocomplete(true),
-    ),
+    .setDescription("Effectue une routine"),
 
   async execute(client, interaction, config) {
-    const serveur =
-      interaction.options.getString("serveur")?.toLowerCase() ||
-      (await getServerCommand(interaction.guild.id, interaction.user.id));
-
-    const errorContainer = await errorStaffContainer(serveur);
-
-    if (errorContainer) {
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur } = interaction.parametre;
 
     const configRoutine = getData(`data/${serveur}/config-routine.json`);
 
     if (!configRoutine.routine?.active) {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          `Le système de routine n'est pas configuré sur le serveur <:NG${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }:${config.emoji[serveur.toLowerCase()]}> **${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`,
+      const errorContainer = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ❌ Système Désactivé"),
         )
-        .setFooter({ text: config.footer });
-      return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `Le système de Routine est désactivé sur le serveur ${
+              config.emoji_formate[serveur]
+            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}.`,
+          ),
+        );
+
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
     }
 
     if (
       !configRoutine.routine?.Salon.valeur ||
       !configRoutine.routine?.Grade.valeur
     ) {
-      const erreurEmbed = new EmbedBuilder()
-        .setTitle("Erreur")
-        .setColor(config.errorcolor)
-        .setDescription(
-          `Le système de routine n'est pas complètement configuré sur le serveur <:NG${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }:${config.emoji[serveur.toLowerCase()]}> **${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }** !`,
+      const errorContainer = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ❌ Configuration Invalide"),
         )
-        .setFooter({ text: config.footer });
-      return interaction.reply({ embeds: [erreurEmbed], ephemeral: true });
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `Le système de Routine n'est pas correctement configuré sur le serveur ${
+              config.emoji_formate[serveur]
+            } ${
+              serveur.charAt(0).toUpperCase() + serveur.slice(1)
+            }, le choix du salon et/ou du grade autorisé est manquant.`,
+          ),
+        );
+
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
     }
 
     const roleAutorise = configRoutine.routine.Grade.valeur;
@@ -87,7 +97,7 @@ module.exports = {
       Guide: "guide",
     };
 
-    const { pseudonym, servers, container } = await discordStaff(
+    const { pseudonym, container } = await discordStaff(
       interaction.user.id,
       serveur,
       gradeAutorise[roleAutorise],
@@ -100,88 +110,88 @@ module.exports = {
       });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    const teteEmoji = await getEmojiTete(client, pseudonym);
 
-    const imageUrl = `https://skins.nationsglory.fr/body/${pseudonym}/3d/4?vr=-20&hr=10&hrh=20&vrla=50&vrra=-10&vrll=-10&vrrl=20&ratio=12&format=png&displayHair=true&headOnly=false&layers=false`;
-    const response = await fetch(imageUrl);
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    const image = await loadImage(buffer);
-
-    const canvas = createCanvas(image.width, image.height);
-    const ctx = canvas.getContext("2d");
-
-    ctx.scale(-1, 1);
-    ctx.drawImage(image, -image.width, 0);
-
-    const flippedImageBuffer = canvas.toBuffer();
-
-    const embed = new EmbedBuilder()
-      .setTitle(`⏱️ Routine - ${pseudonym.replace(/_/g, "\\_")}`)
-      .setColor(config.couleur[serveur])
-      .setDescription(
-        `**Début de la routine :** <t:${Math.floor(
-          Date.now() / 1000,
-        )}:R>\n**Infractions :**\n**Fin de la routine :**`,
+    const routineContainer = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `## ${teteEmoji || "⏱️"} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
+        ),
       )
-      .setFooter({ text: config.footer })
-      .setThumbnail("attachment://modele.png");
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `**Début de la routine :** <t:${Math.floor(
+            Date.now() / 1000,
+          )}:R>\n**Infractions :**\n**Fin de la routine :**`,
+        ),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId("routine")
+            .setPlaceholder("Sélectionnez une infraction")
+            .addOptions([
+              {
+                label: "Bunker Illégal",
+                value: "routine_bunkerillegal",
+                emoji: "1333876277651705878",
+              },
+              {
+                label: "Anti-AFK",
+                value: "routine_antiafk",
+                emoji: "1333876277651705878",
+              },
+              {
+                label: "Auto-Clic",
+                value: "routine_autoclic",
+                emoji: "1333876277651705878",
+              },
+              {
+                label: "Stack Item",
+                value: "routine_stackitem",
+                emoji: "1333876277651705878",
+              },
+              {
+                label: "AutoNuke Illégal",
+                value: "routine_autonukeillegal",
+                emoji: "1333876277651705878",
+              },
+              {
+                label: "XRay",
+                value: "routine_xray",
+                emoji: "1333876277651705878",
+              },
+              {
+                label: "Autre",
+                value: "routine_autre",
+                emoji: "1333876277651705878",
+              },
+            ]),
+        ),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`routine_finish-${pseudonym}`)
+            .setLabel("✅ Terminer la Routine")
+            .setStyle(ButtonStyle.Success),
+        ),
+      );
 
-    const selectMenu = new StringSelectMenuBuilder()
-      .setCustomId("routine")
-      .setPlaceholder("Sélectionnez une infraction")
-      .addOptions([
-        {
-          label: "Bunker Illégal",
-          value: "routine_bunkerillegal",
-          emoji: "1333876277651705878",
-        },
-        {
-          label: "Anti-AFK",
-          value: "routine_antiafk",
-          emoji: "1333876277651705878",
-        },
-        {
-          label: "Auto-Clic",
-          value: "routine_autoclic",
-          emoji: "1333876277651705878",
-        },
-        {
-          label: "Stack Item",
-          value: "routine_stackitem",
-          emoji: "1333876277651705878",
-        },
-        {
-          label: "AutoNuke Illégal",
-          value: "routine_autonukeillegal",
-          emoji: "1333876277651705878",
-        },
-        {
-          label: "XRay",
-          value: "routine_xray",
-          emoji: "1333876277651705878",
-        },
-        {
-          label: "Autre",
-          value: "routine_autre",
-          emoji: "1333876277651705878",
-        },
-      ]);
-
-    const buttonFinish = new ButtonBuilder()
-      .setCustomId(`routine_finish-${pseudonym}`)
-      .setLabel("Terminer la Routine")
-      .setStyle(ButtonStyle.Success);
-
-    const actionRow1 = new ActionRowBuilder().addComponents(selectMenu);
-    const actionRow2 = new ActionRowBuilder().addComponents(buttonFinish);
-
-    interaction.editReply({
-      embeds: [embed],
-      files: [{ attachment: flippedImageBuffer, name: "modele.png" }],
-      components: [actionRow1, actionRow2],
-      ephemeral: true,
-    });
+    if (interaction.isMessageComponent()) {
+      return interaction.update({
+        components: [routineContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    } else {
+      return interaction.reply({
+        components: [routineContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
   },
 };

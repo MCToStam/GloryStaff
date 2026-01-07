@@ -1,6 +1,8 @@
-const { EmbedBuilder, MessageFlags } = require("discord.js");
+const { ContainerBuilder, MessageFlags } = require("discord.js");
+const { getEmojiTete } = require("../../../util/module/emoji");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
+const { getServeur } = require("../../../util/module/getServeur");
 
 module.exports = {
   data: {
@@ -8,13 +10,12 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const embedColor = interaction.message.embeds[0]?.color;
+    const embedColor = interaction.message?.embeds[0]?.color;
 
-    const serveur = Object.keys(config.couleur).find(
-      (key) => config.couleur[key] === embedColor,
-    );
-
-    await interaction.deferReply({ ephemeral: true });
+    const serveur =
+      Object.keys(config.couleur).find(
+        (key) => config.couleur[key] === embedColor,
+      ) || (await getServeur(interaction));
 
     const configJail = getData(`data/${serveur}/config-jail.json`);
     const roleAutorise = configJail.jail.Grade.valeur;
@@ -77,40 +78,40 @@ module.exports = {
     }
 
     if (serveur === "cyan" && jailInfo && jailedUser) {
-      try {
-        const thread = await client.channels.fetch("1377730953153220770");
-        if (thread?.isThread()) {
-          const message = `<@${interaction.user.id}> a effectué le jail de **${jailedUser}** durant **${jailInfo.duree}** pour la raison :\n> ${jailInfo.lien}`;
-          await thread.send({ content: message });
-        }
-      } catch (err) {
-        console.error("Erreur lors de l'envoi dans le thread cyan :", err);
+      const thread = await client.channels.fetch("1377730953153220770");
+      if (thread?.isThread()) {
+        const message = `<@${interaction.user.id}> a effectué le jail de **${jailedUser}** durant **${jailInfo.duree}** pour la raison :\n> ${jailInfo.lien}`;
+        await thread.send({ content: message });
       }
     }
 
-    try {
-      await interaction.message.delete();
-    } catch (err) {
-      console.error("Erreur lors de la suppression du message :", err);
-    }
+    await interaction.message.delete();
 
     if (threadIdToDelete) {
-      try {
-        const thread = await client.channels.fetch(threadIdToDelete);
-        if (thread?.isThread()) {
-          await thread.delete("Suppression du thread après la fin du jail");
-        }
-      } catch (err) {
-        console.error("Erreur lors de la suppression du thread :", err);
+      const thread = await client.channels.fetch(threadIdToDelete);
+      if (thread?.isThread()) {
+        await thread.delete("Suppression du thread après la fin du jail");
       }
     }
 
-    const userEmbed = new EmbedBuilder()
-      .setTitle("🚧 Jail")
-      .setColor(config.couleur[serveur])
-      .setDescription("Ce jail a correctement été supprimé !")
-      .setFooter({ text: config.footer });
+    const emojiTete = await getEmojiTete(client, jailedUser);
+    const userContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.success)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ✅ Jail Effectué"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `Le jail de ${emojiTete ? `${emojiTete} ` : ""}**${jailedUser}** durant **${
+            jailInfo.duree
+          }** a correctement été supprimé.`,
+        ),
+      );
 
-    return interaction.editReply({ embeds: [userEmbed], ephemeral: true });
+    return interaction.reply({
+      components: [userContainer],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
   },
 };

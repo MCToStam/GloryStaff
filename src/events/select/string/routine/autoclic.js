@@ -13,7 +13,7 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const modal = new ModalBuilder()
-      .setCustomId("routine_antoclic")
+      .setCustomId("routine_autoclic")
       .setTitle("Ajouter une infraction à la routine");
 
     const pseudoInput = new TextInputBuilder()
