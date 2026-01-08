@@ -1,150 +1,110 @@
 const {
-  getFiles,
   getData,
   getImage,
   saveData,
 } = require("../util/module/getAndSaveData");
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
+const config = require("../config");
 
-async function updateLogo(client, config) {
+async function updateLogo(client) {
   const token = process.env.DISCORD_TOKEN;
-  const cache = getData("data/logo/serveur.json");
-  const guildsToKeep = new Set();
+  const cache = getData("data/logo/serveur.json") || {};
+
+  const guildServers = new Map();
 
   for (const serveur of config.liste_serveur) {
     try {
-      const files = getFiles(`data/${serveur}`);
+      const configData = getData(`data/${serveur}/config.json`);
+      if (!Array.isArray(configData)) continue;
 
-      const channelIds = [];
+      for (const module of configData) {
+        if (!module.systeme) continue;
 
-      for (const file of files) {
-        if (!file.startsWith("config-") || !file.endsWith(".json")) continue;
+        for (const systemeKey in module.systeme) {
+          const active = module.systeme[systemeKey]?.active;
+          if (!active || typeof active !== "object") continue;
 
-        const data = getData(`data/${serveur}/${file}`);
+          for (const guildId of Object.keys(active)) {
+            if (!guildId) continue;
 
-        for (const key in data) {
-          const entry = data[key];
-          for (const param in entry) {
-            const paramValue = entry[param];
-            if (
-              paramValue &&
-              typeof paramValue === "object" &&
-              paramValue.type === "channel"
-            ) {
-              const valeur = paramValue.valeur;
-              if (Array.isArray(valeur)) {
-                for (const salon of valeur) {
-                  channelIds.push(salon);
-                }
-              } else if (typeof valeur === "string") {
-                channelIds.push(valeur);
-              }
+            if (!guildServers.has(guildId)) {
+              guildServers.set(guildId, new Set());
             }
+
+            guildServers.get(guildId).add(serveur);
           }
         }
       }
+    } catch (err) {
+      console.error(`Erreur lecture config ${serveur}:`, err);
+    }
+  }
 
+  for (const [guildId, serveurs] of guildServers) {
+    if (guildId === config.support_serveur_id) continue;
+
+    if (serveurs.size !== 1) continue;
+
+    const [serveur] = [...serveurs];
+
+    if (cache[guildId] === serveur) continue;
+
+    try {
       const imageBase64 =
         "data:image/png;base64," +
         getImage(`data/logo/${serveur}.png`).toString("base64");
 
-      const guildIds = new Set();
-      for (const channelId of channelIds) {
-        if (!channelId) continue;
-        const channel = await client.channels
-          .fetch(channelId)
-          .catch(() => null);
-        if (channel?.guild) guildIds.add(channel.guild.id);
-      }
-
-      for (const guildId of guildIds) {
-        guildsToKeep.add(guildId);
-
-        if (cache[guildId] === serveur) continue;
-
-        const res = await fetch(
-          `https://discord.com/api/v10/guilds/${guildId}/members/@me`,
-          {
-            method: "PATCH",
-            headers: {
-              Authorization: `Bot ${token}`,
-              "Content-Type": "application/json",
-              "X-Audit-Log-Reason": `Mise à jour automatique du logo ${serveur}`,
-            },
-            body: JSON.stringify({ avatar: imageBase64 }),
+      const res = await fetch(
+        `https://discord.com/api/v10/guilds/${guildId}/members/@me`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bot ${token}`,
+            "Content-Type": "application/json",
+            "X-Audit-Log-Reason": `Logo automatique ${serveur}`,
           },
+          body: JSON.stringify({ avatar: imageBase64 }),
+        },
+      );
+
+      if (!res.ok) {
+        console.error(
+          `Erreur update logo ${serveur} → ${guildId}:`,
+          await res.text(),
         );
-
-        if (!res.ok) {
-          const err = await res.text();
-          console.error(`Erreur update logo ${serveur} → ${guildId}:`, err);
-          continue;
-        }
-
-        cache[guildId] = serveur;
-        saveData("data/logo/serveur.json", cache);
+        continue;
       }
+
+      cache[guildId] = serveur;
+      saveData("data/logo/serveur.json", cache);
+      await new Promise((r) => setTimeout(r, 1500));
     } catch (err) {
-      console.error(`Erreur traitement du serveur ${serveur}:`, err);
+      console.error(`Erreur update logo → ${guildId}:`, err);
     }
   }
 
   const allGuilds = await client.guilds.fetch();
 
   for (const [guildId] of allGuilds) {
-    if (guildId === config.support_serveur_id) {
-      if (cache[guildId]) {
-        try {
-          const res = await fetch(
-            `https://discord.com/api/v10/guilds/${guildId}/members/@me`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bot ${token}`,
-                "Content-Type": "application/json",
-                "X-Audit-Log-Reason":
-                  "Suppression de l'avatar pour le serveur de support",
-              },
-              body: JSON.stringify({ avatar: null }),
-            },
-          );
+    const serveurs = guildServers.get(guildId);
 
-          if (!res.ok) {
-            const err = await res.text();
-            console.error(`Erreur suppression logo support → ${guildId}:`, err);
-            continue;
-          }
+    const mustRemove =
+      guildId === config.support_serveur_id || !serveurs || serveurs.size !== 1;
 
-          delete cache[guildId];
-          saveData("data/logo/serveur.json", cache);
-          await new Promise((r) => setTimeout(r, 1500));
-        } catch (err) {
-          console.error(`Erreur suppression logo support → ${guildId}:`, err);
-        }
-      }
-      continue;
-    }
-
-    if (!guildsToKeep.has(guildId) && cache[guildId]) {
+    if (mustRemove && cache[guildId]) {
       try {
-        const res = await fetch(
+        await fetch(
           `https://discord.com/api/v10/guilds/${guildId}/members/@me`,
           {
             method: "PATCH",
             headers: {
               Authorization: `Bot ${token}`,
               "Content-Type": "application/json",
-              "X-Audit-Log-Reason": "Suppression de l'avatar",
+              "X-Audit-Log-Reason": "Suppression automatique du logo",
             },
             body: JSON.stringify({ avatar: null }),
           },
         );
-
-        if (!res.ok) {
-          const err = await res.text();
-          console.error(`Erreur suppression logo → ${guildId}:`, err);
-          continue;
-        }
 
         delete cache[guildId];
         saveData("data/logo/serveur.json", cache);

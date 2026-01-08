@@ -192,7 +192,7 @@ module.exports = async (client, interaction) => {
   );
 
   cron.schedule("0 0 * * *", async () => {
-    await updateLogo(client, config);
+    await updateLogo(client);
   });
 
   cron.schedule("* * * * 0,6", async () => {

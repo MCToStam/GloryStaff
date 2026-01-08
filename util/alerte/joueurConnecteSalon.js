@@ -10,7 +10,7 @@ async function joueurConnecteSalon(client) {
         (c) => c.nom === "Joueur(s) Connecté(s)",
       );
 
-      const jcConfig = configData.systeme.joueurconnecte;
+      const jcConfig = configData.systeme["Joueur(s) Connecté(s)"];
 
       if (!Object.values(jcConfig.active || {}).some((value) => value === true))
         continue;

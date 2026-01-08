@@ -3,31 +3,33 @@ const path = require("path");
 const config = require("../config");
 
 const AUTRE_EMOJI = {
+  "Attente Staff": "<:attentestaff:1458459659043078154>",
   Guide: "<:guide:1441505228007411783>",
   Modérateur: "<:moderateur:1441505230394228897>",
   Builder: "<:builder:1458468397963808872>",
-  "Pays Pillable ( 14h )": false,
-  "Pays Disband ( 18h15 )": false,
+  "Pays Pillable ( 14h )": "<:payspillable:1458742654010392658>",
+  "Pays Disband ( 18h15 )": "<:paysdisband:1458742655692308623>",
   doublelead: "<:doublelead:1458459662851637554>",
-  "Full Build": false,
-  "Conquête Territoriale": false,
-  Plainte: false,
-  Guerre: false,
-  "Plainte non traitée": false,
-  "Guerre non traitée": false,
-  jail: "<:jail:1441734907260043264>",
-  Classement: false,
-  Répartition: false,
-  Alerte: false,
-  "Rappel 1": false,
-  "Rappel 2": false,
-  "Rappel 3": false,
-  "Récapitulatif Hebdomadaire": false,
-  "Récapitulatif Mensuel": false,
-  routine: "<:routine:1441734905980649695>",
-  "Affichage Staff": false,
-  "Sanction Staff": false,
-  joueurconnecte: "<:joueursconnectes:1458459673974800589>",
+  "Full Build": "<:fullbuild:1458742657617498183>",
+  "Conquête Territoriale": "<:conqueteterritoriale:1458742659995668723>",
+  Plainte: "<:plainte:1458742662160191498>",
+  Guerre: "<:guerre:1458742664265732272>",
+  "Plainte non traitée": "<:plaintenontraitee:1458742665842655354>",
+  "Guerre non traitée": "<:guerrenontraitee:1458742667533095136>",
+  Jail: "<:jail:1441734907260043264>",
+  Classement: "<:classement:1458742669697351748>",
+  Répartition: "<:repartition:1458742671962149018>",
+  Alerte: "<:alerte:1458742674243981456>",
+  "Rappel 1": "<:rappel:1458742676504580239>",
+  "Rappel 2": "<:rappel:1458742676504580239>",
+  "Rappel 3": "<:rappel:1458742676504580239>",
+  "Récapitulatif Hebdomadaire":
+    "<:recapitulatifhebdomadaire:1458742678584823902>",
+  "Récapitulatif Mensuel": "<:recapitulatifmensuel:1458742680921047118>",
+  Routine: "<:routine:1441734905980649695>",
+  "Affichage Staff": "<:affichagestaff:1458742682787647561>",
+  "Sanction Staff": "<:sanctionstaff:1458742684482273322>",
+  "Joueur(s) Connecté(s)": "<:joueursconnectes:1458459673974800589>",
 };
 const SYSTEMES_CONFIG = {
   attentestaff: {
@@ -228,6 +230,11 @@ function genererConfigsServeurs(client) {
           let vraiSysteme = systeme;
           if (systeme === "classement") vraiSysteme = "Classement";
           if (systeme === "répartition") vraiSysteme = "Répartition";
+          if (systeme === "attentestaff") vraiSysteme = "Attente Staff";
+          if (systeme === "jail") vraiSysteme = "Jail";
+          if (systeme === "Routine") vraiSysteme = "Routine";
+          if (systeme === "joueurconnecte")
+            vraiSysteme = "Joueur(s) Connecté(s)";
 
           contenuFinal[vraiSysteme] = {
             emoji: AUTRE_EMOJI[systeme] || false,

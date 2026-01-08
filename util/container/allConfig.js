@@ -44,6 +44,7 @@ async function allConfig(serveur, userId) {
     const data = {
       label: systeme.nom,
       value: `config_subconfig-main-${systeme.nom}`,
+      description: `${Object.keys(systeme.systeme).length} module${Object.keys(systeme.systeme).length > 1 ? "s" : ""}`,
       ...(emoji ? { emoji } : {}),
     };
 
