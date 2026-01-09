@@ -326,16 +326,26 @@ module.exports = {
         ),
       );
 
+    let sentMessage;
+
     if (interaction.isMessageComponent()) {
-      return interaction.update({
+      sentMessage = await interaction.update({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
+        fetchReply: true,
       });
     } else {
-      return interaction.reply({
+      sentMessage = await interaction.reply({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
+        fetchReply: true,
       });
     }
+
+    setTimeout(async () => {
+      if (!sentMessage.deleted) {
+        await sentMessage.delete();
+      }
+    }, 10_000);
   },
 };
