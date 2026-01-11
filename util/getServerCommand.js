@@ -12,4 +12,4 @@ async function getServerCommand(guildId, userId) {
   else return;
 }
 
-module.exports = { getServerCommand };
+module.exports = getServerCommand;

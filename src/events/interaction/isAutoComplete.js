@@ -1,7 +1,7 @@
 const log = require("../../../util/module/log");
 const { getData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
-const { getServerCommand } = require("../../../util/getServerCommand");
+const getServerCommand = require("../../../util/getServerCommand");
 const config = require("../../../config");
 
 module.exports = async (client, interaction) => {

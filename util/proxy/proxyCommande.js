@@ -3,7 +3,7 @@ const {
   MessageFlags,
   ContainerBuilder,
 } = require("discord.js");
-const { getServerCommand } = require("../../util/getServerCommand");
+const getServerCommand = require("../../util/getServerCommand");
 const {
   errorStaffContainer,
   discordStaff,

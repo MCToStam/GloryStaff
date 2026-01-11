@@ -7,18 +7,21 @@ const {
 } = require("discord.js");
 const { getEmojiTete } = require("../../../util/module/emoji");
 const { getData } = require("../../../util/module/getAndSaveData");
-const { discordLink } = require("../../../util/module/discordLink");
+const {
+  discordLink,
+  discordStaff,
+} = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
-  config: { permission: "super_moderateur" },
+  config: { permission: "guide" },
   data: new SlashCommandBuilder()
     .setName("staff")
     .setDescription("Affiche la liste des staffs")
     .addStringOption((option) =>
       option
-        .setName("serveur")
-        .setDescription("Le serveur pour lequel afficher la liste des staffs")
+        .setName("staff")
+        .setDescription("Le membre du staff à configurer")
         .setRequired(false)
         .setAutocomplete(true),
     ),
@@ -28,6 +31,14 @@ module.exports = {
   },
   async proxy(client, interaction, config) {
     const { serveur, staff } = interaction.parametre;
+
+    const { pseudonym, servers } = await discordStaff(
+      interaction.user.id,
+      serveur,
+      "super_moderateur",
+    );
+
+    if (servers.length === 0) staff = pseudonym;
 
     if (!staff) {
       const linkData = (await discordLink(false))?.data;

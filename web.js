@@ -1398,59 +1398,66 @@ app.post("/api/attenteStaff", async (req, res) => {
       .json({ error: "Champs manquants dans le corps de la requête." });
   }
 
-  const configPath = path.join(
-    __dirname,
-    "data",
-    serveur,
-    "config-attentestaff.json",
-  );
+  const configData = getData(`data/${serveur}/config.json`);
+  const configAttenteStaff = configData.find((c) => c.nom === "Attente Staff");
+  const module = configAttenteStaff.systeme["Attente Staff"];
 
-  if (!fs.existsSync(configPath)) {
-    return res
-      .status(404)
-      .json({ error: "Fichier de configuration introuvable." });
-  }
+  const pseudo = await discordLink(id);
+  const emoji = pseudo ? await getEmojiTete(client, pseudo) : undefined;
 
-  let configData;
-  try {
-    configData = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-  } catch (err) {
-    return res.status(500).json({
-      error: "Erreur lors de la lecture du fichier de configuration.",
-    });
-  }
-
-  const attenteStaff = configData.attentestaff;
-  if (!attenteStaff?.active || !attenteStaff?.Salon.valeur) {
-    return res.status(403).json({
-      error: "Le système d’attente staff est désactivé ou mal configuré.",
-    });
-  }
-
-  try {
-    const channel = await client.channels.fetch(attenteStaff.Salon.valeur);
-    if (!channel) {
-      return res.status(404).json({ error: "Salon cible invalide." });
-    }
-
-    const mentions = Array.isArray(attenteStaff.Role.valeur)
-      ? attenteStaff.Role.valeur.map((roleId) => `<@&${roleId}>`).join(" ")
-      : "";
-    const embed = new EmbedBuilder()
-      .setTitle("🕓 Attente Staff")
-      .setDescription(
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## ${emoji || "🕓"} Attente Staff ${pseudo ? `- ${pseudo.replace(/_/g, "\\_")}` : ""}`,
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
         `Le joueur **${joueur}** (<@${id}>) attend dans <#${salon}>.`,
-      )
-      .setColor(config.couleur[serveur])
-      .setFooter({ text: config.footer });
+      ),
+    );
 
-    await channel.send({ content: mentions, embeds: [embed] });
-    return res.status(200).json({ message: "Message envoyé avec succès." });
-  } catch (err) {
-    console.error("Erreur lors de l’envoi du message :", err);
-    return res
-      .status(500)
-      .json({ error: "Erreur interne lors de l’envoi du message." });
+  for (const [guildId, isActive] of Object.entries(module.active)) {
+    if (!isActive) continue;
+
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) continue;
+
+    const channelId = module.Salon.valeur[guildId];
+    if (!channelId) continue;
+
+    const channel = guild.channels.cache.get(channelId);
+    if (!channel) continue;
+
+    const roleIds = module.Role.valeur[guildId] || [];
+    const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+    let components = [container];
+    if (roleMentions.length > 0)
+      components = [
+        new TextDisplayBuilder().setContent(roleMentions),
+        container,
+      ];
+
+    try {
+      const sentMessage = await channel.send({
+        components,
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+
+      console.log(
+        `✅ Message attente staff | serveur ${serveur} | guild ${guildId}`,
+      );
+    } catch (err) {
+      console.error(
+        `❌ Erreur envoi disband 18h15 | serveur ${serveur} | guild ${guildId}`,
+        err,
+      );
+    }
   }
 });
 
