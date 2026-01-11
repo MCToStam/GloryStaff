@@ -1459,6 +1459,8 @@ app.post("/api/attenteStaff", async (req, res) => {
       );
     }
   }
+
+  return res.status(200).json({ success: true });
 });
 
 app.post("/api/forumulaire_espilon_rp", async (req, res) => {
