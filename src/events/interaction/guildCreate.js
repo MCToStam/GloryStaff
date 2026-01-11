@@ -38,7 +38,7 @@ module.exports = async (client, guild) => {
         description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
         thumbnail: { url: serverIconURL },
         footer: { text: config.footer },
-        color: config.goodcolor,
+        color: config.colors.sucess,
       };
       try {
         await targetUser.send({ embeds: [embed] });
@@ -96,7 +96,7 @@ module.exports = async (client, guild) => {
         description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
         thumbnail: { url: serverIconURL },
         footer: { text: config.footer },
-        color: config.errorcolor,
+        color: config.colors.error,
       };
 
       try {

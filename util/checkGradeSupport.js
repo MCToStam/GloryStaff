@@ -3,6 +3,7 @@ const config = require("../config");
 
 async function checkGradeSupport(client) {
   try {
+    console.log("[updateStaffRoles] Début de la vérification.");
     const supportGuild = client.guilds.cache.get(config.support_serveur_id);
     if (!supportGuild) {
       console.error(
@@ -17,11 +18,13 @@ async function checkGradeSupport(client) {
       if (member.user.bot) continue;
 
       try {
-        const { servers: adminServers } = await discordStaff(
+        const { pseudonym, servers: adminServers } = await discordStaff(
           member.id,
           "all",
           "administrateur",
         );
+
+        if (!pseudonym) continue;
 
         const { servers: superModoServers } = await discordStaff(
           member.id,

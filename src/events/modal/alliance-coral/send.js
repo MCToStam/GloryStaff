@@ -19,7 +19,7 @@ module.exports = {
     const alliance = data.find((a) => a.nom === allianceNom);
     if (!alliance) {
       const erreurContainer = new ContainerBuilder()
-        .setAccentColor(config.errorcolor)
+        .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
@@ -38,7 +38,7 @@ module.exports = {
       .catch(() => null);
     if (!channel) {
       const erreurContainer = new ContainerBuilder()
-        .setAccentColor(config.errorcolor)
+        .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>

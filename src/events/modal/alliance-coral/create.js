@@ -17,7 +17,7 @@ module.exports = {
 
     if (data.find((a) => a.nom.toLowerCase() === nom.toLowerCase())) {
       const erreurContainer = new ContainerBuilder()
-        .setAccentColor(config.errorcolor)
+        .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) => t.setContent(`## ❌ Erreur`))
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>

@@ -174,7 +174,7 @@ Panneau prévention (screen des logs) : ${
 \`\`\``;
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.color)
+      .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) => t.setContent(codeContent));
 
     return interaction.reply({

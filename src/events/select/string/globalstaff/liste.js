@@ -38,7 +38,7 @@ module.exports = {
       "Aucune donnée trouvée dans le fichier staff-serveur.json.";
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur] || config.color)
+      .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
         t.setContent(
           `## Liste des Staff - ${

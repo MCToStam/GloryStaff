@@ -328,7 +328,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${categorie.role && categorie.role.length > 1 ? "Rôles mentionnés" : "Rôle mentionné"} lors d'un rank ou dérank :**`,
+              `**${
+                categorie.role && categorie.role.length > 1
+                  ? "Rôles mentionnés"
+                  : "Rôle mentionné"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -394,7 +398,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${categorie.role && categorie.role.length > 1 ? "Rôles mentionnés" : "Rôle mentionné"} lors d'un rank ou dérank :**`,
+              `**${
+                categorie.role && categorie.role.length > 1
+                  ? "Rôles mentionnés"
+                  : "Rôle mentionné"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -562,7 +570,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${grade.role && grade.role.length > 1 ? "Rôles donnés ou enlevé" : "Rôle donné ou enlevé"} lors d'un rank ou dérank :**`,
+              `**${
+                grade.role && grade.role.length > 1
+                  ? "Rôles donnés ou enlevé"
+                  : "Rôle donné ou enlevé"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -693,7 +705,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${grade.role && grade.role.length > 1 ? "Rôles donnés ou enlevé" : "Rôle donné ou enlevé"} lors d'un rank ou dérank :**`,
+              `**${
+                grade.role && grade.role.length > 1
+                  ? "Rôles donnés ou enlevé"
+                  : "Rôle donné ou enlevé"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -860,7 +876,7 @@ async function handleInteraction(interaction, client, config) {
         if (!roleData.categorie) roleData.categorie = [];
         if (roleData.categorie.find((c) => c.nom === nom)) {
           const erreurContainer = new ContainerBuilder()
-            .setAccentColor(config.errorcolor)
+            .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(`La catégorie **${nom}** existe déjà.`),
             );
@@ -896,7 +912,7 @@ async function handleInteraction(interaction, client, config) {
           interaction.fields.getTextInputValue("categorie_name");
         if (roleData.categorie.find((c) => c.nom === nouveauNom)) {
           const erreurContainer = new ContainerBuilder()
-            .setAccentColor(config.errorcolor)
+            .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
                 `La catégorie **${nouveauNom}** existe déjà.`,
@@ -936,7 +952,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${categorie.role && categorie.role.length > 1 ? "Rôles mentionnés" : "Rôle mentionné"} lors d'un rank ou dérank :**`,
+              `**${
+                categorie.role && categorie.role.length > 1
+                  ? "Rôles mentionnés"
+                  : "Rôle mentionné"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -981,7 +1001,7 @@ async function handleInteraction(interaction, client, config) {
         couleur = formatHexColor(couleur);
         if (!couleur) {
           const erreurContainer = new ContainerBuilder()
-            .setAccentColor(config.errorcolor)
+            .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
                 "La couleur hexadécimale est invalide. Exemple valide : #FF0000",
@@ -999,7 +1019,7 @@ async function handleInteraction(interaction, client, config) {
           roleData.grade.find((g) => g.nom === nom && g.categorie === idCat)
         ) {
           const erreurContainer = new ContainerBuilder()
-            .setAccentColor(config.errorcolor)
+            .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
                 `Le grade **${nom}** existe déjà dans la catégorie ayant l'ID **${idCat}**.`,
@@ -1145,7 +1165,7 @@ async function handleInteraction(interaction, client, config) {
           grade.nom !== nom
         ) {
           const erreurContainer = new ContainerBuilder()
-            .setAccentColor(config.errorcolor)
+            .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
                 `Le grade **${nom}** existe déjà dans la catégorie **${categorie.nom}**.`,
@@ -1230,7 +1250,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${grade.role && grade.role.length > 1 ? "Rôles donnés ou enlevé" : "Rôle donné ou enlevé"} lors d'un rank ou dérank :**`,
+              `**${
+                grade.role && grade.role.length > 1
+                  ? "Rôles donnés ou enlevé"
+                  : "Rôle donné ou enlevé"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -1350,7 +1374,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${grade.role && grade.role.length > 1 ? "Rôles donnés ou enlevé" : "Rôle donné ou enlevé"} lors d'un rank ou dérank :**`,
+              `**${
+                grade.role && grade.role.length > 1
+                  ? "Rôles donnés ou enlevé"
+                  : "Rôle donné ou enlevé"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -1466,7 +1494,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${grade.role && grade.role.length > 1 ? "Rôles donnés ou enlevé" : "Rôle donné ou enlevé"} lors d'un rank ou dérank :**`,
+              `**${
+                grade.role && grade.role.length > 1
+                  ? "Rôles donnés ou enlevé"
+                  : "Rôle donné ou enlevé"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>
@@ -1582,7 +1614,11 @@ async function handleInteraction(interaction, client, config) {
           )
           .addTextDisplayComponents((td) =>
             td.setContent(
-              `**${grade.role && grade.role.length > 1 ? "Rôles donnés ou enlevé" : "Rôle donné ou enlevé"} lors d'un rank ou dérank :**`,
+              `**${
+                grade.role && grade.role.length > 1
+                  ? "Rôles donnés ou enlevé"
+                  : "Rôle donné ou enlevé"
+              } lors d'un rank ou dérank :**`,
             ),
           )
           .addActionRowComponents((actionRow) =>

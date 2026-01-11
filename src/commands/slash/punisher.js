@@ -61,7 +61,7 @@ module.exports = {
       const errorembed = {
         author: { name: "Erreur" },
         footer: { text: config.footer },
-        color: config.errorcolor,
+        color: config.colors.error,
         thumbnail: { url: `https://i.imgur.com/ZB0yLME.png` },
         description: description,
       };

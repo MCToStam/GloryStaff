@@ -193,7 +193,7 @@ module.exports = {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur] || config.color)
+      .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
         t.setContent(
           `## ${emojiTete} Gestion Staff - ${joueur.replace(/_/g, "\\_")}`,

@@ -288,8 +288,8 @@ function genererConfigsServeurs(client) {
         if (systeme === "joueurconnecte") vraiSysteme = "Joueur(s) Connecté(s)";
 
         contenuFinal[vraiSysteme] = {
-          emoji: AUTRE_EMOJI[systeme] || false,
-          details: INFO_SUPP[systeme] || false,
+          emoji: AUTRE_EMOJI[vraiSysteme] || false,
+          details: INFO_SUPP[vraiSysteme] || false,
           ...nettoye,
           active,
         };

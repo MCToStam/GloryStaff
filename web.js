@@ -782,7 +782,7 @@ app.post("/update-leaders", async (req, res) => {
             );
 
             const container = new ContainerBuilder()
-              .setAccentColor(config.couleur[server] || config.color)
+              .setAccentColor(config.couleur[server])
               .addTextDisplayComponents((t) =>
                 t.setContent(`## 🏴 Double Lead`),
               )

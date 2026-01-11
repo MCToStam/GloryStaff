@@ -105,7 +105,7 @@ module.exports = {
 
     if (!gradeChoisi) {
       const embed = new EmbedBuilder()
-        .setColor(config.errorcolor)
+        .setColor(config.colors.error)
         .setTitle("❌ Grade introuvable")
         .setDescription(
           `Le grade \`${grade}\` n'existe pas sur le serveur ${
@@ -183,7 +183,7 @@ module.exports = {
             const errorEmbed = new EmbedBuilder()
               .setTitle(`❌ Liaison échouée - ${pseudonym}`)
               .setDescription(data.error)
-              .setColor(config.errorcolor)
+              .setColor(config.colors.error)
               .setFooter({ text: config.footer });
 
             return submitted.reply({

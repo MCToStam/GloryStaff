@@ -19,7 +19,8 @@ module.exports = {
     const serveur = await getServeur(interaction);
 
     const configData = getData(`data/${serveur}/config.json`);
-    const systeme = configData.find((c) => c.systeme?.[module]);
+    const systemeData = configData.find((c) => c.systeme?.[module]);
+    const systeme = systemeData.systeme[module];
 
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])

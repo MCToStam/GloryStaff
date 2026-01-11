@@ -8,7 +8,7 @@ module.exports = {
   async execute(client, interaction, config) {
     const embed = new EmbedBuilder()
       .setTitle("Prévisualitation")
-      .setColor(config.errorcolor)
+      .setColor(config.colors.error)
       .setDescription(
         "Le bouton censé effectuer un jail et donc le terminer n'est pas fonctionnel sur une prévisualisation. En cas réel, il supprime le message, le fil et n'alerte plus lors des connexions ou déconnexions du joueur.",
       )

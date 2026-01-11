@@ -51,7 +51,11 @@ module.exports = {
         .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `Les notations du pays <:${emojiPays.name}:${emojiPays.id}> "**${data.pays}**" ont été faites par ${emojiStaff ? `${emojiStaff} ` : ""}**${staff}**.`,
+            `Les notations du pays <:${emojiPays.name}:${emojiPays.id}> "**${
+              data.pays
+            }**" ont été faites par ${
+              emojiStaff ? `${emojiStaff} ` : ""
+            }**${staff}**.`,
           ),
         );
 
@@ -62,7 +66,7 @@ module.exports = {
       });
     } else {
       const informationContainer = new ContainerBuilder()
-        .setAccentColor(config.errorcolor)
+        .setAccentColor(config.colors.error)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent("## Erreur"),
         )
