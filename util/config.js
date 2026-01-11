@@ -1,6 +1,63 @@
-const fs = require("fs");
-const path = require("path");
 const config = require("../config");
+const {
+  getData,
+  saveData,
+  getFiles,
+} = require("../util/module/getAndSaveData");
+
+const INFO_SUPP = {
+  "Attente Staff":
+    "Ce système permet d'être alerté lorsqu'une personne rejoint le salon \"Attente Staff\" de votre serveur.",
+  Guide:
+    "Ce système vous permet d'être alerté lorsqu'une nouvelle candidature pour le poste de guide est envoyée sur le forum.",
+  Modérateur:
+    "Ce système vous permet d'être alerté lorsqu'une nouvelle candidature pour le poste de modérateur est envoyée sur le forum.>",
+  Builder:
+    "Ce système vous permet d'être alerté lorsqu'une nouvelle candidature pour le poste de buildeur est envoyée sur le forum.",
+  "Pays Pillable ( 14h )":
+    "Ce système permet de recevoir un message à 14h00 contenant les potentiels pays disponibles au pillage.",
+  "Pays Disband ( 18h15 )":
+    "Ce système permet de recevoir un message à 18h15 contenant la liste des pays disbands entre 18h00 et 18h15.",
+  doublelead:
+    'Ce système permet d\'être alerté lorsque de nouvelles personnes sont détectées en tant que "Double Lead" sur votre serveur.',
+  "Full Build":
+    "Ce système vous permet d'annoncer qu'un pays est \"Full Build\" et qu'il peut partir en expention territoriale sur un autre pays.",
+  "Conquête Territoriale":
+    "Ce système vous permet d'annoncer qu'un pays a valité son expention territoriale sur un autre pays.",
+  Plainte:
+    "Ce système permet d'être alerté lorsqu'une nouvelle plainte est postée sur le forum avec le tag \"En Attente\".",
+  Guerre:
+    "Ce système permet d'être alerté lorsqu'une nouvelle guerre est postée sur le forum avec le tag \"En Attente\".",
+  "Plainte non traitée":
+    "Ce système permet d'être alerté lorsqu'une plainte avec le tag \"En Attente\" n'a pas été modifiée depuis un nombre de jour configurable.",
+  "Guerre non traitée":
+    "Ce système permet d'être alerté lorsqu'une guerre avec le tag \"En Attente\" n'a pas été modifiée depuis un nombre de jour configurable.",
+  Jail: "Ce système permet d'être alerté lorsqu'une personne devant aller en prison se connecte.",
+  Classement:
+    "Ce système permet de recevoir un message contenant le top 3 inter-serveur ainsi que le top 10 de votre serveur des notations le lundi matin à 10h00.",
+  Répartition:
+    "Ce système permet de répartir les notations entre les différents opérateurs de ton serveur et de recevoir un message le vendredi soir indiquant au joueur qui note son pays.",
+  Alerte:
+    "Ce système permet d'être alerté lorsque l'ONU de votre serveur commence.",
+  "Rappel 1":
+    "Ce système permet de recevoir un rappel lorsque votre ONU debutera bientôt.",
+  "Rappel 2":
+    "Ce système permet de recevoir un rappel lorsque votre ONU debutera bientôt.",
+  "Rappel 3":
+    "Ce système permet de recevoir un rappel lorsque votre ONU debutera bientôt.",
+  "Récapitulatif Hebdomadaire":
+    "Ce système permet de recevoir un récapitulatif de votre serveur chaque semaine à 10h15",
+  "Récapitulatif Mensuel":
+    "Ce système permet de recevoir un récapitulatif de votre serveur chaque mois à 10h30",
+  Routine:
+    "Ce système permet d'organiser vos routines avec les différentes infractions possibles.",
+  "Affichage Staff":
+    "Ce système permet de recevoir et de modifier automatiquement un message contenant l'effectif de votre serveur.",
+  "Sanction Staff":
+    "Ce système permet d'être alerté lorsque l'un de vos staffs recoient une sanction sur un serveur de NationsGlory.",
+  "Joueur(s) Connecté(s)":
+    "Ce système permet de mettre à jour un salon avec le nombre de joueurs connectés de votre serveur.",
+};
 
 const AUTRE_EMOJI = {
   "Attente Staff": "<:attentestaff:1458459659043078154>",
@@ -163,17 +220,13 @@ function nettoyerValeurs(obj, client) {
 
 function genererConfigsServeurs(client) {
   for (const serveur of config.liste_serveur) {
-    const dossierServeur = path.join(__dirname, "..", "data", serveur);
     const resultat = [];
 
-    if (!fs.existsSync(dossierServeur)) continue;
-
-    const fichiersConfig = fs
-      .readdirSync(dossierServeur)
-      .filter((f) => f.startsWith("config-") && f.endsWith(".json"));
+    const fichiersConfig = getFiles(`data/${serveur}`).filter(
+      (f) => f.startsWith("config-") && f.endsWith(".json"),
+    );
 
     for (const fichier of fichiersConfig) {
-      const cheminFichier = path.join(dossierServeur, fichier);
       const nomSysteme = fichier.replace("config-", "").replace(".json", "");
       if (
         nomSysteme === "radio" ||
@@ -182,83 +235,75 @@ function genererConfigsServeurs(client) {
       )
         continue;
 
-      try {
-        const contenuBrut = JSON.parse(fs.readFileSync(cheminFichier, "utf8"));
-        const configManuelle = SYSTEMES_CONFIG[nomSysteme];
+      const contenuBrut = getData(`data/${serveur}/${fichier}`);
+      const configManuelle = SYSTEMES_CONFIG[nomSysteme];
 
-        const contenuFinal = {};
+      const contenuFinal = {};
 
-        for (const [systeme, data] of Object.entries(contenuBrut)) {
-          const nettoye = nettoyerValeurs(data, client);
+      for (const [systeme, data] of Object.entries(contenuBrut)) {
+        const nettoye = nettoyerValeurs(data, client);
 
-          let active = {};
+        let active = {};
 
-          function trouverServeur(obj) {
-            if (typeof obj !== "object" || obj === null) return null;
-
-            if (
-              obj.valeur &&
-              typeof obj.valeur === "object" &&
-              !Array.isArray(obj.valeur)
-            ) {
-              const serveurId = Object.keys(obj.valeur)[0];
-              if (serveurId) return serveurId;
-            }
-
-            for (const val of Object.values(obj)) {
-              if (typeof val === "object") {
-                const res = trouverServeur(val);
-                if (res) return res;
-              }
-            }
-            return null;
-          }
-
-          const serveurId = trouverServeur(nettoye);
-          if (serveurId) {
-            active[serveurId] = data.active ?? false;
-          }
+        function trouverServeur(obj) {
+          if (typeof obj !== "object" || obj === null) return null;
 
           if (
-            data.donnee &&
-            typeof data.donnee === "object" &&
-            Object.keys(data.donnee).length > 0
+            obj.valeur &&
+            typeof obj.valeur === "object" &&
+            !Array.isArray(obj.valeur)
           ) {
-            data.donnee = { [serveurId]: data.donnee };
+            const serveurId = Object.keys(obj.valeur)[0];
+            if (serveurId) return serveurId;
           }
 
-          let vraiSysteme = systeme;
-          if (systeme === "classement") vraiSysteme = "Classement";
-          if (systeme === "répartition") vraiSysteme = "Répartition";
-          if (systeme === "attentestaff") vraiSysteme = "Attente Staff";
-          if (systeme === "jail") vraiSysteme = "Jail";
-          if (systeme === "Routine") vraiSysteme = "Routine";
-          if (systeme === "joueurconnecte")
-            vraiSysteme = "Joueur(s) Connecté(s)";
-
-          contenuFinal[vraiSysteme] = {
-            emoji: AUTRE_EMOJI[systeme] || false,
-            ...nettoye,
-            active,
-          };
+          for (const val of Object.values(obj)) {
+            if (typeof val === "object") {
+              const res = trouverServeur(val);
+              if (res) return res;
+            }
+          }
+          return null;
         }
 
-        resultat.push({
-          nom: configManuelle?.nom || false,
-          emoji: configManuelle?.emoji || false,
-          permission: configManuelle?.permission || false,
-          systeme: contenuFinal,
-        });
-      } catch (err) {
-        console.error(`Erreur lecture ${cheminFichier}`, err);
+        const serveurId = trouverServeur(nettoye);
+        if (serveurId) {
+          active[serveurId] = data.active ?? false;
+        }
+
+        if (
+          data.donnee &&
+          typeof data.donnee === "object" &&
+          Object.keys(data.donnee).length > 0
+        ) {
+          data.donnee = { [serveurId]: data.donnee };
+        }
+
+        let vraiSysteme = systeme;
+        if (systeme === "classement") vraiSysteme = "Classement";
+        if (systeme === "répartition") vraiSysteme = "Répartition";
+        if (systeme === "attentestaff") vraiSysteme = "Attente Staff";
+        if (systeme === "jail") vraiSysteme = "Jail";
+        if (systeme === "Routine") vraiSysteme = "Routine";
+        if (systeme === "joueurconnecte") vraiSysteme = "Joueur(s) Connecté(s)";
+
+        contenuFinal[vraiSysteme] = {
+          emoji: AUTRE_EMOJI[systeme] || false,
+          details: INFO_SUPP[systeme] || false,
+          ...nettoye,
+          active,
+        };
       }
+
+      resultat.push({
+        nom: configManuelle?.nom || false,
+        emoji: configManuelle?.emoji || false,
+        permission: configManuelle?.permission || false,
+        systeme: contenuFinal,
+      });
     }
 
-    fs.writeFileSync(
-      path.join(dossierServeur, "config.json"),
-      JSON.stringify(resultat, null, 2),
-      "utf8",
-    );
+    saveData(`data/${serveur}/config.json`, resultat);
 
     console.log(`[${serveur}] config.json généré`);
   }

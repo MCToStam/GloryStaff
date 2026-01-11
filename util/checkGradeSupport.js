@@ -17,18 +17,39 @@ async function checkGradeSupport(client) {
       if (member.user.bot) continue;
 
       try {
-        const { servers: availableServers } = await discordStaff(
+        const { servers: adminServers } = await discordStaff(
+          member.id,
+          "all",
+          "administrateur",
+        );
+
+        const { servers: superModoServers } = await discordStaff(
           member.id,
           "all",
           "super_moderateur",
         );
 
-        const expectedRoles = availableServers
+        const expectedRoles = [];
+
+        if (adminServers.length > 0 && config.role["administrateur"]) {
+          expectedRoles.push(config.role["administrateur"]);
+        } else if (
+          superModoServers.length > 0 &&
+          config.role["super_moderateur"]
+        ) {
+          expectedRoles.push(config.role["super_moderateur"]);
+        }
+
+        const serverRoles = superModoServers
           .map((server) => config.role[server])
-          .filter((roleId) => roleId);
+          .filter(Boolean);
+
+        expectedRoles.push(...serverRoles);
+
+        const managedRoles = Object.values(config.role);
 
         const currentRoles = member.roles.cache
-          .filter((r) => Object.values(config.role).includes(r.id))
+          .filter((r) => managedRoles.includes(r.id))
           .map((r) => r.id);
 
         const rolesToAdd = expectedRoles.filter(

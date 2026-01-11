@@ -1,42 +1,65 @@
 const { discordStaff } = require("../../../util/module/discordLink");
-const { EmbedBuilder } = require("discord.js");
+const canSendMP = require("../../../util/module/canSendMP");
+const { ContainerBuilder, MessageFlags } = require("discord.js");
 const config = require("../../../config");
 
 module.exports = async (client, member) => {
   try {
-    const guildId = member.guild.id;
-    if (guildId !== config.support_serveur_id) return;
+    if (member.guild.id !== config.support_serveur_id) return;
 
-    const memberId = member.user.id;
+    const { servers: adminServers } = await discordStaff(
+      member.user.id,
+      "all",
+      "administrateur",
+    );
 
-    const {
-      pseudonym,
-      servers: availableServers,
-      container,
-    } = await discordStaff(memberId, "all", "super_moderateur");
+    const { servers: superModoServers } = await discordStaff(
+      member.user.id,
+      "all",
+      "super_moderateur",
+    );
 
-    const rolesToAdd = availableServers
+    const rolesToAdd = [];
+
+    if (adminServers.length > 0 && config.role["administrateur"]) {
+      rolesToAdd.push(config.role["administrateur"]);
+    } else if (superModoServers.length > 0 && config.role["super_moderateur"]) {
+      rolesToAdd.push(config.role["super_moderateur"]);
+    }
+
+    const serverRoles = superModoServers
       .map((server) => config.role[server])
-      .filter((roleId) => roleId);
+      .filter(Boolean);
 
-    if (rolesToAdd.length > 0) {
-      await member.roles.add(rolesToAdd);
-      console.log(
-        `Ajout des rôles ${rolesToAdd} à ${member.user.displayName} automatiquement.`,
-      );
-      try {
-        const embed = new EmbedBuilder()
-          .setColor(config.color)
-          .setTitle(`Bienvenue ${member.user.displayName}`)
-          .setDescription(
-            `Merci d'avoir rejoint le serveur support de GloryBot et de GloryStaff. Le rôle d'opérateur de ${availableServers.length > 1 ? "tes" : "ton"} serveur${availableServers.length > 1 ? "s" : ""} t'a automatiquement été donné en raison de ton implication dans ce${availableServers.length > 1 ? "s" : ""} serveur${availableServers.length > 1 ? "s" : ""} : ${availableServers.join(
-              ", ",
-            )}.\n\nPour t'aider, voici un petit guide des salons mis à disposition :\n- <#1327555365436653568> : Fait-nous part de l'intégralité de tes envies et demandes d'ajouts\n- <#1327555147785572362> : Remonte-nous les problèmes que tu peux rencontrer\n- <#1327554503846924311> : Tiens-toi au courant des nouveautés qui arrivent\n\nRappelle-toi aussi que si tu as une question, même banale, n'hésite pas à la poser !`,
-          )
-          .setFooter({ text: config.footer });
+    rolesToAdd.push(...serverRoles);
 
-        await member.send({ embeds: [embed] });
-      } catch (e) {}
+    if (rolesToAdd.length === 0) return;
+
+    await member.roles.add(rolesToAdd);
+
+    console.log(
+      `Ajout des rôles ${rolesToAdd.join(", ")} à ${
+        member.user.displayName
+      } automatiquement.`,
+    );
+
+    if (canSendMP(client, member.user.id)) {
+      const container = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(`## 👋 Bienvenue ${member.user.displayName}`),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `Merci d'avoir rejoint le serveur support de GloryBot et GloryStaff.\n\n` +
+              `Ton rôle t'a été attribué automatiquement en fonction de ton implication sur les serveurs suivants :\n` +
+              `${superModoServers.join(", ")}\n\n` +
+              `📌 Besoin d'aide ? N'hésite jamais à poser une question !`,
+          ),
+        );
+
+      await member.send({ components: [container], flags: MessageFlags });
     }
   } catch (error) {
     console.error("Erreur lors du traitement de guildMemberAdd:", error);
