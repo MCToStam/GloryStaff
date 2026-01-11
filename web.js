@@ -899,14 +899,11 @@ app.get("/api/get-staff", async (req, res) => {
   }
 
   try {
-    if (
-      discordId === "261543619557588994" ||
-      discordId === "719072181631320145" ||
-      discordId === "213743858511642626"
-    ) {
+    if (discordId === "719072181631320145") {
       return res.status(200).json(config.liste_serveur);
     }
-    const { pseudonym, servers, container } = await discordStaff(
+
+    const { servers } = await discordStaff(
       discordId,
       "all",
       "super_moderateur",

@@ -1,4 +1,6 @@
 const { ContainerBuilder, MessageFlags } = require("discord.js");
+const { getServeur } = require("../../../util/module/getServeur");
+const moduleContainers = require("../../../util/container/module");
 
 module.exports = {
   data: {
@@ -6,20 +8,43 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const container = new ContainerBuilder()
-      .setAccentColor(config.colors.error)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(`## ❌ Prévisualisation Indisponible`),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          "Ce module ne permet pas encore d'en afficher une prévisualisation, elle sera sûrement disponible bientôt !",
-        ),
-      );
+    const module = interaction.customId.split("-")[1].replace(/\s+/g, "");
+    const serveur = await getServeur(interaction);
+
+    let components;
+
+    if (
+      moduleContainers[module] &&
+      typeof moduleContainers[module] === "function"
+    ) {
+      const attentionContainer =
+        new ContainerBuilder().addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            "La prévisualisation qui suit est une représentation, la forme est celle que vous pouvez retrouver mais les données peuvent être factices.",
+          ),
+        );
+
+      const container = await moduleContainers[module](client, serveur);
+
+      components = [attentionContainer, container];
+    } else {
+      const container = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ❌ Prévisualisation Indisponible"),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            "Ce module ne permet pas encore d'en afficher une prévisualisation, elle sera sûrement disponible bientôt !",
+          ),
+        );
+
+      components = [container];
+    }
 
     return interaction.reply({
-      components: [container],
+      components,
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
   },

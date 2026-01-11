@@ -15,7 +15,6 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const module = interaction.customId.split("-")[1];
-
     const serveur = await getServeur(interaction);
 
     const configData = getData(`data/${serveur}/config.json`);

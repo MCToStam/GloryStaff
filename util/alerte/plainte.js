@@ -1,16 +1,9 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const { getEmojiTete } = require("../../util/module/emoji");
+const { Plainte, Plaintenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  MessageFlags,
-  ContainerBuilder,
-  TextDisplayBuilder,
-} = require("discord.js");
+const { MessageFlags, TextDisplayBuilder } = require("discord.js");
 
 const moisMapping = {
   janvier: "01",
@@ -121,27 +114,7 @@ async function plainte(client) {
           const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
           for (const plainte of nouvellesPlaintes) {
-            const emoji = await getEmojiTete(client, plainte.auteur);
-            const container = new ContainerBuilder()
-              .setAccentColor(config.couleur[server])
-              .addTextDisplayComponents((t) =>
-                t.setContent(`## 📍 Nouvelle Plainte`),
-              )
-              .addSeparatorComponents((s) => s)
-              .addTextDisplayComponents((t) =>
-                t.setContent(
-                  `📌 **Titre :** ${plainte.titre}\n${emoji} **Auteur :** ${plainte.auteur}\n\n*Postée <t:${plainte.date}:R>*`,
-                ),
-              )
-              .addSeparatorComponents((s) => s)
-              .addActionRowComponents(
-                new ActionRowBuilder().addComponents(
-                  new ButtonBuilder()
-                    .setURL(plainte.lien)
-                    .setLabel("🔗 Aller sur la Plainte")
-                    .setStyle(ButtonStyle.Link),
-                ),
-              );
+            const container = await Plainte(client, server, plainte);
 
             let components = [container];
             if (roleMentions && !rolePingDone[guildId])
@@ -217,32 +190,12 @@ async function plainte(client) {
         for (const plainte of plaintesExistantes.filter(
           (p) => p.date < timestampLimite && !p?.alerteEnvoyee?.[guildId],
         )) {
-          const emoji = await getEmojiTete(client, plainte.auteur);
-
-          const container = new ContainerBuilder()
-            .setAccentColor(config.couleur[server])
-            .addTextDisplayComponents((t) =>
-              t.setContent(`## 🚨 Plainte non traitée`),
-            )
-            .addSeparatorComponents((s) => s)
-            .addTextDisplayComponents((t) =>
-              t.setContent(
-                `📌 **Titre :** ${plainte.titre}\n` +
-                  `${emoji} **Auteur :** ${plainte.auteur}\n\n` +
-                  `*Postée depuis plus de ${delaiJour} jour${
-                    delaiJour > 1 ? "s" : ""
-                  }*`,
-              ),
-            )
-            .addSeparatorComponents((s) => s)
-            .addActionRowComponents(
-              new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setURL(plainte.lien)
-                  .setLabel("🔗 Aller sur la plainte")
-                  .setStyle(ButtonStyle.Link),
-              ),
-            );
+          const container = await Plaintenontraitée(
+            client,
+            server,
+            plainte,
+            delaiJour,
+          );
 
           let components = [container];
           if (roleMentions && !rolePingDone[guildId])

@@ -1,16 +1,9 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const { getEmojiTete } = require("../../util/module/emoji");
+const { Guerre, Guerrenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  MessageFlags,
-  ContainerBuilder,
-  TextDisplayBuilder,
-} = require("discord.js");
+const { MessageFlags, TextDisplayBuilder } = require("discord.js");
 
 const moisMapping = {
   janvier: "01",
@@ -124,28 +117,7 @@ async function guerre(client) {
           const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
           for (const guerre of nouvellesGuerres) {
-            const emoji = await getEmojiTete(client, guerre.auteur);
-
-            const container = new ContainerBuilder()
-              .setAccentColor(config.couleur[server])
-              .addTextDisplayComponents((t) =>
-                t.setContent(`## 📍 Nouvelle Guerre`),
-              )
-              .addSeparatorComponents((s) => s)
-              .addTextDisplayComponents((t) =>
-                t.setContent(
-                  `📌 **Titre :** ${guerre.titre}\n${emoji} **Auteur :** ${guerre.auteur}\n\n*Postée <t:${guerre.date}:R>*`,
-                ),
-              )
-              .addSeparatorComponents((s) => s)
-              .addActionRowComponents(
-                new ActionRowBuilder().addComponents(
-                  new ButtonBuilder()
-                    .setURL(guerre.lien)
-                    .setLabel("🔗 Aller sur la Guerre")
-                    .setStyle(ButtonStyle.Link),
-                ),
-              );
+            const container = await Guerre(client, server, guerre);
 
             let components = [container];
             if (roleMentions && !rolePingDone[guildId])
@@ -220,28 +192,12 @@ async function guerre(client) {
         for (const guerre of guerresExistantes.filter(
           (g) => g.date < timestampLimite && !g?.alerteEnvoyee?.[guildId],
         )) {
-          const emoji = await getEmojiTete(client, guerre.auteur);
-
-          const container = new ContainerBuilder()
-            .setAccentColor(config.couleur[server])
-            .addTextDisplayComponents((t) =>
-              t.setContent(`## 🚨 Guerre non traitée`),
-            )
-            .addSeparatorComponents((s) => s)
-            .addTextDisplayComponents((t) =>
-              t.setContent(
-                `📌 **Titre :** ${guerre.titre}\n${emoji} **Auteur :** ${guerre.auteur}\n\n*Postée depuis plus de ${delaiJour} jour(s)*`,
-              ),
-            )
-            .addSeparatorComponents((s) => s)
-            .addActionRowComponents(
-              new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                  .setURL(guerre.lien)
-                  .setLabel("🔗 Aller sur la Guerre")
-                  .setStyle(ButtonStyle.Link),
-              ),
-            );
+          const container = await Guerrenontraitée(
+            client,
+            server,
+            guerre,
+            delaiJour,
+          );
 
           let components = [container];
           if (roleMentions && !rolePingDone[guildId])

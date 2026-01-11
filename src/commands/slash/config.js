@@ -9,7 +9,7 @@ const proxyCommande = require("../../../util/proxy/proxyCommande");
 module.exports = {
   config: { permission: "guide" },
   data: new SlashCommandBuilder()
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
     .setName("config")
     .setDescription("Affiche la configuration d’un système"),
 
