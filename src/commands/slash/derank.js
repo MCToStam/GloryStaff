@@ -5,11 +5,13 @@ const {
 } = require("../../../util/module/getAndSaveData");
 const {
   SlashCommandBuilder,
+  ContainerBuilder,
   EmbedBuilder,
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
+  MessageFlags,
 } = require("discord.js");
 const { discordLink } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
@@ -102,16 +104,64 @@ module.exports = {
 
     const gradeConfig = getData(`data/${serveur}/grade.json`);
 
-    const [categorieId, gradeId] = grade.split("_");
+    let gradeChoisi = null;
+    let gradesCategorie = [];
+    let categorieId = null;
 
-    const gradesCategorie = gradeConfig.grade.filter(
-      (g) => g.categorie === categorieId,
-    );
+    if (grade.includes("_")) {
+      const [catId, gradeId] = grade.split("_");
 
-    const gradeChoisi = gradesCategorie.find((g) => g.id === gradeId);
+      const gradesCat = gradeConfig.grade.filter((g) => g.categorie === catId);
+
+      const found = gradesCat.find((g) => g.id === gradeId);
+
+      if (found) {
+        categorieId = catId;
+        gradesCategorie = gradesCat;
+        gradeChoisi = found;
+      }
+    }
+
+    if (!gradeChoisi) {
+      const gradesParNom = gradeConfig.grade.filter(
+        (g) => g.nom.toLowerCase() === grade.toLowerCase(),
+      );
+
+      if (gradesParNom.length === 0 || gradesParNom.length > 1) {
+        const errorContainer = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent("## ❌ Grade Invalide"),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              "Le grade spécifié n'a pas été trouvé pour le serveur choisit.",
+            ),
+          );
+
+        if (interaction.isMessageComponent()) {
+          return interaction.update({
+            components: [errorContainer],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          return interaction.reply({
+            components: [errorContainer],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
+      }
+
+      gradeChoisi = gradesParNom[0];
+      categorieId = gradeChoisi.categorie;
+
+      gradesCategorie = gradeConfig.grade.filter(
+        (g) => g.categorie === categorieId,
+      );
+    }
 
     const rolesCategorie = gradesCategorie.flatMap((g) => g.role || []);
-
     const rolesGrade = gradeChoisi.role || [];
 
     let pseudonym = await discordLink(pseudo);

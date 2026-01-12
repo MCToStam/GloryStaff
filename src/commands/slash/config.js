@@ -7,6 +7,7 @@ const allConfig = require("../../../util/container/allConfig");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  guild: true,
   config: { permission: "guide" },
   data: new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)

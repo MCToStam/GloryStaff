@@ -33,7 +33,10 @@ async function proxyCommande(client, interaction, config) {
 
   let serveur = interaction.options.getString("serveur")?.toLowerCase();
   if (!serveur)
-    serveur = await getServerCommand(interaction.guild.id, interaction.user.id);
+    serveur = await getServerCommand(
+      interaction.guild?.id,
+      interaction.user.id,
+    );
 
   if (serveur && typeof serveur === "string") {
     const errorContainer = await errorStaffContainer(serveur);

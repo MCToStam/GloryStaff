@@ -190,6 +190,59 @@ module.exports = async (client, interaction) => {
           await interaction.respond(suggestions);
         }
       } catch (error) {}
+    } else if (name === "grade") {
+      try {
+        const serveur =
+          interaction.options.getString("serveur") ||
+          (await getServerCommand(interaction.guild.id, interaction.user.id));
+        if (!serveur || typeof serveur !== "string") {
+          return await interaction.respond([
+            {
+              name: "Il te faut sélectionner un serveur",
+              value: "non-choisit",
+            },
+          ]);
+        }
+
+        if (serveur === "non-lie") {
+          return await interaction.respond([
+            {
+              name: "Compte NationsGlory non lié, fait le maintenant : https://glorybot.fr",
+              value: "non-lie",
+            },
+          ]);
+        }
+
+        const gradeData = getData(`data/${serveur}/grade.json`);
+
+        const allGrades = gradeData.grade.map((g) => {
+          const categorie = gradeData.categorie.find(
+            (c) => c.id === g.categorie,
+          );
+          return {
+            id: g.id,
+            nom: g.nom,
+            categorieId: g.categorie,
+            categorieNom: categorie ? categorie.nom : "Autre",
+          };
+        });
+
+        const filteredGrades = allGrades.filter(
+          (g) =>
+            g.nom.toLowerCase().startsWith(value.toLowerCase()) ||
+            g.categorieNom.toLowerCase().startsWith(value.toLowerCase()),
+        );
+
+        const choices = filteredGrades.slice(0, 25).map((g) => ({
+          name: `${g.categorieNom} : ${g.nom}`,
+          value: `${g.categorieId}_${g.id}`,
+        }));
+
+        await interaction.respond(choices);
+      } catch (error) {
+        console.error("Erreur lors de l'autocomplétion pour grade :", error);
+        await interaction.respond([]);
+      }
     }
   } catch (e) {
     await interaction.respond([]);

@@ -10,6 +10,7 @@ const { discordLink } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  guild: true,
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("conquête-territoriale")

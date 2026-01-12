@@ -12,6 +12,7 @@ const { getEmojiTete } = require("../../../util/module/emoji");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
+  guild: true,
   data: new SlashCommandBuilder()
     .setName("jail")
     .setDescription("Effectue un jail")

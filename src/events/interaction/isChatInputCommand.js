@@ -49,6 +49,26 @@ module.exports = async (client, interaction) => {
     });
   }
 
+  if (slashCmd?.guild && !interaction.guild) {
+    const noGuildContainer = {
+      type: 17,
+      accent_color: config.colors.error,
+      components: [
+        { type: 10, content: "## :no_entry_sign: Serveur Requis" },
+        { type: 14, spacing: SeparatorSpacingSize.Large },
+        {
+          type: 10,
+          content:
+            "Cette commande ne peut être envoyée uniquement dans un serveur Discord.",
+        },
+      ],
+    };
+    return interaction.reply({
+      components: [noGuildContainer],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
+  }
+
   const { cooldowns } = client;
 
   if (!cooldowns.has(slashCmd.data.name)) {

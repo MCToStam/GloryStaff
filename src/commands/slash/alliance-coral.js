@@ -10,6 +10,7 @@ const {
 } = require("discord.js");
 
 module.exports = {
+  guild: true,
   data: new SlashCommandBuilder()
     .setName("alliance")
     .setDescription("Affiche la configuration des alliances"),
