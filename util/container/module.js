@@ -1,5 +1,6 @@
 const config = require("../../config");
 const { getEmojiTete } = require("../../util/module/emoji");
+const { discordLink } = require("../../util/module/discordLink");
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -141,4 +142,37 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
   return container;
 }
 
-module.exports = { Guerre, Guerrenontraitée, Plainte, Plaintenontraitée };
+async function AttenteStaff(client, serveur, joueur, id, salon) {
+  if (!joueur) joueur = "ToStam";
+  if (!id) id = "719072181631320145";
+  if (!salon) salon = "1391047893678293094";
+
+  const pseudo = await discordLink(id);
+  const emoji = pseudo ? await getEmojiTete(client, pseudo) : undefined;
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## ${emoji || "🕓"} Attente Staff ${
+          pseudo ? `- ${pseudo.replace(/_/g, "\\_")}` : ""
+        }`,
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `Le joueur **${joueur}** (<@${id}>) attend dans <#${salon}>.`,
+      ),
+    );
+
+  return container;
+}
+
+module.exports = {
+  Guerre,
+  Guerrenontraitée,
+  Plainte,
+  Plaintenontraitée,
+  AttenteStaff,
+};

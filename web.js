@@ -1,6 +1,7 @@
 const express = require("express");
 const { getData } = require("./util/module/getAndSaveData");
 const { discordStaff, discordLink } = require("./util/module/discordLink");
+const { AttenteStaff } = require("./util/container/module");
 const { getEmojiTete } = require("./util/module/emoji");
 const bodyParser = require("body-parser");
 const {
@@ -1399,22 +1400,7 @@ app.post("/api/attenteStaff", async (req, res) => {
   const configAttenteStaff = configData.find((c) => c.nom === "Attente Staff");
   const module = configAttenteStaff.systeme["Attente Staff"];
 
-  const pseudo = await discordLink(id);
-  const emoji = pseudo ? await getEmojiTete(client, pseudo) : undefined;
-
-  const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
-    .addTextDisplayComponents((t) =>
-      t.setContent(
-        `## ${emoji || "🕓"} Attente Staff ${pseudo ? `- ${pseudo.replace(/_/g, "\\_")}` : ""}`,
-      ),
-    )
-    .addSeparatorComponents((s) => s)
-    .addTextDisplayComponents((t) =>
-      t.setContent(
-        `Le joueur **${joueur}** (<@${id}>) attend dans <#${salon}>.`,
-      ),
-    );
+  const container = await AttenteStaff(client, serveur, joueur, id, salon);
 
   for (const [guildId, isActive] of Object.entries(module.active)) {
     if (!isActive) continue;
