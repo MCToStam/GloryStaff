@@ -196,7 +196,7 @@ module.exports = async (client, interaction) => {
   });
 
   cron.schedule("* * * * 0,6", async () => {
-    await checkONU(client);
+    // await checkONU(client);
   });
 
   process.on("unhandledRejection", (reason, p) => {
