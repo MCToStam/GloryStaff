@@ -6,6 +6,7 @@ const {
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../util/module/getServeur");
 const { getEmojiTete } = require("../../../util/module/emoji");
+const { guild } = require("../../commands/slash/fullbuild");
 
 module.exports = {
   data: {
@@ -26,13 +27,17 @@ module.exports = {
 
     const serveur = await getServeur(interaction);
 
-    const configRoutine = getData(`data/${serveur}/config-routine.json`);
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configData = dataFile.find((c) => c.nom === "Routine");
+    const configRoutine = configData.systeme.Routine;
 
-    if (configRoutine.routine?.active && configRoutine.routine?.Salon.valeur) {
+    const guildId = interaction.guild.id;
+
+    if (configRoutine.active[guildId] && configRoutine.Salon.valeur[guildId]) {
       const salon = await interaction.client.channels.fetch(
-        configRoutine.routine?.Salon.valeur,
+        configRoutine.Salon.valeur[guildId],
       );
-      const roleMention = configRoutine.routine?.Role.valeur;
+      const roleMention = configRoutine.Role.valeur[guildId];
 
       let infractionsText = description.replace(
         /\*\*Début de la routine :\*\* <t:\d+:R>\n/,

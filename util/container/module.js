@@ -1,10 +1,11 @@
 const config = require("../../config");
-const { getEmojiTete } = require("../../util/module/emoji");
+const { getEmojiTete, getEmojiDrapeau } = require("../../util/module/emoji");
 const { discordLink } = require("../../util/module/discordLink");
 const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  StringSelectMenuBuilder,
   ContainerBuilder,
 } = require("discord.js");
 
@@ -169,10 +170,193 @@ async function AttenteStaff(client, serveur, joueur, id, salon) {
   return container;
 }
 
+async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
+  const buttonEnable = vraiCriminel ? false : true;
+  if (!vraiCriminel) vraiCriminel = "ToStam";
+  if (!dureeLisible) dureeLisible = "30 minutes";
+  if (!lien_raison)
+    lien_raison =
+      "https://nationsglory.fr/forums/thread/plainte-n6386-onu-contre-ninnin22.237988#answer-453729293094";
+
+  const isLienValide = lien_raison.startsWith(
+    "https://nationsglory.fr/forums/thread/",
+  );
+
+  let descriptionEmbed = `**Durée** : ${dureeLisible}\n`;
+  descriptionEmbed += isLienValide
+    ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
+    : `**Raison :** ${lien_raison}`;
+
+  const teteEmoji = await getEmojiTete(client, vraiCriminel);
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `## ${teteEmoji || "🚧"} Jail sur ${vraiCriminel.replace(/_/g, "\\_")}`,
+      ),
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(descriptionEmbed),
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("jail_finish")
+          .setLabel("✅ Jail Effectué")
+          .setStyle(ButtonStyle.Success)
+          .setDisabled(buttonEnable),
+        ...(isLienValide
+          ? [
+              new ButtonBuilder()
+                .setLabel("🔗 Aller sur la plainte")
+                .setStyle(ButtonStyle.Link)
+                .setURL(lien_raison),
+            ]
+          : []),
+      ),
+    );
+
+  return container;
+}
+
+async function Routine(client, serveur, pseudonym) {
+  const buttonEnable = pseudonym ? false : true;
+  if (!pseudonym) pseudonym = "ToStam";
+
+  const teteEmoji = await getEmojiTete(client, pseudonym);
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `## ${teteEmoji || "⏱️"} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
+      ),
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `**Début de la routine :** <t:${Math.floor(
+          Date.now() / 1000,
+        )}:R>\n**Infractions :**\n**Fin de la routine :**`,
+      ),
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId("routine")
+          .setPlaceholder("Sélectionnez une infraction")
+          .addOptions([
+            {
+              label: "Bunker Illégal",
+              value: "routine_bunkerillegal",
+              emoji: "1333876277651705878",
+            },
+            {
+              label: "Anti-AFK",
+              value: "routine_antiafk",
+              emoji: "1333876277651705878",
+            },
+            {
+              label: "Auto-Clic",
+              value: "routine_autoclic",
+              emoji: "1333876277651705878",
+            },
+            {
+              label: "Stack Item",
+              value: "routine_stackitem",
+              emoji: "1333876277651705878",
+            },
+            {
+              label: "AutoNuke Illégal",
+              value: "routine_autonukeillegal",
+              emoji: "1333876277651705878",
+            },
+            {
+              label: "XRay",
+              value: "routine_xray",
+              emoji: "1333876277651705878",
+            },
+            {
+              label: "Autre",
+              value: "routine_autre",
+              emoji: "1333876277651705878",
+            },
+          ])
+          .setDisabled(buttonEnable),
+      ),
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`routine_finish-${pseudonym}`)
+          .setLabel("✅ Terminer la Routine")
+          .setStyle(ButtonStyle.Success)
+          .setDisabled(buttonEnable),
+      ),
+    );
+
+  return container;
+}
+
+async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
+  if (!pseudo) pseudo = "ToStam";
+  if (!paysa) paysa = "France";
+  if (!paysb) paysb = "Allemagne";
+
+  const tete = await getEmojiTete(client, pseudo);
+  const drapeauA = await getEmojiDrapeau(client, serveur, paysa);
+  const drapeauB = await getEmojiDrapeau(client, serveur, paysb);
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent("## ✈️ Conquête Territoriale"),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `${tete} **${pseudo}** vient de valider la conquête territoriale du pays ${drapeauA || ""} **${paysa}**. Ce pays a donc annexé le pays ${drapeauB || ""} **${paysb}**.`,
+      ),
+    );
+
+  return container;
+}
+
+async function FullBuild(client, serveur, pseudo, paysa, paysb) {
+  if (!pseudo) pseudo = "ToStam";
+  if (!paysa) paysa = "France";
+  if (!paysb) paysb = "Allemagne";
+
+  const tete = await getEmojiTete(client, pseudo);
+  const drapeauA = await getEmojiDrapeau(client, serveur, paysa);
+  const drapeauB = await getEmojiDrapeau(client, serveur, paysb);
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) => t.setContent("## 🏚️ FullBuild"))
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `${tete} **${pseudo}** vient de valider le fullbuild de pays ${drapeauA || ""} **${paysa}**. Ce pays a donc maintenant la permission de s'étendre sur le pays ${drapeauB || ""} **${paysb}**.`,
+      ),
+    );
+
+  return container;
+}
+
 module.exports = {
   Guerre,
   Guerrenontraitée,
   Plainte,
   Plaintenontraitée,
   AttenteStaff,
+  Jail,
+  Routine,
+  ConquêteTerritoriale,
+  FullBuild,
 };

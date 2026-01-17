@@ -284,7 +284,7 @@ function genererConfigsServeurs(client) {
         if (systeme === "répartition") vraiSysteme = "Répartition";
         if (systeme === "attentestaff") vraiSysteme = "Attente Staff";
         if (systeme === "jail") vraiSysteme = "Jail";
-        if (systeme === "Routine") vraiSysteme = "Routine";
+        if (systeme === "routine") vraiSysteme = "Routine";
         if (systeme === "joueurconnecte") vraiSysteme = "Joueur(s) Connecté(s)";
 
         contenuFinal[vraiSysteme] = {

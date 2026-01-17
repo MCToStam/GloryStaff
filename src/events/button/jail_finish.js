@@ -17,8 +17,11 @@ module.exports = {
         (key) => config.couleur[key] === embedColor,
       ) || (await getServeur(interaction));
 
-    const configJail = getData(`data/${serveur}/config-jail.json`);
-    const roleAutorise = configJail.jail.Grade.valeur;
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configData = dataFile.find((c) => c.nom === "Jail");
+    const configJail = configData.systeme["Jail"];
+
+    const roleAutorise = configJail.Grade.valeur[interaction.guild.id];
 
     const gradeAutorise = {
       Administrateur: "administrateur",

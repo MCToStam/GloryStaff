@@ -411,38 +411,20 @@ app.post("/staff", async (req, res) => {
       );
       console.log(`✅ Données sauvegardées pour le serveur ${serveur}`);
 
-      const configFilePath = path.join(
-        __dirname,
-        "data",
-        serveur,
-        "config-staff.json",
-      );
-      if (fs.existsSync(configFilePath)) {
-        const configStaff = JSON.parse(fs.readFileSync(configFilePath, "utf8"));
-        if (
-          configStaff["Affichage Staff"].active &&
-          configStaff["Affichage Staff"].Salon.valeur &&
-          configStaff["Affichage Staff"].Message
-        ) {
-          try {
-            const channel = await client.channels.fetch(
-              configStaff["Affichage Staff"].Salon.valeur,
-            );
-            if (channel) {
-              const message = await channel.messages.fetch(
-                configStaff["Affichage Staff"].Message,
-              );
-              if (message) {
-                const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
+      const dataFile = getData(`data/${serveur}/config.json`);
+      const configStaff = dataFile.find((c) => c.nom === "Staff");
+      const configAffichage = configStaff.systeme["Affichage Staff"];
 
-                const effectifRole = (role) => {
-                  const members = processedData[role].filter(
-                    (name) => name.trim() !== "",
-                  );
-                  return members.length;
-                };
+      const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
 
-                const description = `
+      const effectifRole = (role) => {
+        const members = processedData[role].filter(
+          (name) => name.trim() !== "",
+        );
+        return members.length;
+      };
+
+      const description = `
                                     **${
                                       config.emojigrade["Administrateur"]
                                     } Administrateurs (${effectifRole(
@@ -500,50 +482,48 @@ app.post("/staff", async (req, res) => {
                                     )}:R>*
                                 `;
 
-                const staffEmbed = new EmbedBuilder()
-                  .setAuthor({
-                    name: `Staff du serveur ${
-                      serveur.charAt(0).toUpperCase() + serveur.slice(1)
-                    }`,
-                    url: `https://nationsglory.fr/server/${serveur}/staff`,
-                  })
-                  .setThumbnail(
-                    `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
-                  )
-                  .setColor(config.couleur[serveur])
-                  .setDescription(description)
-                  .setFooter({ text: config.footer });
+      const staffEmbed = new EmbedBuilder()
+        .setAuthor({
+          name: `Staff du serveur ${
+            serveur.charAt(0).toUpperCase() + serveur.slice(1)
+          }`,
+          url: `https://nationsglory.fr/server/${serveur}/staff`,
+        })
+        .setThumbnail(`${config.glorybot_url}/api/banniere?serveur=${serveur}`)
+        .setColor(config.couleur[serveur])
+        .setDescription(description)
+        .setFooter({ text: config.footer });
 
-                await message.edit({ embeds: [staffEmbed] });
-                console.log(
-                  `✅ Message mis à jour pour le serveur ${
-                    serveur.charAt(0).toUpperCase() + serveur.slice(1)
-                  }`,
-                );
-              }
-            }
-          } catch (error) {
-            if (error.code === 10008) {
-              console.log(
-                `🗑️ Le message pour le serveur ${
-                  serveur.charAt(0).toUpperCase() + serveur.slice(1)
-                } a été supprimé.`,
-              );
-              configStaff["Affichage Staff"].Message = false;
-              fs.writeFileSync(
-                configFilePath,
-                JSON.stringify(configStaff, null, 2),
-                "utf8",
-              );
-            } else {
-              console.error(
-                `❌ Erreur lors de la mise à jour du message pour le serveur ${
-                  serveur.charAt(0).toUpperCase() + serveur.slice(1)
-                }:`,
-                error,
-              );
-            }
-          }
+      for (const [guildId, isActive] of Object.entries(
+        configAffichage.active,
+      )) {
+        if (!isActive) continue;
+
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) continue;
+
+        const channelId = configAffichage.Salon.valeur[guildId];
+        if (!channelId) continue;
+
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) continue;
+
+        const message = await channel.messages.fetch(
+          configAffichage.Message[guildId],
+        );
+        if (!message) continue;
+
+        try {
+          await message.edit({ embeds: [staffEmbed] });
+
+          console.log(
+            `✅ Message effectif staff modifié | serveur ${serveur} | guild ${guildId}`,
+          );
+        } catch (err) {
+          console.error(
+            `❌ Erreur modification effectif staff | serveur ${serveur} | guild ${guildId}`,
+            err,
+          );
         }
       }
     }
@@ -720,22 +700,10 @@ app.post("/update-leaders", async (req, res) => {
             const normalizedServer = server.toLowerCase();
             if (eligibleServersMap.has(normalizedServer)) continue;
 
-            const serverConfigPath = path.join(
-              __dirname,
-              "data",
-              server,
-              "config-doublelead.json",
-            );
-            if (!fs.existsSync(serverConfigPath)) continue;
-
-            const serverConfig = JSON.parse(
-              fs.readFileSync(serverConfigPath, "utf8"),
-            );
-            if (
-              serverConfig.doublelead.active &&
-              serverConfig.doublelead.Salon.valeur &&
-              !updatedEntry.alerteServeur.includes(server)
-            ) {
+            const dataFile = getData(`data/${server}/config.json`);
+            const configData = dataFile.find((c) => c.nom === "Double Lead");
+            const serverConfig = configData.systeme.doublelead;
+            if (!updatedEntry.alerteServeur.find((a) => a.server === server)) {
               eligibleServersMap.set(normalizedServer, serverConfig);
             }
           }
@@ -778,10 +746,6 @@ app.post("/update-leaders", async (req, res) => {
           }
 
           for (const [server, serverConfig] of eligibleServersMap.entries()) {
-            const channel = await client.channels.fetch(
-              serverConfig.doublelead.Salon.valeur,
-            );
-
             const container = new ContainerBuilder()
               .setAccentColor(config.couleur[server])
               .addTextDisplayComponents((t) =>
@@ -790,29 +754,56 @@ app.post("/update-leaders", async (req, res) => {
               .addSeparatorComponents((s) => s)
               .addTextDisplayComponents((t) => t.setContent(message));
 
-            if (
-              Array.isArray(serverConfig.doublelead.Role.valeur) &&
-              serverConfig.doublelead.Role.valeur.length > 0
-            ) {
-              const roleMentions = serverConfig.doublelead.Role.valeur
-                .map((roleId) => `<@&${roleId}>`)
-                .join(", ");
-              const roleTextDisplay = new TextDisplayBuilder().setContent(
-                roleMentions,
-              );
+            for (const [guildId, isActive] of Object.entries(
+              serverConfig.active,
+            )) {
+              if (!isActive) continue;
 
-              channel.send({
-                components: [roleTextDisplay, container],
-                flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-              });
-            } else {
-              channel.send({
-                components: [container],
-                flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-              });
+              const guild = client.guilds.cache.get(guildId);
+              if (!guild) continue;
+
+              const channelId = serverConfig.Salon.valeur[guildId];
+              if (!channelId) continue;
+
+              const channel = guild.channels.cache.get(channelId);
+              if (!channel) continue;
+
+              if (updatedEntry.alerteServeur.find((a) => a.server === server))
+                continue;
+
+              const roleIds = serverConfig.Role.valeur[guildId] || [];
+              const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+              let components = [container];
+              if (roleMentions.length > 0) {
+                components = [
+                  new TextDisplayBuilder().setContent(roleMentions),
+                  container,
+                ];
+              }
+
+              try {
+                const sentMessage = await channel.send({
+                  components,
+                  flags: MessageFlags.IsComponentsV2,
+                });
+
+                if (channel.type === "GUILD_NEWS") {
+                  await sentMessage.crosspost();
+                }
+
+                console.log(
+                  `✅ Message double lead envoyé | serveur ${server} | guild ${guildId}`,
+                );
+
+                updatedEntry.alerteServeur.push({ server, guildId });
+              } catch (err) {
+                console.error(
+                  `❌ Erreur envoi double lead | serveur ${server} | guild ${guildId}`,
+                  err,
+                );
+              }
             }
-
-            updatedEntry.alerteServeur.push(server);
           }
         }
 

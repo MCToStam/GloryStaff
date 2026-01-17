@@ -59,7 +59,10 @@ module.exports = async (client, member) => {
           ),
         );
 
-      await member.send({ components: [container], flags: MessageFlags });
+      await member.send({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
     }
   } catch (error) {
     console.error("Erreur lors du traitement de guildMemberAdd:", error);

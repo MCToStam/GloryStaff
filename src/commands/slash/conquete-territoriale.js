@@ -7,6 +7,7 @@ const {
 const { getData } = require("../../../util/module/getAndSaveData");
 const { getEmojiDrapeau, getEmojiTete } = require("../../../util/module/emoji");
 const { discordLink } = require("../../../util/module/discordLink");
+const { ConquêteTerritoriale } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
@@ -36,11 +37,13 @@ module.exports = {
   async proxy(client, interaction, config) {
     const { serveur, paysa, paysb } = interaction.parametre;
 
-    const configExpansion = getData(
-      `data/${serveur}/config-expansionterritoriale.json`,
-    );
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configData = dataFile.find((c) => c.nom === "Expansion Territoriale");
+    const configExpansion = configData.systeme["Conquête Territoriale"];
 
-    if (!configExpansion["Conquête Territoriale"]?.active) {
+    const guildId = interaction.guild.id;
+
+    if (!configExpansion.active[guildId]) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
@@ -51,7 +54,7 @@ module.exports = {
           t.setContent(
             `Le système de Conquête Territoriale est désactivé sur le serveur ${
               config.emoji_formate[serveur]
-            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}.`,
+            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
           ),
         );
 
@@ -61,7 +64,7 @@ module.exports = {
       });
     }
 
-    if (!configExpansion["Conquête Territoriale"]?.Salon.valeur) {
+    if (!configExpansion.Salon.valeur[guildId]) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
@@ -74,7 +77,7 @@ module.exports = {
               config.emoji_formate[serveur]
             } ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }, le choix du salon est manquant.`,
+            } pour votre serveur Discord, le choix du salon est manquant.`,
           ),
         );
 
@@ -91,29 +94,22 @@ module.exports = {
     }
 
     const pseudo = await discordLink(interaction.user.id);
-    const tete = await getEmojiTete(client, pseudo);
-    const drapeauA = await getEmojiDrapeau(client, serveur, paysa);
-    const drapeauB = await getEmojiDrapeau(client, serveur, paysb);
 
-    const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
-      .addTextDisplayComponents((t) =>
-        t.setContent("## ✈️ Conquête Territoriale"),
-      )
-      .addSeparatorComponents((s) => s)
-      .addTextDisplayComponents((t) =>
-        t.setContent(
-          `${tete} **${pseudo}** vient de valider la conquête territoriale du pays ${drapeauA} **${paysa}**. Ce pays a donc annexé le pays ${drapeauB} **${paysb}**.`,
-        ),
-      );
+    const container = await ConquêteTerritoriale(
+      client,
+      serveur,
+      pseudo,
+      paysa,
+      paysb,
+    );
 
     const salon = await client.channels.fetch(
-      configExpansion["Conquête Territoriale"]?.Salon.valeur,
+      configExpansion.Salon.valeur[guildId],
     );
 
     let message;
-    if (configExpansion["Conquête Territoriale"].Role.valeur.length > 0) {
-      const roleMentions = configExpansion["Conquête Territoriale"]?.Role.valeur
+    if (configExpansion.Role.valeur[guildId].length > 0) {
+      const roleMentions = configExpansion.Role.valeur[guildId]
         .map((roleId) => `<@&${roleId}>`)
         .join(", ");
 

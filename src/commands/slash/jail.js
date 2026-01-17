@@ -1,14 +1,11 @@
 const {
   SlashCommandBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   MessageFlags,
   ContainerBuilder,
 } = require("discord.js");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
-const { getEmojiTete } = require("../../../util/module/emoji");
+const { Jail } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
@@ -41,10 +38,6 @@ module.exports = {
   },
   async proxy(client, interaction, config) {
     const { serveur, criminel, durée, lien_raison } = interaction.parametre;
-
-    const isLienValide = lien_raison.startsWith(
-      "https://nationsglory.fr/forums/thread/",
-    );
 
     const dureeRegex = /^(\d+)([hmdb])$/;
     const match = durée.match(dureeRegex);
@@ -138,9 +131,13 @@ module.exports = {
 
     const vraiCriminel = foundUser.username;
 
-    const configJail = getData(`data/${serveur}/config-jail.json`);
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configData = dataFile.find((c) => c.nom === "Jail");
+    const configJail = configData.systeme["Jail"];
 
-    if (!configJail.jail?.active) {
+    const guildId = interaction.guild.id;
+
+    if (!configJail.active[guildId]) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((textDisplay) =>
@@ -151,7 +148,7 @@ module.exports = {
           textDisplay.setContent(
             `Le système de Jail est désactivé sur le serveur ${
               config.emoji_formate[serveur]
-            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}.`,
+            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
           ),
         );
 
@@ -168,7 +165,10 @@ module.exports = {
       }
     }
 
-    if (!configJail.jail?.Salon.valeur || !configJail.jail?.Grade.valeur) {
+    if (
+      !configJail.Salon.valeur[guildId] ||
+      !configJail.Grade.valeur[guildId]
+    ) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((textDisplay) =>
@@ -181,7 +181,7 @@ module.exports = {
               config.emoji_formate[serveur]
             } ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }, le choix du salon et/ou du grade autorisé est manquant.`,
+            } pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
           ),
         );
 
@@ -198,7 +198,7 @@ module.exports = {
       }
     }
 
-    const roleAutorise = configJail.jail.Grade.valeur;
+    const roleAutorise = configJail.Grade.valeur[guildId];
 
     const gradeAutorise = {
       Administrateur: "administrateur",
@@ -222,48 +222,17 @@ module.exports = {
       });
     }
 
-    let descriptionEmbed = `**Durée** : ${dureeLisible}\n`;
-    descriptionEmbed += isLienValide
-      ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
-      : `**Raison :** ${lien_raison}`;
-
     const salon = await interaction.client.channels.fetch(
-      configJail.jail?.Salon.valeur,
+      configJail.Salon.valeur[guildId],
     );
 
-    const teteEmoji = await getEmojiTete(client, vraiCriminel);
-
-    const jailContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `## ${teteEmoji || "🚧"} Jail sur ${vraiCriminel.replace(
-            /_/g,
-            "\\_",
-          )}`,
-        ),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(descriptionEmbed),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("jail_finish")
-            .setLabel("✅ Jail Effectué")
-            .setStyle(ButtonStyle.Success),
-          ...(isLienValide
-            ? [
-                new ButtonBuilder()
-                  .setLabel("🔗 Aller sur la plainte")
-                  .setStyle(ButtonStyle.Link)
-                  .setURL(lien_raison),
-              ]
-            : []),
-        ),
-      );
+    const jailContainer = await Jail(
+      client,
+      serveur,
+      vraiCriminel,
+      dureeLisible,
+      lien_raison,
+    );
 
     const message = await salon.send({
       components: [jailContainer],

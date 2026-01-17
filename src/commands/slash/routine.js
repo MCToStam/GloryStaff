@@ -1,15 +1,11 @@
 const {
   SlashCommandBuilder,
-  StringSelectMenuBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
 const { getData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
-const { getEmojiTete } = require("../../../util/module/emoji");
+const { Routine } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
@@ -24,9 +20,13 @@ module.exports = {
   async proxy(client, interaction, config) {
     const { serveur } = interaction.parametre;
 
-    const configRoutine = getData(`data/${serveur}/config-routine.json`);
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configData = dataFile.find((c) => c.nom === "Routine");
+    const configRoutine = configData.systeme.Routine;
 
-    if (!configRoutine.routine?.active) {
+    const guildId = interaction.guild.id;
+
+    if (!configRoutine.active[guildId]) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((textDisplay) =>
@@ -37,7 +37,7 @@ module.exports = {
           textDisplay.setContent(
             `Le système de Routine est désactivé sur le serveur ${
               config.emoji_formate[serveur]
-            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}.`,
+            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
           ),
         );
 
@@ -55,8 +55,8 @@ module.exports = {
     }
 
     if (
-      !configRoutine.routine?.Salon.valeur ||
-      !configRoutine.routine?.Grade.valeur
+      !configRoutine.Salon.valeur[guildId] ||
+      !configRoutine.Grade.valeur[guildId]
     ) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
@@ -70,7 +70,7 @@ module.exports = {
               config.emoji_formate[serveur]
             } ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }, le choix du salon et/ou du grade autorisé est manquant.`,
+            } pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
           ),
         );
 
@@ -87,7 +87,7 @@ module.exports = {
       }
     }
 
-    const roleAutorise = configRoutine.routine.Grade.valeur;
+    const roleAutorise = configRoutine.Grade.valeur[guildId];
 
     const gradeAutorise = {
       Administrateur: "administrateur",
@@ -111,77 +111,7 @@ module.exports = {
       });
     }
 
-    const teteEmoji = await getEmojiTete(client, pseudonym);
-
-    const routineContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `## ${teteEmoji || "⏱️"} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
-        ),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `**Début de la routine :** <t:${Math.floor(
-            Date.now() / 1000,
-          )}:R>\n**Infractions :**\n**Fin de la routine :**`,
-        ),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId("routine")
-            .setPlaceholder("Sélectionnez une infraction")
-            .addOptions([
-              {
-                label: "Bunker Illégal",
-                value: "routine_bunkerillegal",
-                emoji: "1333876277651705878",
-              },
-              {
-                label: "Anti-AFK",
-                value: "routine_antiafk",
-                emoji: "1333876277651705878",
-              },
-              {
-                label: "Auto-Clic",
-                value: "routine_autoclic",
-                emoji: "1333876277651705878",
-              },
-              {
-                label: "Stack Item",
-                value: "routine_stackitem",
-                emoji: "1333876277651705878",
-              },
-              {
-                label: "AutoNuke Illégal",
-                value: "routine_autonukeillegal",
-                emoji: "1333876277651705878",
-              },
-              {
-                label: "XRay",
-                value: "routine_xray",
-                emoji: "1333876277651705878",
-              },
-              {
-                label: "Autre",
-                value: "routine_autre",
-                emoji: "1333876277651705878",
-              },
-            ]),
-        ),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`routine_finish-${pseudonym}`)
-            .setLabel("✅ Terminer la Routine")
-            .setStyle(ButtonStyle.Success),
-        ),
-      );
+    const routineContainer = await Routine(client, serveur, pseudonym);
 
     if (interaction.isMessageComponent()) {
       return interaction.update({
