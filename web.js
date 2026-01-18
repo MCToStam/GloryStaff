@@ -1,7 +1,7 @@
 const express = require("express");
 const { getData } = require("./util/module/getAndSaveData");
 const { discordStaff, discordLink } = require("./util/module/discordLink");
-const { AttenteStaff } = require("./util/container/module");
+const { AttenteStaff, DoubleLead } = require("./util/container/module");
 const { getEmojiTete } = require("./util/module/emoji");
 const bodyParser = require("body-parser");
 const {
@@ -11,7 +11,6 @@ const {
   ButtonStyle,
   WebhookClient,
   MessageFlags,
-  ContainerBuilder,
   TextDisplayBuilder,
 } = require("discord.js");
 const fs = require("fs");
@@ -702,7 +701,7 @@ app.post("/update-leaders", async (req, res) => {
 
             const dataFile = getData(`data/${server}/config.json`);
             const configData = dataFile.find((c) => c.nom === "Double Lead");
-            const serverConfig = configData.systeme.doublelead;
+            const serverConfig = configData.systeme["Double Lead"];
             if (!updatedEntry.alerteServeur.find((a) => a.server === server)) {
               eligibleServersMap.set(normalizedServer, serverConfig);
             }
@@ -711,48 +710,14 @@ app.post("/update-leaders", async (req, res) => {
           if (eligibleServersMap.size === 0) continue;
 
           const leaderPseudos = [...new Set(servers.map((s) => s.compte))];
-          let message;
-
-          if (leaderPseudos.length === 1) {
-            const emoji = await getEmojiTete(client, leaderPseudos[0]);
-            message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays :\n`;
-          } else if (leaderPseudos.length === 2) {
-            const [p1, p2] = leaderPseudos;
-            const [e1, e2] = await Promise.all([
-              getEmojiTete(client, p1),
-              getEmojiTete(client, p2),
-            ]);
-            message = `Les joueurs ${e1} **${p1}** et ${e2} **${p2}** possèdent différents pays :\n`;
-          } else {
-            const last = leaderPseudos.pop();
-            const emojis = await Promise.all(
-              leaderPseudos.map((p) => getEmojiTete(client, p)),
-            );
-            const lastEmoji = await getEmojiTete(client, last);
-            message = `Les joueurs ${leaderPseudos
-              .map((p, i) => `${emojis[i]} **${p}**`)
-              .join(
-                ", ",
-              )} et ${lastEmoji} **${last}** possèdent différents pays :\n`;
-          }
-
-          for (const { compte, server, country } of servers) {
-            const emojiCompte = await getEmojiTete(client, compte);
-            message += `<:NG${
-              server.charAt(0).toUpperCase() + server.slice(1)
-            }:${config.emoji[server.toLowerCase()]}> **${
-              server.charAt(0).toUpperCase() + server.slice(1)
-            }** : ${country} (${emojiCompte} ${compte})\n`;
-          }
 
           for (const [server, serverConfig] of eligibleServersMap.entries()) {
-            const container = new ContainerBuilder()
-              .setAccentColor(config.couleur[server])
-              .addTextDisplayComponents((t) =>
-                t.setContent(`## 🏴 Double Lead`),
-              )
-              .addSeparatorComponents((s) => s)
-              .addTextDisplayComponents((t) => t.setContent(message));
+            const container = await DoubleLead(
+              client,
+              server,
+              leaderPseudos,
+              servers,
+            );
 
             for (const [guildId, isActive] of Object.entries(
               serverConfig.active,

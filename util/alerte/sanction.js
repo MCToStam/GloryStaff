@@ -1,32 +1,12 @@
 const config = require("../../config");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
-const { getEmojiTete } = require("../../util/module/emoji");
-const {
-  MessageFlags,
-  ContainerBuilder,
-  TextDisplayBuilder,
-} = require("discord.js");
+const { SanctionStaff } = require("../../util/container/module");
+const { MessageFlags, TextDisplayBuilder } = require("discord.js");
 
 function sameSanction(a, b) {
   return (
     a?.date === b?.date && a?.raison === b?.raison && a?.staff === b?.staff
   );
-}
-
-function formatDuree(duree) {
-  if (!duree) return "";
-  return duree.replace(/(\d+)(y|mois|j|h|m|s)/g, (_, value, unit) => {
-    const map = {
-      y: { sing: "an", plur: "ans" },
-      mois: { sing: "mois", plur: "mois" },
-      j: { sing: "jour", plur: "jours" },
-      h: { sing: "heure", plur: "heures" },
-      m: { sing: "minute", plur: "minutes" },
-      s: { sing: "seconde", plur: "secondes" },
-    };
-    const u = map[unit];
-    return u ? `${value} ${value > 1 ? u.plur : u.sing}` : `${value}${unit}`;
-  });
 }
 
 function parseSanctions(rawText) {
@@ -124,16 +104,17 @@ async function sendSanctionMessage(
   active,
   salon,
   role,
-  message,
-  titre,
+  pseudonyme,
+  newSanctions,
   serveur,
   client,
 ) {
-  const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
-    .addTextDisplayComponents((t) => t.setContent(`## 🔨 ${titre}`))
-    .addSeparatorComponents((s) => s)
-    .addTextDisplayComponents((t) => t.setContent(message));
+  const container = await SanctionStaff(
+    client,
+    serveur,
+    pseudonyme,
+    newSanctions,
+  );
 
   for (const [guildId, isActive] of Object.entries(active)) {
     if (!isActive) continue;
@@ -216,43 +197,12 @@ async function sanction(client, serveur) {
       }),
     );
 
-    const lignes = await Promise.all(
-      newSanctions.map(async (s) => {
-        const ts = s.date
-          ? `<t:${Math.floor(new Date(s.date).getTime() / 1000)}:R>`
-          : "";
-
-        const dureeStr =
-          s.type !== "Warn" && s.duree === "Def"
-            ? "définitif "
-            : s.type !== "Warn" && s.duree
-              ? `pendant ${formatDuree(s.duree)} `
-              : "";
-
-        const tete = await getEmojiTete(client, s.staff);
-
-        return `${config.emoji_formate[s.serveur] || ""} **${
-          s.type
-        }** ${dureeStr}pour **${s.raison}** par ${tete} **${s.staff}** ${ts}`;
-      }),
-    );
-
-    const embedMessage = `**${await getEmojiTete(
-      client,
-      pseudonyme,
-    )} ${pseudonyme}** a reçu ${newSanctions.length} ${
-      newSanctions.length > 1 ? "nouvelles sanctions" : "nouvelle sanction"
-    } :\n\n${lignes.join("\n")}`;
-
-    const titre =
-      newSanctions.length > 1 ? "Nouvelles Sanctions" : "Nouvelle Sanction";
-
     await sendSanctionMessage(
       configSanction.active,
       configSanction.Salon.valeur,
       configSanction.Role.valeur,
-      embedMessage,
-      titre,
+      pseudonyme,
+      newSanctions,
       serveur,
       client,
     );

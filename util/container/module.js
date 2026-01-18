@@ -9,6 +9,22 @@ const {
   ContainerBuilder,
 } = require("discord.js");
 
+function formatDuree(duree) {
+  if (!duree) return "";
+  return duree.replace(/(\d+)(y|mois|j|h|m|s)/g, (_, value, unit) => {
+    const map = {
+      y: { sing: "an", plur: "ans" },
+      mois: { sing: "mois", plur: "mois" },
+      j: { sing: "jour", plur: "jours" },
+      h: { sing: "heure", plur: "heures" },
+      m: { sing: "minute", plur: "minutes" },
+      s: { sing: "seconde", plur: "secondes" },
+    };
+    const u = map[unit];
+    return u ? `${value} ${value > 1 ? u.plur : u.sing}` : `${value}${unit}`;
+  });
+}
+
 async function Guerre(client, serveur, guerre) {
   if (!guerre)
     guerre = {
@@ -349,6 +365,120 @@ async function FullBuild(client, serveur, pseudo, paysa, paysb) {
   return container;
 }
 
+async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
+  if (!pseudonyme) pseudonyme = "ToStam";
+  if (!newSanctions)
+    newSanctions = [
+      {
+        type: "Warn",
+        duree: "Def",
+        raison: "Utilisation abusive d une autre langue",
+        staff: "Noah181006",
+        date: "2024-01-21 15:44:42",
+        serveur: "orange",
+      },
+    ];
+
+  const lignes = await Promise.all(
+    newSanctions.map(async (s) => {
+      const ts = s.date
+        ? `<t:${Math.floor(new Date(s.date).getTime() / 1000)}:R>`
+        : "";
+
+      const dureeStr =
+        s.type !== "Warn" && s.duree === "Def"
+          ? "définitif "
+          : s.type !== "Warn" && s.duree
+            ? `pendant ${formatDuree(s.duree)} `
+            : "";
+
+      const tete = await getEmojiTete(client, s.staff);
+
+      return `${config.emoji_formate[s.serveur] || ""} **${
+        s.type
+      }** ${dureeStr}pour **${s.raison}** par ${tete} **${s.staff}** ${ts}`;
+    }),
+  );
+
+  const message = `**${await getEmojiTete(
+    client,
+    pseudonyme,
+  )} ${pseudonyme}** a reçu ${newSanctions.length} ${
+    newSanctions.length > 1 ? "nouvelles sanctions" : "nouvelle sanction"
+  } :\n\n${lignes.join("\n")}`;
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## 🔨 ${newSanctions.length > 1 ? "Nouvelles Sanctions" : "Nouvelle Sanction"}`,
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) => t.setContent(message));
+
+  return container;
+}
+
+async function DoubleLead(client, serveur, leaderPseudos, servers) {
+  if (!leaderPseudos) leaderPseudos = ["Zyfera", "ZyfLeRat"];
+  if (!servers)
+    servers = [
+      {
+        server: "white",
+        compte: "Zyfera",
+        role: "leader",
+        country: "Madagascar",
+      },
+      {
+        server: "white",
+        compte: "ZyfLeRat",
+        role: "officer",
+        country: "Perou",
+      },
+    ];
+
+  let message;
+
+  if (leaderPseudos.length === 1) {
+    const emoji = await getEmojiTete(client, leaderPseudos[0]);
+    message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays :\n`;
+  } else if (leaderPseudos.length === 2) {
+    const [p1, p2] = leaderPseudos;
+    const [e1, e2] = await Promise.all([
+      getEmojiTete(client, p1),
+      getEmojiTete(client, p2),
+    ]);
+    message = `Les joueurs ${e1} **${p1}** et ${e2} **${p2}** possèdent différents pays :\n`;
+  } else {
+    const last = leaderPseudos.pop();
+    const emojis = await Promise.all(
+      leaderPseudos.map((p) => getEmojiTete(client, p)),
+    );
+    const lastEmoji = await getEmojiTete(client, last);
+    message = `Les joueurs ${leaderPseudos
+      .map((p, i) => `${emojis[i]} **${p}**`)
+      .join(", ")} et ${lastEmoji} **${last}** possèdent différents pays :\n`;
+  }
+
+  for (const { compte, server, country } of servers) {
+    const emojiCompte = await getEmojiTete(client, compte);
+    message += `<:NG${
+      server.charAt(0).toUpperCase() + server.slice(1)
+    }:${config.emoji[server.toLowerCase()]}> **${
+      server.charAt(0).toUpperCase() + server.slice(1)
+    }** : ${country} (${emojiCompte} ${compte})\n`;
+  }
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) => t.setContent(`## 🏴 Double Lead`))
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) => t.setContent(message));
+
+  return container;
+}
+
 module.exports = {
   Guerre,
   Guerrenontraitée,
@@ -359,4 +489,6 @@ module.exports = {
   Routine,
   ConquêteTerritoriale,
   FullBuild,
+  SanctionStaff,
+  DoubleLead,
 };

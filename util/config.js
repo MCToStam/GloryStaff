@@ -18,7 +18,7 @@ const INFO_SUPP = {
     "Ce système permet de recevoir un message à 14h00 contenant les potentiels pays disponibles au pillage.",
   "Pays Disband ( 18h15 )":
     "Ce système permet de recevoir un message à 18h15 contenant la liste des pays disbands entre 18h00 et 18h15.",
-  doublelead:
+  "Double Lead":
     'Ce système permet d\'être alerté lorsque de nouvelles personnes sont détectées en tant que "Double Lead" sur votre serveur.',
   "Full Build":
     "Ce système vous permet d'annoncer qu'un pays est \"Full Build\" et qu'il peut partir en expention territoriale sur un autre pays.",
@@ -66,7 +66,7 @@ const AUTRE_EMOJI = {
   Builder: "<:builder:1458468397963808872>",
   "Pays Pillable ( 14h )": "<:payspillable:1458742654010392658>",
   "Pays Disband ( 18h15 )": "<:paysdisband:1458742655692308623>",
-  doublelead: "<:doublelead:1458459662851637554>",
+  "Double Lead": "<:doublelead:1458459662851637554>",
   "Full Build": "<:fullbuild:1458742657617498183>",
   "Conquête Territoriale": "<:conqueteterritoriale:1458742659995668723>",
   Plainte: "<:plainte:1458742662160191498>",
@@ -281,6 +281,7 @@ function genererConfigsServeurs(client) {
 
         let vraiSysteme = systeme;
         if (systeme === "classement") vraiSysteme = "Classement";
+        if (systeme === "doublelead") vraiSysteme = "Double Lead";
         if (systeme === "répartition") vraiSysteme = "Répartition";
         if (systeme === "attentestaff") vraiSysteme = "Attente Staff";
         if (systeme === "jail") vraiSysteme = "Jail";
