@@ -71,7 +71,7 @@ async function allConfig(serveur, userId) {
     .addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId("routine")
+          .setCustomId("config_subconfig")
           .setPlaceholder("Sélectionnez un système")
           .addOptions(options),
       ),

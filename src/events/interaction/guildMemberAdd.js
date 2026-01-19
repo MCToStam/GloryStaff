@@ -31,7 +31,9 @@ module.exports = async (client, member) => {
       rolesToAdd.push(config.role["administrateur"]);
     } else if (superModoServers.length > 0 && config.role["super_moderateur"]) {
       rolesToAdd.push(config.role["super_moderateur"]);
-    } else if (guideServers.length > 0 && config.role["staffng"]) {
+    }
+
+    if (guideServers.length > 0 && config.role["staffng"]) {
       rolesToAdd.push(config.role["staffng"]);
     }
 

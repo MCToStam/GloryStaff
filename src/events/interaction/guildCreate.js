@@ -33,15 +33,29 @@ module.exports = async (client, guild) => {
     );
 
     if (config.developpeur.includes(inviter?.id) || servers.length > 0) {
-      const embed = {
-        title: "Nouveau Serveur - Accès Autorisé",
-        description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
-        thumbnail: { url: serverIconURL },
-        footer: { text: config.footer },
-        color: config.colors.sucess,
-      };
+      const container = new ContainerBuilder()
+        .setAccentColor(config.colors.success)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ✅ Nouveau Serveur - Accès Autorisé"),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addSectionComponents((section) =>
+          section
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(
+                `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
+              ),
+            )
+            .setThumbnailAccessory((thumbnail) =>
+              thumbnail.setURL(serverIconURL),
+            ),
+        );
+
       try {
-        await targetUser.send({ embeds: [embed] });
+        await targetUser.send({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+        });
       } catch (e) {}
     } else {
       let errorContainer;
@@ -91,17 +105,28 @@ module.exports = async (client, guild) => {
           );
       }
 
-      const embed = {
-        title: "Nouveau Serveur - Accès Refusé",
-        description: `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
-        thumbnail: { url: serverIconURL },
-        footer: { text: config.footer },
-        color: config.colors.error,
-      };
+      const container = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ❌ Nouveau Serveur - Accès Refusé"),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addSectionComponents((section) =>
+          section
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(
+                `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
+              ),
+            )
+            .setThumbnailAccessory((thumbnail) =>
+              thumbnail.setURL(serverIconURL),
+            ),
+        );
 
       try {
         await targetUser.send({
-          embeds: [embed],
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
         });
       } catch (e) {}
       try {

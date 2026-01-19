@@ -47,7 +47,9 @@ async function checkGradeSupport(client) {
           config.role["super_moderateur"]
         ) {
           expectedRoles.push(config.role["super_moderateur"]);
-        } else if (guideServers.length > 0 && config.role["staffng"]) {
+        }
+
+        if (guideServers.length > 0 && config.role["staffng"]) {
           expectedRoles.push(config.role["staffng"]);
         }
 
