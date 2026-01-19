@@ -32,6 +32,12 @@ async function checkGradeSupport(client) {
           "super_moderateur",
         );
 
+        const { servers: guideServers } = await discordStaff(
+          member.id,
+          "all",
+          "guide",
+        );
+
         const expectedRoles = [];
 
         if (adminServers.length > 0 && config.role["administrateur"]) {
@@ -41,6 +47,8 @@ async function checkGradeSupport(client) {
           config.role["super_moderateur"]
         ) {
           expectedRoles.push(config.role["super_moderateur"]);
+        } else if (guideServers.length > 0 && config.role["staffng"]) {
+          expectedRoles.push(config.role["staffng"]);
         }
 
         const serverRoles = superModoServers

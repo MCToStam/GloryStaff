@@ -19,12 +19,20 @@ module.exports = async (client, member) => {
       "super_moderateur",
     );
 
+    const { servers: guideServers } = await discordStaff(
+      member.user.id,
+      "all",
+      "guide",
+    );
+
     const rolesToAdd = [];
 
     if (adminServers.length > 0 && config.role["administrateur"]) {
       rolesToAdd.push(config.role["administrateur"]);
     } else if (superModoServers.length > 0 && config.role["super_moderateur"]) {
       rolesToAdd.push(config.role["super_moderateur"]);
+    } else if (guideServers.length > 0 && config.role["staffng"]) {
+      rolesToAdd.push(config.role["staffng"]);
     }
 
     const serverRoles = superModoServers
@@ -54,7 +62,7 @@ module.exports = async (client, member) => {
           textDisplay.setContent(
             `Merci d'avoir rejoint le serveur support de GloryBot et GloryStaff.\n\n` +
               `Ton rôle t'a été attribué automatiquement en fonction de ton implication sur les serveurs suivants :\n` +
-              `${superModoServers.join(", ")}\n\n` +
+              `${guideServers.join(", ")}\n\n` +
               `📌 Besoin d'aide ? N'hésite jamais à poser une question !`,
           ),
         );
