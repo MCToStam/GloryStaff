@@ -30,7 +30,7 @@ module.exports = {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    const { serveur, staff } = interaction.parametre;
+    const { serveur, staff: staffParam } = interaction.parametre;
 
     const { pseudonym, servers } = await discordStaff(
       interaction.user.id,
@@ -38,6 +38,7 @@ module.exports = {
       "super_moderateur",
     );
 
+    let staff = staffParam;
     if (servers.length === 0) staff = pseudonym;
 
     if (!staff) {
