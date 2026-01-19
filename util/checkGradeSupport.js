@@ -51,7 +51,7 @@ async function checkGradeSupport(client) {
           expectedRoles.push(config.role["staffng"]);
         }
 
-        const serverRoles = superModoServers
+        const serverRoles = guideServers
           .map((server) => config.role[server])
           .filter(Boolean);
 

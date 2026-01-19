@@ -35,7 +35,7 @@ module.exports = async (client, member) => {
       rolesToAdd.push(config.role["staffng"]);
     }
 
-    const serverRoles = superModoServers
+    const serverRoles = guideServers
       .map((server) => config.role[server])
       .filter(Boolean);
 
