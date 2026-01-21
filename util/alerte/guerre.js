@@ -229,10 +229,19 @@ async function guerre(client) {
         }
       }
 
-      saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
+      for (const guerre of guerresExistantes) {
+        const stillExists = complaints.some((c) => c.lien === guerre.lien);
+
+        if (stillExists) {
+          guerre.missingCount = 0;
+        } else {
+          guerre.missingCount = (guerre.missingCount || 0) + 1;
+        }
+      }
 
       for (const guerre of guerresAvantUpdate.filter(
-        (g) => !complaints.some((c) => c.lien === g.lien),
+        (g) =>
+          !complaints.some((c) => c.lien === g.lien && c.missingCount >= 24),
       )) {
         if (!Array.isArray(guerre.message)) continue;
 
@@ -263,7 +272,7 @@ async function guerre(client) {
 
       if (guerresAvantUpdate.length > 0) {
         const guerresRestantes = guerresExistantes.filter((g) =>
-          complaints.some((c) => c.lien === g.lien),
+          complaints.some((c) => c.lien === g.lien && c.missingCount < 24),
         );
 
         saveData(`data/${server}/forum/guerre.json`, guerresRestantes);

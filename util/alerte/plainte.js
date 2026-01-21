@@ -228,10 +228,19 @@ async function plainte(client) {
         }
       }
 
-      saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
+      for (const plainte of plaintesExistantes) {
+        const stillExists = complaints.some((c) => c.lien === plainte.lien);
+
+        if (stillExists) {
+          plainte.missingCount = 0;
+        } else {
+          plainte.missingCount = (plainte.missingCount || 0) + 1;
+        }
+      }
 
       for (const plainte of plaintesAvantUpdate.filter(
-        (p) => !complaints.some((c) => c.lien === p.lien),
+        (p) =>
+          !complaints.some((c) => c.lien === p.lien && p.missingCount >= 24),
       )) {
         if (!Array.isArray(plainte.message)) continue;
 
@@ -263,7 +272,7 @@ async function plainte(client) {
       saveData(
         `data/${server}/forum/plainte.json`,
         plaintesInitiales.filter((p) =>
-          complaints.some((c) => c.lien === p.lien),
+          complaints.some((c) => c.lien === p.lien && p.missingCount < 24),
         ),
       );
     } catch (e) {}
