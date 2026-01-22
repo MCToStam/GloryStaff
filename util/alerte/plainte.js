@@ -91,6 +91,17 @@ async function plainte(client) {
       const nouvellesPlaintes = complaints.filter(
         (c) => !plaintesExistantes.some((p) => p.lien === c.lien),
       );
+
+      for (const plainte of plaintesExistantes) {
+        const stillExists = complaints.some((c) => c.lien === plainte.lien);
+
+        if (stillExists) {
+          plainte.missingCount = 0;
+        } else {
+          plainte.missingCount = (plainte.missingCount || 0) + 1;
+        }
+      }
+
       const plaintesAvantUpdate = [...plaintesExistantes];
 
       if (nouvellesPlaintes.length) {
@@ -228,19 +239,10 @@ async function plainte(client) {
         }
       }
 
-      for (const plainte of plaintesExistantes) {
-        const stillExists = complaints.some((c) => c.lien === plainte.lien);
-
-        if (stillExists) {
-          plainte.missingCount = 0;
-        } else {
-          plainte.missingCount = (plainte.missingCount || 0) + 1;
-        }
-      }
-
       for (const plainte of plaintesAvantUpdate.filter(
         (p) =>
-          !complaints.some((c) => c.lien === p.lien && p.missingCount >= 24),
+          !complaints.some((c) => c.lien === p.lien) &&
+          plainte.missingCount >= 24,
       )) {
         if (!Array.isArray(plainte.message)) continue;
 
@@ -269,12 +271,15 @@ async function plainte(client) {
         }
       }
 
-      saveData(
-        `data/${server}/forum/plainte.json`,
-        plaintesInitiales.filter((p) =>
-          complaints.some((c) => c.lien === p.lien && p.missingCount < 24),
-        ),
-      );
+      if (plaintesAvantUpdate.length > 0) {
+        saveData(
+          `data/${server}/forum/plainte.json`,
+          plaintesInitiales.filter(
+            (p) =>
+              complaints.some((c) => c.lien === p.lien) && p.missingCount < 24,
+          ),
+        );
+      }
     } catch (e) {}
   }
 }
