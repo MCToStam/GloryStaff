@@ -42,7 +42,7 @@ async function jail(client) {
                   jailEntry.connecte = true;
 
                   const jailContainer = new ContainerBuilder()
-                    .setAccentColor(config.colors.sucess)
+                    .setAccentColor(config.colors.success)
                     .addSectionComponents((section) =>
                       section
                         .addTextDisplayComponents((textDisplay) =>

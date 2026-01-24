@@ -7,7 +7,6 @@ const {
   ContainerBuilder,
   TextDisplayBuilder,
   MessageFlags,
-  EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,

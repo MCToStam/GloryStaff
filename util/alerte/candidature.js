@@ -138,9 +138,18 @@ async function getCandidatureContent(url, serveur) {
 
 async function sendCandidatures(client, AllCandidatures) {
   for (const { serveur, role, candidature } of AllCandidatures) {
+    if (
+      candidature.messageId.length !== 0 &&
+      candidature.badgeColor === candidature.savedBadgeColor
+    )
+      continue;
+
     const data = getData(`data/${serveur}/config.json`);
     const configData = data.find((c) => c.nom === "Candidature");
     const roleData = configData.systeme[role];
+
+    if (!Object.values(roleData.active || {}).some((value) => value === true))
+      continue;
 
     if (
       candidature.messageId.length === 0 ||

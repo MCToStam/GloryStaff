@@ -12,6 +12,7 @@ const {
   WebhookClient,
   MessageFlags,
   TextDisplayBuilder,
+  ContainerBuilder,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -414,6 +415,15 @@ app.post("/staff", async (req, res) => {
       const configStaff = dataFile.find((c) => c.nom === "Staff");
       const configAffichage = configStaff.systeme["Affichage Staff"];
 
+      if (
+        !Object.values(configAffichage.active || {}).some(
+          (value) => value === true,
+        )
+      )
+        continue;
+
+      const configCandidature = dataFile.find((c) => c.nom === "Candidature");
+
       const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
 
       const effectifRole = (role) => {
@@ -423,75 +433,133 @@ app.post("/staff", async (req, res) => {
         return members.length;
       };
 
-      const description = `
-                                    **${
-                                      config.emojigrade["Administrateur"]
-                                    } Administrateurs (${effectifRole(
-                                      "Administrateur",
-                                    )}) :**\n${
-                                      processedData["Administrateur"].join(
-                                        ", ",
-                                      ) || "Aucun"
-                                    }
-                                    \n**${
-                                      config.emojigrade["Super-Modérateur"]
-                                    } Super Modérateurs (${effectifRole(
-                                      "Super-Modérateur",
-                                    )}) :**\n${escapeUnderscore(
-                                      processedData["Super-Modérateur"].join(
-                                        ", ",
-                                      ) || "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Modérateur Plus"]
-                                    } Modérateurs Plus (${effectifRole(
-                                      "Modérateur Plus",
-                                    )}) :**\n${escapeUnderscore(
-                                      processedData["Modérateur Plus"].join(
-                                        ", ",
-                                      ) || "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Modérateur"]
-                                    } Modérateurs (${effectifRole(
-                                      "Modérateur",
-                                    )}) :**\n${escapeUnderscore(
-                                      processedData["Modérateur"].join(", ") ||
-                                        "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Modérateur Test"]
-                                    } Modérateurs Tests (${effectifRole(
-                                      "Modérateur Test",
-                                    )}) :**\n${escapeUnderscore(
-                                      processedData["Modérateur Test"].join(
-                                        ", ",
-                                      ) || "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Guide"]
-                                    } Guides (${effectifRole(
-                                      "Guide",
-                                    )}) :**\n${escapeUnderscore(
-                                      processedData["Guide"].join(", ") ||
-                                        "Aucun",
-                                    )}
-                                    \n\n*Dernière mise à jour : <t:${Math.floor(
-                                      Date.now() / 1000,
-                                    )}:R>*
-                                `;
+      const GRADES = [
+        "Administrateur",
+        "Super-Modérateur",
+        "Modérateur Plus",
+        "Modérateur",
+        "Modérateur Test",
+        "Guide",
+      ];
 
-      const staffEmbed = new EmbedBuilder()
-        .setAuthor({
-          name: `Staff du serveur ${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`,
-          url: `https://nationsglory.fr/server/${serveur}/staff`,
-        })
-        .setThumbnail(`${config.glorybot_url}/api/banniere?serveur=${serveur}`)
-        .setColor(config.couleur[serveur])
-        .setDescription(description)
-        .setFooter({ text: config.footer });
+      const components = [];
+
+      for (const grade of GRADES) {
+        const membres = processedData[grade] || [];
+
+        const membresText =
+          membres.length > 0
+            ? (
+                await Promise.all(
+                  membres.map(async (m) => {
+                    const emoji = await getEmojiTete(client, m);
+                    return `${emoji} ${escapeUnderscore(m)}`;
+                  }),
+                )
+              ).join(", ")
+            : "Aucun";
+
+        const color = config.grade[grade]
+          ? parseInt(config.grade[grade].replace("#", ""), 16)
+          : null;
+
+        const container = new ContainerBuilder()
+          .setAccentColor(color)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              `### ${config.emojigrade[grade]} ${grade}s (${effectifRole(grade)}) :`,
+            ),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(membresText),
+          );
+
+        if (grade === "Guide") {
+          container
+            .addSeparatorComponents((separator) => separator)
+            .addActionRowComponents(
+              new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setURL(configCandidature.systeme.Guide.lien)
+                  .setLabel("Recrutement Guide")
+                  .setStyle(ButtonStyle.Link),
+                new ButtonBuilder()
+                  .setURL(configCandidature.systeme.Modérateur.lien)
+                  .setLabel("Recrutement Modérateur")
+                  .setStyle(ButtonStyle.Link),
+                new ButtonBuilder()
+                  .setURL(configCandidature.systeme.Builder.lien)
+                  .setLabel("Recrutement Builder")
+                  .setStyle(ButtonStyle.Link),
+              ),
+            );
+        }
+
+        components.push(container);
+      }
+
+      /*const buildRoleBlock = async (grade, label) => {
+        const membres = processedData[grade] || [];
+
+        const membresText =
+          membres.length > 0
+            ? (
+                await Promise.all(
+                  membres.map(async (m) => {
+                    const emoji = await getEmojiTete(client, m);
+                    return `${emoji} ${escapeUnderscore(m)}`;
+                  }),
+                )
+              ).join(" ")
+            : "Aucun";
+
+        return `**${config.emojigrade[grade]} ${label} (${effectifRole(
+          grade,
+        )}) :**\n${membresText}\n`;
+      };
+      const description = `
+${await buildRoleBlock("Administrateur", "Administrateurs")}
+${await buildRoleBlock("Super-Modérateur", "Super Modérateurs")}
+${await buildRoleBlock("Modérateur Plus", "Modérateurs Plus")}
+${await buildRoleBlock("Modérateur", "Modérateurs")}
+${await buildRoleBlock("Modérateur Test", "Modérateurs Tests")}
+${await buildRoleBlock("Guide", "Guides")}
+*Dernière mise à jour : <t:${Math.floor(Date.now() / 1000)}:R>*
+`;
+
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addSectionComponents((section) =>
+          section
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(description),
+            )
+            .setThumbnailAccessory((thumbnail) =>
+              thumbnail.setURL(
+                `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
+              ),
+            ),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addActionRowComponents(
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setURL(configCandidature.systeme.Guide.lien)
+              .setLabel("Recrutement Guide")
+              .setStyle(ButtonStyle.Link),
+            new ButtonBuilder()
+              .setURL(configCandidature.systeme.Modérateur.lien)
+              .setLabel("Recrutement Modérateur")
+              .setStyle(ButtonStyle.Link),
+            new ButtonBuilder()
+              .setURL(configCandidature.systeme.Builder.lien)
+              .setLabel("Recrutement Builder")
+              .setStyle(ButtonStyle.Link),
+          ),
+        );
+
+      const components = [container];*/
 
       for (const [guildId, isActive] of Object.entries(
         configAffichage.active,
@@ -513,7 +581,11 @@ app.post("/staff", async (req, res) => {
         if (!message) continue;
 
         try {
-          await message.edit({ embeds: [staffEmbed] });
+          await message.edit({
+            embeds: [],
+            components,
+            flags: MessageFlags.IsComponentsV2,
+          });
 
           console.log(
             `✅ Message effectif staff modifié | serveur ${serveur} | guild ${guildId}`,
