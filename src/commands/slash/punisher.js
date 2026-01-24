@@ -21,8 +21,7 @@ module.exports = {
         .setName("serveur")
         .setDescription("Le serveur pour lequel afficher la configuration")
         .addChoices({ name: "Inter-Serveur", value: "all" }, ...serveurs)
-        .setRequired(false)
-        .setAutocomplete(false),
+        .setRequired(false),
     ),
 
   async execute(client, interaction, config) {

@@ -32,7 +32,7 @@ async function updateAllStaffWebhooks() {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[\s-]+/g, "_");
   }
-  for (const serveur of ["blue"]) {
+  for (const serveur of config.liste_serveur) {
     let configWebhook = getData(`data/${serveur}/webhookListeDesStaffs.json`);
     const staffData = getData(`data/${serveur}/staff-serveur.json`);
     const lastUpdated = staffData.timestamp;
