@@ -84,6 +84,15 @@ async function updateAllStaffWebhooks() {
       "Guide",
     ];
 
+    const GRADES_EMOJI = {
+      "Administrateur": "<:admin:1289928191674290187>",
+      "Super-Modérateur": "<:supermodo:1289928193595281480>",
+      "Modérateur Plus": "<:modoplus:1289934725569581086>",
+      "Modérateur": "<:modo:1289934724294250588>",
+      "Modérateur Test": "<:modotest:1289934722151088180>",
+      "Guide": "<:guide:1289928200800964628>",
+    };
+
     const dataFile = getData(`data/${serveur}/config.json`);
     const configCandidature = dataFile.find((c) => c.nom === "Candidature");
 
@@ -118,7 +127,7 @@ async function updateAllStaffWebhooks() {
         .setAccentColor(color)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `### ${config.emojigrade[grade]} ${grade}s (${effectifRole(grade)}) :`,
+            `### ${GRADES_EMOJI[grade]} ${grade}s (${effectifRole(grade)}) :`,
           ),
         )
         .addSeparatorComponents((separator) => separator)
