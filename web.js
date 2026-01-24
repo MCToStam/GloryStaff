@@ -85,12 +85,12 @@ async function updateAllStaffWebhooks() {
     ];
 
     const GRADES_EMOJI = {
-      "Administrateur": "<:admin:1289928191674290187>",
+      Administrateur: "<:admin:1289928191674290187>",
       "Super-Modérateur": "<:supermodo:1289928193595281480>",
       "Modérateur Plus": "<:modoplus:1289934725569581086>",
-      "Modérateur": "<:modo:1289934724294250588>",
+      Modérateur: "<:modo:1289934724294250588>",
       "Modérateur Test": "<:modotest:1289934722151088180>",
-      "Guide": "<:guide:1289928200800964628>",
+      Guide: "<:guide:1289928200800964628>",
     };
 
     const dataFile = getData(`data/${serveur}/config.json`);

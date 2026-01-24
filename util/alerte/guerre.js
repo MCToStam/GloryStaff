@@ -83,7 +83,9 @@ async function guerre(client) {
               .text()
               .trim(),
             date: convertirEnTimestamp(dateStr),
+            missingCount: 0,
             message: [],
+            alerteEnvoyee: {},
           };
         })
         .get()
@@ -101,7 +103,7 @@ async function guerre(client) {
         }
       }
 
-      const guerresAvantUpdate = [...guerresExistantes];
+      const guerresAvantUpdate = guerresExistantes;
 
       const nouvellesGuerres = complaints.filter(
         (c) => !guerresExistantes.some((p) => p.lien === c.lien),
@@ -165,10 +167,9 @@ async function guerre(client) {
             });
           }
         }
-
-        guerresExistantes.push(...nouvellesGuerres);
-        saveData(`data/${server}/forum/guerre.json`, guerresExistantes);
       }
+
+      guerresExistantes.push(...nouvellesGuerres);
 
       const guerreNonTraiteeConfig = forumConfig["Guerre non traitée"];
 
@@ -234,7 +235,6 @@ async function guerre(client) {
             continue;
           }
 
-          guerre.alerteEnvoyee ??= {};
           guerre.alerteEnvoyee[guildId] = true;
           rolePingDone = true;
         }
@@ -273,13 +273,13 @@ async function guerre(client) {
       }
 
       if (guerresAvantUpdate.length > 0) {
-        saveData(
-          `data/${server}/forum/guerre.json`,
-          guerresExistantes.filter(
-            (g) =>
-              complaints.some((c) => c.lien === g.lien) && g.missingCount < 24,
-          ),
+        const guerresFinales = guerresExistantes.filter(
+          (p) =>
+            complaints.some((c) => c.lien === p.lien) &&
+            (p.missingCount ?? 0) < 12,
         );
+
+        saveData(`data/${server}/forum/guerre.json`, guerresFinales);
       }
     } catch (e) {}
   }

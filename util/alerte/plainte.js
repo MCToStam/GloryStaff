@@ -81,7 +81,9 @@ async function plainte(client) {
               .text()
               .trim(),
             date: convertirEnTimestamp(dateStr),
+            missingCount: 0,
             message: [],
+            alerteEnvoyee: {},
           };
         })
         .get()
@@ -102,7 +104,7 @@ async function plainte(client) {
         }
       }
 
-      const plaintesAvantUpdate = [...plaintesExistantes];
+      const plaintesAvantUpdate = plaintesExistantes;
 
       if (nouvellesPlaintes.length) {
         let rolePingDone = {};
@@ -165,8 +167,6 @@ async function plainte(client) {
       }
 
       plaintesExistantes.push(...nouvellesPlaintes);
-      saveData(`data/${server}/forum/plainte.json`, plaintesExistantes);
-      const plaintesInitiales = [...plaintesExistantes];
 
       const plainteNonTraiteeConfig = plainteConfig["Plainte non traitée"];
 
@@ -233,7 +233,6 @@ async function plainte(client) {
             continue;
           }
 
-          plainte.alerteEnvoyee ??= {};
           plainte.alerteEnvoyee[guildId] = true;
           rolePingDone[guildId] = true;
         }
@@ -272,13 +271,13 @@ async function plainte(client) {
       }
 
       if (plaintesAvantUpdate.length > 0) {
-        saveData(
-          `data/${server}/forum/plainte.json`,
-          plaintesInitiales.filter(
-            (p) =>
-              complaints.some((c) => c.lien === p.lien) && p.missingCount < 24,
-          ),
+        const plaintesFinales = plaintesExistantes.filter(
+          (p) =>
+            complaints.some((c) => c.lien === p.lien) &&
+            (p.missingCount ?? 0) < 12,
         );
+
+        saveData(`data/${server}/forum/plainte.json`, plaintesFinales);
       }
     } catch (e) {}
   }
