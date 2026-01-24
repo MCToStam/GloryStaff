@@ -1,5 +1,5 @@
 const express = require("express");
-const { getData } = require("./util/module/getAndSaveData");
+const { getData, saveData } = require("./util/module/getAndSaveData");
 const { discordStaff, discordLink } = require("./util/module/discordLink");
 const { AttenteStaff, DoubleLead } = require("./util/container/module");
 const { getEmojiTete } = require("./util/module/emoji");
@@ -32,34 +32,10 @@ async function updateAllStaffWebhooks() {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[\s-]+/g, "_");
   }
-  for (const serveur of config.liste_serveur) {
-    const basePath = path.join(__dirname, "data", serveur);
-    const configPath = path.join(basePath, "webhookListeDesStaffs.json");
-    const staffFilePath = path.join(basePath, "staff-serveur.json");
-
-    if (!fs.existsSync(configPath)) continue;
-
-    let config;
-    try {
-      const rawConfig = await readFile(configPath, "utf8");
-      config = JSON.parse(rawConfig);
-    } catch (err) {
-      console.warn(
-        `Erreur de lecture du fichier config pour ${serveur} :`,
-        err,
-      );
-      continue;
-    }
-
-    let staffData = null;
-    let lastUpdated = null;
-    try {
-      const staffRaw = await readFile(staffFilePath, "utf8");
-      staffData = JSON.parse(staffRaw);
-      lastUpdated = staffData.timestamp;
-    } catch (e) {
-      console.warn(`Impossible de lire ou parser ${staffFilePath}`, e);
-    }
+  for (const serveur of ["blue"]) {
+    let configWebhook = getData(`data/${serveur}/webhookListeDesStaffs.json`);
+    const staffData = getData(`data/${serveur}/staff-serveur.json`);
+    const lastUpdated = staffData.timestamp;
 
     const replacePlaceholders = (text) => {
       if (!staffData) return text;
@@ -95,11 +71,86 @@ async function updateAllStaffWebhooks() {
       couleur,
       auteurNom,
       auteurUrl,
-    } = config;
+    } = configWebhook;
 
     const description = replacePlaceholders(rawDescription || "");
 
-    const embed = new EmbedBuilder().setColor(couleur || "#0099ff");
+    const GRADES = [
+      "Administrateur",
+      "Super-Modérateur",
+      "Modérateur Plus",
+      "Modérateur",
+      "Modérateur Test",
+      "Guide",
+    ];
+
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configCandidature = dataFile.find((c) => c.nom === "Candidature");
+
+    const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
+
+    const effectifRole = (role) => {
+      const members = staffData[role].filter((name) => name.trim() !== "");
+      return members.length;
+    };
+
+    const components = [];
+
+    for (const grade of GRADES) {
+      const membres = staffData[grade] || [];
+
+      const membresText =
+        membres.length > 0
+          ? (
+              await Promise.all(
+                membres.map(async (m) => {
+                  return escapeUnderscore(m);
+                }),
+              )
+            ).join(", ")
+          : "Aucun";
+
+      const color = config.grade[grade]
+        ? parseInt(config.grade[grade].replace("#", ""), 16)
+        : null;
+
+      const container = new ContainerBuilder()
+        .setAccentColor(color)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `### ${config.emojigrade[grade]} ${grade}s (${effectifRole(grade)}) :`,
+          ),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(membresText),
+        );
+
+      if (grade === "Guide") {
+        container
+          .addSeparatorComponents((separator) => separator)
+          .addActionRowComponents(
+            new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setURL(configCandidature.systeme.Guide.lien)
+                .setLabel("Recrutement Guide")
+                .setStyle(ButtonStyle.Link),
+              new ButtonBuilder()
+                .setURL(configCandidature.systeme.Modérateur.lien)
+                .setLabel("Recrutement Modérateur")
+                .setStyle(ButtonStyle.Link),
+              new ButtonBuilder()
+                .setURL(configCandidature.systeme.Builder.lien)
+                .setLabel("Recrutement Builder")
+                .setStyle(ButtonStyle.Link),
+            ),
+          );
+      }
+
+      components.push(container);
+    }
+
+    /*const embed = new EmbedBuilder().setColor(couleur || "#0099ff");
 
     if (titre) embed.setTitle(titre);
     if (description) embed.setDescription(description);
@@ -114,7 +165,7 @@ async function updateAllStaffWebhooks() {
       embed.setAuthor({
         name: auteurNom || "",
         url: auteurUrl || undefined,
-      });
+      });*/
 
     if (!webhookUrl) {
       console.warn(`webhookUrl manquant pour ${serveur}`);
@@ -130,21 +181,34 @@ async function updateAllStaffWebhooks() {
     try {
       if (messageId) {
         try {
-          await webhookClient.editMessage(messageId, { embeds: [embed] });
+          await webhookClient.editMessage(messageId, {
+            embeds: [],
+            components,
+            flags: MessageFlags.IsComponentsV2,
+            withComponents: true,
+          });
         } catch (editError) {
           console.warn(
             `Erreur modification message (${serveur}), envoi nouveau...`,
             editError,
           );
-          const sent = await webhookClient.send({ embeds: [embed] });
-          config.messageId = sent.id;
+          const sent = await webhookClient.send({
+            components,
+            flags: MessageFlags.IsComponentsV2,
+            withComponents: true,
+          });
+          configWebhook.messageId = sent.id;
         }
       } else {
-        const sent = await webhookClient.send({ embeds: [embed] });
-        config.messageId = sent.id;
+        const sent = await webhookClient.send({
+          components,
+          flags: MessageFlags.IsComponentsV2,
+          withComponents: true,
+        });
+        configWebhook.messageId = sent.id;
       }
 
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf8");
+      saveData(`data/${serveur}/webhookListeDesStaffs.json`, configWebhook);
       console.log(`✅ ${serveur} : embed mis à jour.`);
     } catch (err) {
       console.error(`❌ ${serveur} : erreur d’envoi du webhook :`, err);
