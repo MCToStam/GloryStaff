@@ -212,7 +212,7 @@ async function guerre(client) {
           );
 
           let components = [container];
-          if (roleMentions && !rolePingDone[guildId])
+          if (roleMentions && !rolePingDone)
             components = [
               new TextDisplayBuilder().setContent(roleMentions),
               container,

@@ -5,9 +5,6 @@ const {
 } = require("discord.js");
 
 module.exports = {
-  categorie: "Développeur",
-  usage: "/cmd",
-  details: "Cette commande permet de déployer les commandes",
   serveur: ["743741992194015314"],
   data: new SlashCommandBuilder()
     .setName("cmd")

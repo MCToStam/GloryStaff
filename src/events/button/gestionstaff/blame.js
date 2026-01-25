@@ -3,9 +3,12 @@ const {
   LabelBuilder,
   TextInputBuilder,
   TextInputStyle,
+  ContainerBuilder,
+  MessageFlags,
 } = require("discord.js");
 const { getData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
+const { discordLink } = require("../../../../util/module/discordLink");
 
 module.exports = {
   data: {
@@ -15,8 +18,27 @@ module.exports = {
   async execute(client, interaction, config) {
     const joueur = interaction.customId.split("-")[1];
     const serveur = await getServeur(interaction);
-
+    const pseudo = await discordLink(interaction.user.id);
     const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
+
+    if (pseudo === joueur) {
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addTextDisplayComponents((t) =>
+          t.setContent(`## 💢 Blâme - ${joueur.replace(/_/g, "\\_")}`),
+        )
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `Tu n'as pas la permission de modifier tes propres blâmes, mais tu veux les visualiser.\n\n**Blâme n°1 :** ${staffData["Blâme 1"] || ""}\n**Blâme n°2 :** ${staffData["Blâme 2"] || ""}\n**Blâme n°3 :** ${staffData["Blâme 3"] || ""}`,
+          ),
+        );
+
+      return interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
+    }
 
     const modal = new ModalBuilder()
       .setCustomId(`gestionstaff_blame-${joueur}`)

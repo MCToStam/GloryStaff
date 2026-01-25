@@ -91,9 +91,6 @@ function buildSelectOptions(actions) {
 }
 
 module.exports = {
-  categorie: "Développeur",
-  usage: "/util-action",
-  details: "Exécute automatiquement une fonction depuis util",
   serveur: ["743741992194015314"],
   data: new SlashCommandBuilder()
     .setName("util-action")

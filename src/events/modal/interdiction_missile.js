@@ -1,0 +1,75 @@
+const {
+  ContainerBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
+const { getServeur } = require("../../../util/module/getServeur");
+const { getData, saveData } = require("../../../util/module/getAndSaveData");
+
+module.exports = {
+  data: {
+    name: "interdiction_missile",
+  },
+
+  async execute(client, interaction, config) {
+    const [_, action] = interaction.customId.split("-");
+
+    const serveur = await getServeur(interaction);
+    let data = getData(`data/${serveur}/interdiction-missile.json`);
+
+    if (action === "create") {
+      const pays = interaction.fields.getTextInputValue("pays");
+      data.push({ nom: pays });
+      saveData(`data/${serveur}/interdiction-missile.json`, data);
+
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `## 🚀 Interdiction Missile - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+          ),
+        )
+        .addSeparatorComponents((s) => s);
+
+      for (const pays of data) {
+        container.addSectionComponents((section) =>
+          section
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(`### ${pays.nom}`),
+            )
+            .setButtonAccessory((button) =>
+              button
+                .setCustomId(`interdiction_missile-delete-${pays.nom}`)
+                .setLabel("Supprimer l'Interdiction Missile")
+                .setStyle(ButtonStyle.Danger),
+            ),
+        );
+      }
+
+      if (!data || data.length === 0) {
+        container.addTextDisplayComponents((t) =>
+          t.setContent(
+            "Aucune pays en interdiction missile n’a encore été trouvé",
+          ),
+        );
+      }
+
+      container.addSeparatorComponents((s) => s);
+      container.addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("interdiction_missile-create")
+            .setLabel("Ajouter une Interdiction Missile")
+            .setStyle(ButtonStyle.Success),
+        ),
+      );
+
+      interaction.update({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2,
+      });
+    }
+  },
+};

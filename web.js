@@ -37,43 +37,7 @@ async function updateAllStaffWebhooks() {
     const staffData = getData(`data/${serveur}/staff-serveur.json`);
     const lastUpdated = staffData.timestamp;
 
-    const replacePlaceholders = (text) => {
-      if (!staffData) return text;
-      let replaced = text;
-      Object.entries(staffData).forEach(([role, users]) => {
-        if (!Array.isArray(users)) return;
-        const normalizedRole = normalizeRoleKey(role);
-        replaced = replaced.replace(
-          new RegExp(`{${normalizedRole}}`, "gi"),
-          users.map((u) => u.replace(/_/g, "\\_")).join(", "),
-        );
-        replaced = replaced.replace(
-          new RegExp(`{${normalizedRole}_nombre}`, "gi"),
-          String(users.length),
-        );
-      });
-      replaced = replaced.replace(
-        /{timestamp}/gi,
-        lastUpdated ? String(lastUpdated) : "",
-      );
-      return replaced;
-    };
-
-    const {
-      messageId,
-      webhookUrl,
-      titre,
-      description: rawDescription,
-      footerTexte,
-      footerImage,
-      image,
-      thumbnail,
-      couleur,
-      auteurNom,
-      auteurUrl,
-    } = configWebhook;
-
-    const description = replacePlaceholders(rawDescription || "");
+    const { messageId, webhookUrl } = configWebhook;
 
     const GRADES = [
       "Administrateur",
@@ -123,11 +87,16 @@ async function updateAllStaffWebhooks() {
         ? parseInt(config.grade[grade].replace("#", ""), 16)
         : null;
 
+      const nbEffectif = effectifRole(grade);
+      let nomGrade = grade + nbEffectif > 1 ? "s" : "";
+      if (grade === "Modérateur Plus" && nbEffectif > 1)
+        nomGrade = "Modérateurs Plus";
+
       const container = new ContainerBuilder()
         .setAccentColor(color)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `### ${GRADES_EMOJI[grade]} ${grade}s (${effectifRole(grade)}) :`,
+            `### ${GRADES_EMOJI[grade]} ${nomGrade} (${nbEffectif}) :`,
           ),
         )
         .addSeparatorComponents((separator) => separator)
