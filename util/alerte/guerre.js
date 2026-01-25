@@ -242,8 +242,7 @@ async function guerre(client) {
 
       for (const guerre of guerresAvantUpdate.filter(
         (g) =>
-          !complaints.some((c) => c.lien === g.lien) &&
-          guerre.missingCount >= 24,
+          !complaints.some((c) => c.lien === g.lien) && g.missingCount >= 24,
       )) {
         if (!Array.isArray(guerre.message)) continue;
 
@@ -281,7 +280,9 @@ async function guerre(client) {
 
         saveData(`data/${server}/forum/guerre.json`, guerresFinales);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log("Erreur Guerre :", e);
+    }
   }
 }
 

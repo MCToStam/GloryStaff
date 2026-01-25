@@ -241,7 +241,7 @@ async function plainte(client) {
       for (const plainte of plaintesAvantUpdate.filter(
         (p) =>
           !complaints.some((c) => c.lien === p.lien) &&
-          plainte.missingCount >= 24,
+          (p.missingCount ?? 0) >= 24,
       )) {
         if (!Array.isArray(plainte.message)) continue;
 
@@ -279,7 +279,9 @@ async function plainte(client) {
 
         saveData(`data/${server}/forum/plainte.json`, plaintesFinales);
       }
-    } catch (e) {}
+    } catch (e) {
+      console.log("Erreur Plainte :", e);
+    }
   }
 }
 
