@@ -88,7 +88,8 @@ async function updateAllStaffWebhooks() {
         : null;
 
       const nbEffectif = effectifRole(grade);
-      let nomGrade = grade + nbEffectif > 1 ? "s" : "";
+
+      let nomGrade = grade + (nbEffectif > 1 ? "s" : "");
       if (grade === "Modérateur Plus" && nbEffectif > 1)
         nomGrade = "Modérateurs Plus";
 
