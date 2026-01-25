@@ -115,12 +115,12 @@ module.exports = {
 
     if (interaction.isMessageComponent()) {
       return interaction.update({
-        components: [routineContainer],
+        components: routineContainer,
         flags: MessageFlags.IsComponentsV2,
       });
     } else {
       return interaction.reply({
-        components: [routineContainer],
+        components: routineContainer,
         flags: MessageFlags.IsComponentsV2,
       });
     }

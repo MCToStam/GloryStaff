@@ -5,7 +5,6 @@ const {
   TextDisplayBuilder,
 } = require("discord.js");
 const { getData } = require("../../../util/module/getAndSaveData");
-const { getEmojiDrapeau, getEmojiTete } = require("../../../util/module/emoji");
 const { discordLink } = require("../../../util/module/discordLink");
 const { FullBuild } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
@@ -109,12 +108,12 @@ module.exports = {
 
       const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
       message = await salon.send({
-        components: [roleTextDisplay, container],
+        components: [roleTextDisplay, ...container],
         flags: MessageFlags.IsComponentsV2,
       });
     } else {
       message = await salon.send({
-        components: [container],
+        components: container,
         flags: MessageFlags.IsComponentsV2,
       });
     }

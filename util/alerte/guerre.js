@@ -132,11 +132,11 @@ async function guerre(client) {
           for (const guerre of nouvellesGuerres) {
             const container = await Guerre(client, server, guerre);
 
-            let components = [container];
+            let components = container;
             if (roleMentions && !rolePingDone[guildId])
               components = [
                 new TextDisplayBuilder().setContent(roleMentions),
-                container,
+                ...container,
               ];
 
             let sent;
@@ -211,11 +211,11 @@ async function guerre(client) {
             delaiJour,
           );
 
-          let components = [container];
+          let components = container;
           if (roleMentions && !rolePingDone)
             components = [
               new TextDisplayBuilder().setContent(roleMentions),
-              container,
+              ...container,
             ];
 
           try {
@@ -281,7 +281,7 @@ async function guerre(client) {
         saveData(`data/${server}/forum/guerre.json`, guerresFinales);
       }
     } catch (e) {
-      console.log("Erreur Guerre :", e);
+      console.log(`Erreur Guerre ${server} :`, e);
     }
   }
 }

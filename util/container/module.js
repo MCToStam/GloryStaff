@@ -54,7 +54,9 @@ async function Guerre(client, serveur, guerre) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
@@ -89,7 +91,9 @@ async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function Plainte(client, serveur, plainte) {
@@ -121,7 +125,9 @@ async function Plainte(client, serveur, plainte) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
@@ -156,7 +162,9 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function AttenteStaff(client, serveur, joueur, id, salon) {
@@ -183,7 +191,9 @@ async function AttenteStaff(client, serveur, joueur, id, salon) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
@@ -235,7 +245,9 @@ async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function Routine(client, serveur, pseudonym) {
@@ -316,7 +328,9 @@ async function Routine(client, serveur, pseudonym) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
@@ -340,7 +354,9 @@ async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function FullBuild(client, serveur, pseudo, paysa, paysb) {
@@ -362,7 +378,9 @@ async function FullBuild(client, serveur, pseudo, paysa, paysb) {
       ),
     );
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
@@ -417,7 +435,9 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(message));
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 async function DoubleLead(client, serveur, leaderPseudos, servers) {
@@ -476,7 +496,9 @@ async function DoubleLead(client, serveur, leaderPseudos, servers) {
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) => t.setContent(message));
 
-  return container;
+  const components = [container];
+
+  return components;
 }
 
 module.exports = {

@@ -25,17 +25,9 @@ const util = require("util");
 const readFile = util.promisify(fs.readFile);
 
 async function updateAllStaffWebhooks() {
-  function normalizeRoleKey(role) {
-    return role
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[\s-]+/g, "_");
-  }
   for (const serveur of config.liste_serveur) {
     let configWebhook = getData(`data/${serveur}/webhookListeDesStaffs.json`);
     const staffData = getData(`data/${serveur}/staff-serveur.json`);
-    const lastUpdated = staffData.timestamp;
 
     const { messageId, webhookUrl } = configWebhook;
 
@@ -128,23 +120,6 @@ async function updateAllStaffWebhooks() {
 
       components.push(container);
     }
-
-    /*const embed = new EmbedBuilder().setColor(couleur || "#0099ff");
-
-    if (titre) embed.setTitle(titre);
-    if (description) embed.setDescription(description);
-    if (footerTexte || footerImage)
-      embed.setFooter({
-        text: footerTexte || "",
-        iconURL: footerImage || undefined,
-      });
-    if (image) embed.setImage(image);
-    if (thumbnail) embed.setThumbnail(thumbnail);
-    if (auteurNom || auteurUrl)
-      embed.setAuthor({
-        name: auteurNom || "",
-        url: auteurUrl || undefined,
-      });*/
 
     if (!webhookUrl) {
       console.warn(`webhookUrl manquant pour ${serveur}`);
@@ -506,11 +481,17 @@ app.post("/staff", async (req, res) => {
           ? parseInt(config.grade[grade].replace("#", ""), 16)
           : null;
 
+        const nbEffectif = effectifRole(grade);
+
+        let nomGrade = grade + (nbEffectif > 1 ? "s" : "");
+        if (grade === "Modérateur Plus" && nbEffectif > 1)
+          nomGrade = "Modérateurs Plus";
+
         const container = new ContainerBuilder()
           .setAccentColor(color)
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `### ${config.emojigrade[grade]} ${grade}s (${effectifRole(grade)}) :`,
+              `### ${config.emojigrade[grade]} ${nomGrade} (${effectifRole(grade)}) :`,
             ),
           )
           .addSeparatorComponents((separator) => separator)
@@ -541,68 +522,6 @@ app.post("/staff", async (req, res) => {
 
         components.push(container);
       }
-
-      /*const buildRoleBlock = async (grade, label) => {
-        const membres = processedData[grade] || [];
-
-        const membresText =
-          membres.length > 0
-            ? (
-                await Promise.all(
-                  membres.map(async (m) => {
-                    const emoji = await getEmojiTete(client, m);
-                    return `${emoji} ${escapeUnderscore(m)}`;
-                  }),
-                )
-              ).join(" ")
-            : "Aucun";
-
-        return `**${config.emojigrade[grade]} ${label} (${effectifRole(
-          grade,
-        )}) :**\n${membresText}\n`;
-      };
-      const description = `
-${await buildRoleBlock("Administrateur", "Administrateurs")}
-${await buildRoleBlock("Super-Modérateur", "Super Modérateurs")}
-${await buildRoleBlock("Modérateur Plus", "Modérateurs Plus")}
-${await buildRoleBlock("Modérateur", "Modérateurs")}
-${await buildRoleBlock("Modérateur Test", "Modérateurs Tests")}
-${await buildRoleBlock("Guide", "Guides")}
-*Dernière mise à jour : <t:${Math.floor(Date.now() / 1000)}:R>*
-`;
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
-        .addSectionComponents((section) =>
-          section
-            .addTextDisplayComponents((textDisplay) =>
-              textDisplay.setContent(description),
-            )
-            .setThumbnailAccessory((thumbnail) =>
-              thumbnail.setURL(
-                `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
-              ),
-            ),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setURL(configCandidature.systeme.Guide.lien)
-              .setLabel("Recrutement Guide")
-              .setStyle(ButtonStyle.Link),
-            new ButtonBuilder()
-              .setURL(configCandidature.systeme.Modérateur.lien)
-              .setLabel("Recrutement Modérateur")
-              .setStyle(ButtonStyle.Link),
-            new ButtonBuilder()
-              .setURL(configCandidature.systeme.Builder.lien)
-              .setLabel("Recrutement Builder")
-              .setStyle(ButtonStyle.Link),
-          ),
-        );
-
-      const components = [container];*/
 
       for (const [guildId, isActive] of Object.entries(
         configAffichage.active,
@@ -854,11 +773,11 @@ app.post("/update-leaders", async (req, res) => {
               const roleIds = serverConfig.Role.valeur[guildId] || [];
               const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
-              let components = [container];
+              let components = container;
               if (roleMentions.length > 0) {
                 components = [
                   new TextDisplayBuilder().setContent(roleMentions),
-                  container,
+                  ...container,
                 ];
               }
 
@@ -1488,11 +1407,11 @@ app.post("/api/attenteStaff", async (req, res) => {
     const roleIds = module.Role.valeur[guildId] || [];
     const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
-    let components = [container];
+    let components = container;
     if (roleMentions.length > 0)
       components = [
         new TextDisplayBuilder().setContent(roleMentions),
-        container,
+        ...container,
       ];
 
     try {

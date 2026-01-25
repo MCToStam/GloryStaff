@@ -131,11 +131,11 @@ async function sendSanctionMessage(
     const roleIds = role[guildId] || [];
     const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
-    let components = [container];
+    let components = container;
     if (roleMentions.length > 0)
       components = [
         new TextDisplayBuilder().setContent(roleMentions),
-        container,
+        ...container,
       ];
 
     try {

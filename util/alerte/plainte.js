@@ -129,11 +129,11 @@ async function plainte(client) {
           for (const plainte of nouvellesPlaintes) {
             const container = await Plainte(client, server, plainte);
 
-            let components = [container];
+            let components = container;
             if (roleMentions && !rolePingDone[guildId])
               components = [
                 new TextDisplayBuilder().setContent(roleMentions),
-                container,
+                ...container,
               ];
 
             let sentMessage;
@@ -208,11 +208,11 @@ async function plainte(client) {
             delaiJour,
           );
 
-          let components = [container];
+          let components = container;
           if (roleMentions && !rolePingDone[guildId])
             components = [
               new TextDisplayBuilder().setContent(roleMentions),
-              container,
+              ...container,
             ];
 
           let sent;
@@ -280,7 +280,7 @@ async function plainte(client) {
         saveData(`data/${server}/forum/plainte.json`, plaintesFinales);
       }
     } catch (e) {
-      console.log("Erreur Plainte :", e);
+      console.log(`Erreur Plainte ${server} :`, e);
     }
   }
 }

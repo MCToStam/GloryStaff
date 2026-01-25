@@ -235,7 +235,7 @@ module.exports = {
     );
 
     const message = await salon.send({
-      components: [jailContainer],
+      components: jailContainer,
       flags: MessageFlags.IsComponentsV2,
     });
 
