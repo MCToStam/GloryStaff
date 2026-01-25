@@ -35,6 +35,7 @@ const { checkCandidature } = require("../../../util/alerte/candidature");
 const { checkONU } = require("../../../util/alerte/onu");
 const { checkGradeSupport } = require("../../../util/checkGradeSupport");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
+const { zipAndUpload } = require("../../../util/module/backupData");
 
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
@@ -193,6 +194,7 @@ module.exports = async (client, interaction) => {
 
   cron.schedule("0 0 * * *", async () => {
     await updateLogo(client);
+    await zipAndUpload();
   });
 
   cron.schedule("* * * * 0,6", async () => {
