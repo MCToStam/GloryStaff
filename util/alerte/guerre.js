@@ -99,11 +99,11 @@ async function guerre(client) {
         if (stillExists) {
           guerre.missingCount = 0;
         } else {
-          guerre.missingCount = (guerre.missingCount || 0) + 1;
+          guerre.missingCount = guerre.missingCount + 1;
         }
       }
 
-      const guerresAvantUpdate = guerresExistantes;
+      const guerresAvantUpdate = JSON.parse(JSON.stringify(guerresExistantes));
 
       const nouvellesGuerres = complaints.filter(
         (c) => !guerresExistantes.some((p) => p.lien === c.lien),
@@ -242,7 +242,7 @@ async function guerre(client) {
 
       for (const guerre of guerresAvantUpdate.filter(
         (g) =>
-          !complaints.some((c) => c.lien === g.lien) && g.missingCount >= 24,
+          !complaints.some((c) => c.lien === g.lien) && g.missingCount >= 12,
       )) {
         if (!Array.isArray(guerre.message)) continue;
 
@@ -274,8 +274,7 @@ async function guerre(client) {
       if (guerresAvantUpdate.length > 0) {
         const guerresFinales = guerresExistantes.filter(
           (p) =>
-            complaints.some((c) => c.lien === p.lien) &&
-            (p.missingCount ?? 0) < 12,
+            complaints.some((c) => c.lien === p.lien) && p.missingCount < 12,
         );
 
         saveData(`data/${server}/forum/guerre.json`, guerresFinales);

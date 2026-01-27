@@ -100,11 +100,13 @@ async function plainte(client) {
         if (stillExists) {
           plainte.missingCount = 0;
         } else {
-          plainte.missingCount = (plainte.missingCount || 0) + 1;
+          plainte.missingCount = plainte.missingCount + 1;
         }
       }
 
-      const plaintesAvantUpdate = plaintesExistantes;
+      const plaintesAvantUpdate = JSON.parse(
+        JSON.stringify(plaintesExistantes),
+      );
 
       if (nouvellesPlaintes.length) {
         let rolePingDone = {};
@@ -241,7 +243,7 @@ async function plainte(client) {
       for (const plainte of plaintesAvantUpdate.filter(
         (p) =>
           !complaints.some((c) => c.lien === p.lien) &&
-          (p.missingCount ?? 0) >= 24,
+          (p.missingCount ?? 0) >= 12,
       )) {
         if (!Array.isArray(plainte.message)) continue;
 
@@ -273,8 +275,7 @@ async function plainte(client) {
       if (plaintesAvantUpdate.length > 0) {
         const plaintesFinales = plaintesExistantes.filter(
           (p) =>
-            complaints.some((c) => c.lien === p.lien) &&
-            (p.missingCount ?? 0) < 12,
+            complaints.some((c) => c.lien === p.lien) && p.missingCount < 12,
         );
 
         saveData(`data/${server}/forum/plainte.json`, plaintesFinales);
