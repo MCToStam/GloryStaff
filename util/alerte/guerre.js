@@ -55,41 +55,47 @@ async function guerre(client) {
     try {
       const allConfig = getData(`data/${server}/config.json`);
       const configData = allConfig.find((c) => c.nom === "Forum");
-
       const forumConfig = configData.systeme;
+      if (!forumConfig.Guerre.Forum) continue;
 
       await new Promise((res) => setTimeout(res, 5000));
 
-      const data = await (await fetch(forumConfig.Guerre.Forum)).text();
-      const $ = cheerio.load(data);
+      let complaints = [];
+      try {
+        const data = await (await fetch(forumConfig.Guerre.Forum)).text();
+        const $ = cheerio.load(data);
 
-      const complaints = $("tr")
-        .map((i, el) => {
-          if (!$(el).find(".badge").text().includes("En Attente")) return null;
+        complaints = $("tr")
+          .map((i, el) => {
+            if (!$(el).find(".badge").text().includes("En Attente"))
+              return null;
 
-          const titleEl = $(el).find("th a.stretched-link").first();
-          const dateStr = $(el)
-            .find("span.small.text-muted")
-            .filter((_, m) => $(m).text().includes("Posté"))
-            .last()
-            .text();
+            const titleEl = $(el).find("th a.stretched-link").first();
+            const dateStr = $(el)
+              .find("span.small.text-muted")
+              .filter((_, m) => $(m).text().includes("Posté"))
+              .last()
+              .text();
 
-          return {
-            titre: titleEl.text().trim(),
-            lien: `https://nationsglory.fr${titleEl.attr("href")}`,
-            auteur: $(el)
-              .find("a.text-muted.stretched-link.position-relative")
-              .first()
-              .text()
-              .trim(),
-            date: convertirEnTimestamp(dateStr),
-            missingCount: 0,
-            message: [],
-            alerteEnvoyee: {},
-          };
-        })
-        .get()
-        .filter((c) => c?.titre && c?.lien && c?.date);
+            return {
+              titre: titleEl.text().trim(),
+              lien: `https://nationsglory.fr${titleEl.attr("href")}`,
+              auteur: $(el)
+                .find("a.text-muted.stretched-link.position-relative")
+                .first()
+                .text()
+                .trim(),
+              date: convertirEnTimestamp(dateStr),
+              missingCount: 0,
+              message: [],
+              alerteEnvoyee: {},
+            };
+          })
+          .get()
+          .filter((c) => c?.titre && c?.lien && c?.date);
+      } catch (err) {
+        console.error("Erreur fetch guerres :", err);
+      }
 
       const guerresExistantes = getData(`data/${server}/forum/guerre.json`);
 
@@ -102,8 +108,6 @@ async function guerre(client) {
           guerre.missingCount = guerre.missingCount + 1;
         }
       }
-
-      const guerresAvantUpdate = JSON.parse(JSON.stringify(guerresExistantes));
 
       const nouvellesGuerres = complaints.filter(
         (c) => !guerresExistantes.some((p) => p.lien === c.lien),
@@ -240,7 +244,7 @@ async function guerre(client) {
         }
       }
 
-      for (const guerre of guerresAvantUpdate.filter(
+      for (const guerre of guerresExistantes.filter(
         (g) =>
           !complaints.some((c) => c.lien === g.lien) && g.missingCount >= 12,
       )) {
@@ -271,14 +275,10 @@ async function guerre(client) {
         }
       }
 
-      if (guerresAvantUpdate.length > 0) {
-        const guerresFinales = guerresExistantes.filter(
-          (p) =>
-            complaints.some((c) => c.lien === p.lien) && p.missingCount < 12,
-        );
-
-        saveData(`data/${server}/forum/guerre.json`, guerresFinales);
-      }
+      saveData(
+        `data/${server}/forum/guerre.json`,
+        guerresExistantes.filter((p) => p.missingCount < 13),
+      );
     } catch (e) {
       console.log(`Erreur Guerre ${server} :`, e);
     }
