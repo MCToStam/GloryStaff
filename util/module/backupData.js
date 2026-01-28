@@ -5,9 +5,9 @@ const readline = require("readline");
 const { google } = require("googleapis");
 const archiver = require("archiver");
 
-const DATA_FOLDER = path.join(__dirname, "..", "data");
+const DATA_FOLDER = path.join(__dirname, "..", "..", "data");
 const BACKUP_FOLDER = path.join(__dirname, "..", "backups");
-const TOKEN_PATH = path.join(__dirname, "..", "token.json");
+const TOKEN_PATH = path.join(__dirname, "..", "..", "token.json");
 
 function getTodayDate() {
   const now = new Date();
