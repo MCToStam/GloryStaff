@@ -31,13 +31,13 @@ async function fetchSanctionsServeur(serveur, joueur, page) {
     .map((entry) => {
       const clean = entry.replace(/&[0-9a-fklmnor]/gi, "").trim();
       const match = clean.match(
-        /\[Punisher\] \[(\w+) · (.+?)\] '(.+?)' by (.+?) on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
+        /\[Punisher\] \[(\w+) · ?(.*?)\] '(.+?)' by (.+?) on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
       );
       return (
         match && {
           serveur,
           type: match[1],
-          duree: formatDuree(match[2]),
+          duree: formatDuree(match[2]) || "",
           raison: match[3],
           staff: match[4],
           date: new Date(match[5]),

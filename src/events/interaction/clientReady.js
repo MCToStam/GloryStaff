@@ -5,6 +5,7 @@ const getServerPlayer = require("../../../util/module/getServerPlayer");
 const { updateLogo } = require("../../../util/updateLogo");
 const { botLaunch } = require("../../../main.js");
 const { checkEmojiCache } = require("../../../util/module/emoji");
+const { updateSanctionsCache } = require("../../../util/updateCache/sanctions");
 const cron = require("node-cron");
 
 const {
@@ -124,6 +125,7 @@ module.exports = async (client, interaction) => {
       }
       await checkGradeSupport(client);
       await cacheApiGloryBot();
+      await updateSanctionsCache();
     },
     {
       timezone: "Europe/Paris",

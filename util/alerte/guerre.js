@@ -95,6 +95,7 @@ async function guerre(client) {
           .filter((c) => c?.titre && c?.lien && c?.date);
       } catch (err) {
         console.error("Erreur fetch guerres :", err);
+        continue;
       }
 
       const guerresExistantes = getData(`data/${server}/forum/guerre.json`);

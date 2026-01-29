@@ -94,6 +94,7 @@ async function plainte(client) {
           .filter((c) => c?.titre && c?.lien && c?.date);
       } catch (err) {
         console.error("Erreur fetch plaintes :", err);
+        continue;
       }
 
       const plaintesExistantes = getData(`data/${server}/forum/plainte.json`);
