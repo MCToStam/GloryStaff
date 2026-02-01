@@ -44,6 +44,36 @@ module.exports = {
       });
     }
 
+    const errorContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((t) =>
+        t.setContent(`## ❌ Compte Minecraft non Lié`),
+      )
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
+          `Le compte NationsGlory "${joueur.replace(/_/g, "\\_")}" n'est relié a aucun compte Minecraft, son temps de jeu ne peut donc pas être enregistré sur les serveur Bedrock.`,
+        ),
+      );
+
+    if (config.liste_serveur_bedrock.includes(serveur)) {
+      const res = await fetch(
+        `${
+          config.glorybot_url
+        }/api/get-bedrock?pseudo_ng=${encodeURIComponent(joueur)}`,
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const pseudoMinecraft = data.pseudo_mc || null;
+      if (!pseudoMinecraft) {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          allowedMentions: { parse: [] },
+        });
+      }
+    }
+
     await interaction.deferUpdate({});
 
     const tempsJeu = staffData["temps-de-jeu"] || {};

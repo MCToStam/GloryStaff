@@ -38,8 +38,10 @@ module.exports = async (client, guild) => {
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent("## ✅ Nouveau Serveur - Accès Autorisé"),
         )
-        .addSeparatorComponents((separator) => separator)
-        .addSectionComponents((section) =>
+        .addSeparatorComponents((separator) => separator);
+
+      if (serverIconURL) {
+        container.addSectionComponents((section) =>
           section
             .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
@@ -50,6 +52,13 @@ module.exports = async (client, guild) => {
               thumbnail.setURL(serverIconURL),
             ),
         );
+      } else {
+        container.addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `GloryStaff a été invité par <@${inviter.id}>.\n\n> Nom : ${escapedServerName}\n> Membres : ${guild.memberCount}\n> Propriétaire : <@${guild.ownerId}>\n> Date de création : <t:${creationTimestamp}:R>`,
+          ),
+        );
+      }
 
       try {
         await targetUser.send({

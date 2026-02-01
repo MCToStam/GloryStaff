@@ -3,7 +3,6 @@ const {
   getImage,
   saveData,
 } = require("../util/module/getAndSaveData");
-require("dotenv").config({ quiet: true });
 const config = require("../config");
 
 async function updateLogo(client) {
