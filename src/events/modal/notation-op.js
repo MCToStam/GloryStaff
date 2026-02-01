@@ -18,7 +18,7 @@ module.exports = {
 
     const serveur = await getServeur(interaction);
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const response = await fetch(
       `${config.glorybot_url}/api/notation?semaine=${id}&pays=${paysSaisi}&serveur=${serveur}`,
       {
@@ -61,8 +61,7 @@ module.exports = {
 
       await interaction.editReply({
         components: [informationContainer],
-        flags: MessageFlags.IsComponentsV2,
-        ephemeral: true,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     } else {
       const informationContainer = new ContainerBuilder()
@@ -79,8 +78,7 @@ module.exports = {
 
       await interaction.editReply({
         components: [informationContainer],
-        flags: MessageFlags.IsComponentsV2,
-        ephemeral: true,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
   },

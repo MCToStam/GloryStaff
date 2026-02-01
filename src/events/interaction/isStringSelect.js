@@ -41,7 +41,6 @@ module.exports = async (client, interaction) => {
   try {
     await stringSelect.execute(client, interaction, config);
   } catch (e) {
-    console.log(e);
     const errorContainer = {
       type: 17,
       accent_color: config.colors.error,

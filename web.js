@@ -3,6 +3,7 @@ const { getData, saveData } = require("./util/module/getAndSaveData");
 const { discordStaff, discordLink } = require("./util/module/discordLink");
 const { AttenteStaff, DoubleLead } = require("./util/container/module");
 const { getEmojiTete } = require("./util/module/emoji");
+const log = require("./util/module/log.js");
 const bodyParser = require("body-parser");
 const {
   EmbedBuilder,
@@ -163,7 +164,7 @@ async function updateAllStaffWebhooks() {
       }
 
       saveData(`data/${serveur}/webhookListeDesStaffs.json`, configWebhook);
-      console.log(`✅ ${serveur} : embed mis à jour.`);
+      log(`✅ Webhhok mis à jour pour le serveur ${serveur}`, "LOG", "gray");
     } catch (err) {
       console.error(`❌ ${serveur} : erreur d’envoi du webhook :`, err);
     }
@@ -263,7 +264,7 @@ app.post("/staff", async (req, res) => {
         const staffName = path.basename(file, ".json");
         if (!allStaffList.includes(staffName)) {
           fs.unlinkSync(path.join(staffServerDir, file));
-          console.log(`🗑️ Fichier supprimé : ${file}`);
+          log(`🗑️ Fichier supprimé : ${file}`, "LOG", "gray");
         }
       }
 
@@ -282,7 +283,7 @@ app.post("/staff", async (req, res) => {
               fs.mkdirSync(path.dirname(filePath), { recursive: true });
 
               fs.writeFileSync(filePath, "{}", "utf8");
-              console.log(`📕 Fichier créé : ${filePath}`);
+              log(`📕 Fichier créé : ${filePath}`, "LOG", "gray");
             }
 
             const staffFilePath = path.join(
@@ -330,8 +331,10 @@ app.post("/staff", async (req, res) => {
                 serveur,
                 grade: role,
               };
-              console.log(
+              log(
                 `➕ Ajout du rôle "${role}" à l'historique pour ${staffName} sur le serveur ${serveur} le ${formattedDate}`,
+                "LOG",
+                "gray",
               );
 
               const wasJoueur =
@@ -396,8 +399,10 @@ app.post("/staff", async (req, res) => {
             grade: "Joueur",
           };
 
-          console.log(
+          log(
             `➖ Déclassement de ${staffName} en "Joueur" sur le serveur ${serveur} le ${formattedDate}`,
+            "LOG",
+            "gray",
           );
 
           fs.writeFileSync(
@@ -427,7 +432,7 @@ app.post("/staff", async (req, res) => {
         JSON.stringify(processedData, null, 2),
         "utf8",
       );
-      console.log(`✅ Données sauvegardées pour le serveur ${serveur}`);
+      log(`✅ Données sauvegardées pour le serveur ${serveur}`, "LOG", "gray");
 
       const dataFile = getData(`data/${serveur}/config.json`);
       const configStaff = dataFile.find((c) => c.nom === "Staff");
@@ -549,8 +554,10 @@ app.post("/staff", async (req, res) => {
             flags: MessageFlags.IsComponentsV2,
           });
 
-          console.log(
+          log(
             `✅ Message effectif staff modifié | serveur ${serveur} | guild ${guildId}`,
+            "LOG",
+            "gray",
           );
         } catch (err) {
           console.error(
@@ -662,7 +669,6 @@ app.get("/historique", (req, res) => {
       res
         .status(500)
         .json({ message: "Erreur de l'API, veuillez contacter ToStam." });
-      console.log(parseErr);
     }
   });
 });
@@ -791,8 +797,10 @@ app.post("/update-leaders", async (req, res) => {
                   await sentMessage.crosspost();
                 }
 
-                console.log(
+                log(
                   `✅ Message double lead envoyé | serveur ${server} | guild ${guildId}`,
+                  "LOG",
+                  "gray",
                 );
 
                 updatedEntry.alerteServeur.push({ server, guildId });
@@ -874,7 +882,7 @@ app.post("/tempsdejeu", (req, res) => {
         console.error(`Erreur sur ${pseudo} du serveur ${serveur}:`, err);
       }
     }
-    console.log(`✅ Temps de jeu ajouté pour le serveur ${serveur} !`);
+    log(`✅ Temps de jeu ajouté pour le serveur ${serveur}`, "LOG", "gray");
   }
 
   res
@@ -1422,8 +1430,10 @@ app.post("/api/attenteStaff", async (req, res) => {
 
       if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
 
-      console.log(
+      log(
         `✅ Message attente staff | serveur ${serveur} | guild ${guildId}`,
+        "LOG",
+        "gray",
       );
     } catch (err) {
       console.error(
@@ -1640,7 +1650,11 @@ app.post("/api/dossierDisband/:serveur", async (req, res) => {
 
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
 
-    console.log(`✅ Fichier dossierDisband.json sauvegardé pour ${serveur}`);
+    log(
+      `✅ Fichier dossierDisband.json sauvegardé pour ${serveur}`,
+      "LOG",
+      "gray",
+    );
     res
       .status(200)
       .json({ success: true, message: `Fichier enregistré pour ${serveur}` });

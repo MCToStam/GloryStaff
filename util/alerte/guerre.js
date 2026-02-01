@@ -1,4 +1,5 @@
 const config = require("../../config");
+const log = require("../../util/module/log.js");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { Guerre, Guerrenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
@@ -154,8 +155,10 @@ async function guerre(client) {
               if (channel.type === "GUILD_NEWS")
                 await sent.crosspost().catch(() => {});
 
-              console.log(
+              log(
                 `✅ Message guerre envoyé | serveur ${server} | guild ${guildId}`,
+                "LOG",
+                "gray",
               );
             } catch (err) {
               console.error(
@@ -229,8 +232,10 @@ async function guerre(client) {
               flags: MessageFlags.IsComponentsV2,
             });
 
-            console.log(
+            log(
               `✅ Alerte guerre non traitée | serveur ${server} | guild ${guildId}`,
+              "LOG",
+              "gray",
             );
           } catch (err) {
             console.error(
@@ -264,8 +269,10 @@ async function guerre(client) {
             if (!message?.deletable) continue;
 
             await message.delete();
-            console.log(
+            log(
               `🗑️ Message guerre supprimé | channel ${channelId} | message ${messageId}`,
+              "LOG",
+              "gray",
             );
           } catch (err) {
             console.error(

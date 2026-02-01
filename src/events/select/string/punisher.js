@@ -15,7 +15,7 @@ module.exports = {
       ?.trim()
       ?.replace(/\\/g, "");
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const sanctions = await ensureSanctions(joueur, PER_PAGE, config);
     const maxPage = Math.max(1, Math.ceil(sanctions.length / PER_PAGE));

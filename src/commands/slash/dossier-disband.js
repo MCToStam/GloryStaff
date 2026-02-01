@@ -29,7 +29,7 @@ module.exports = {
         }:${config.emoji[serveur]}> **${
           serveur.charAt(0).toUpperCase() + serveur.slice(1)
         }**.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 

@@ -73,8 +73,10 @@ const init = async () => {
       const commandName = pathModule.basename(file, ".js");
 
       if (!command.data || !command.data.name) {
-        console.log(
+        log(
           `⚠️ La commande "${commandName}" n'a pas de "data" ou "data.name". Ignorée.`,
+          "error",
+          "red",
         );
         continue;
       }

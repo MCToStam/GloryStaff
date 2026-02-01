@@ -1,4 +1,5 @@
 const { discordStaff } = require("../../../util/module/discordLink");
+const log = require("../../../util/module/log.js");
 const canSendMP = require("../../../util/module/canSendMP");
 const { ContainerBuilder, MessageFlags } = require("discord.js");
 const config = require("../../../config");
@@ -47,10 +48,10 @@ module.exports = async (client, member) => {
 
     await member.roles.add(rolesToAdd);
 
-    console.log(
-      `Ajout des rôles ${rolesToAdd.join(", ")} à ${
-        member.user.displayName
-      } automatiquement.`,
+    log(
+      `✅ Ajout des rôles ${rolesToAdd.join(", ")} à ${member.user.displayName} automatiquement.`,
+      "LOG",
+      "gray",
     );
 
     if (canSendMP(client, member.user.id)) {

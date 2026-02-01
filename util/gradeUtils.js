@@ -268,8 +268,7 @@ async function handleInteraction(interaction, client, config) {
         const container = await generateContainer(serveur);
         return interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -300,8 +299,7 @@ async function handleInteraction(interaction, client, config) {
         const container = await generateContainer(serveur);
         return interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -366,8 +364,7 @@ async function handleInteraction(interaction, client, config) {
 
         return interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -435,8 +432,7 @@ async function handleInteraction(interaction, client, config) {
           );
         return interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -461,7 +457,7 @@ async function handleInteraction(interaction, client, config) {
 
       if (id === "grade_categorie_manage") {
         const idCat = interaction.values[0];
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
         const { container } = await generateGradesContainer(
           interaction.client,
           serveur,
@@ -469,8 +465,7 @@ async function handleInteraction(interaction, client, config) {
         );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -608,14 +603,13 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
       if (id.startsWith("grade_back-")) {
         const [_, idCat] = id.split("-");
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
         const { container } = await generateGradesContainer(
           interaction.client,
           serveur,
@@ -623,8 +617,7 @@ async function handleInteraction(interaction, client, config) {
         );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -639,7 +632,7 @@ async function handleInteraction(interaction, client, config) {
 
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
         const guild = await interaction.client.guilds.fetch(
           "1349379748576366633",
@@ -742,8 +735,7 @@ async function handleInteraction(interaction, client, config) {
           );
         return interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -854,7 +846,7 @@ async function handleInteraction(interaction, client, config) {
         );
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
         const { container } = await generateGradesContainer(
           interaction.client,
           serveur,
@@ -862,8 +854,7 @@ async function handleInteraction(interaction, client, config) {
         );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
@@ -882,8 +873,7 @@ async function handleInteraction(interaction, client, config) {
             );
           return interaction.reply({
             components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2,
-            ephemeral: true,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
 
@@ -901,8 +891,7 @@ async function handleInteraction(interaction, client, config) {
         const container = await generateContainer(serveur);
         return interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -920,8 +909,7 @@ async function handleInteraction(interaction, client, config) {
             );
           return interaction.reply({
             components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2,
-            ephemeral: true,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
 
@@ -989,8 +977,7 @@ async function handleInteraction(interaction, client, config) {
           );
         return interaction.update({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -1009,8 +996,7 @@ async function handleInteraction(interaction, client, config) {
             );
           return interaction.reply({
             components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2,
-            ephemeral: true,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
 
@@ -1027,8 +1013,7 @@ async function handleInteraction(interaction, client, config) {
             );
           return interaction.reply({
             components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2,
-            ephemeral: true,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
 
@@ -1052,7 +1037,7 @@ async function handleInteraction(interaction, client, config) {
         roleData.grade.push(grade);
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
         const guild = await interaction.client.guilds.fetch(
           "1349379748576366633",
@@ -1145,8 +1130,7 @@ async function handleInteraction(interaction, client, config) {
           );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -1173,8 +1157,7 @@ async function handleInteraction(interaction, client, config) {
             );
           return interaction.reply({
             components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2,
-            ephemeral: true,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
 
@@ -1184,7 +1167,7 @@ async function handleInteraction(interaction, client, config) {
 
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
         const guild = await interaction.client.guilds.fetch(
           "1349379748576366633",
@@ -1287,8 +1270,7 @@ async function handleInteraction(interaction, client, config) {
           );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -1300,7 +1282,7 @@ async function handleInteraction(interaction, client, config) {
         if (!couleur)
           return interaction.reply({
             content: "Couleur HEX invalide. Exemple valide : #FF00FF",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
 
         const grade = roleData.grade.find(
@@ -1310,7 +1292,7 @@ async function handleInteraction(interaction, client, config) {
 
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
         const guild = await interaction.client.guilds.fetch(
           "1349379748576366633",
@@ -1411,8 +1393,7 @@ async function handleInteraction(interaction, client, config) {
           );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -1428,7 +1409,7 @@ async function handleInteraction(interaction, client, config) {
 
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
         const guild = await interaction.client.guilds.fetch(
           "1349379748576366633",
@@ -1531,8 +1512,7 @@ async function handleInteraction(interaction, client, config) {
           );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
 
@@ -1548,7 +1528,7 @@ async function handleInteraction(interaction, client, config) {
 
         fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
-        await interaction.deferUpdate({ ephemeral: true });
+        await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
         const guild = await interaction.client.guilds.fetch(
           "1349379748576366633",
@@ -1651,8 +1631,7 @@ async function handleInteraction(interaction, client, config) {
           );
         await interaction.editReply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          ephemeral: true,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }

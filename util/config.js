@@ -1,4 +1,5 @@
 const config = require("../config");
+const log = require("../util/module/log.js");
 const {
   getData,
   saveData,
@@ -305,8 +306,7 @@ function genererConfigsServeurs(client) {
     }
 
     saveData(`data/${serveur}/config.json`, resultat);
-
-    console.log(`[${serveur}] config.json généré`);
+    log(`[${serveur}] config.json généré`, "LOG", "gray");
   }
 }
 

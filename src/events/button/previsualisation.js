@@ -27,7 +27,6 @@ module.exports = {
       const container = await moduleContainers[module](client, serveur);
 
       components = [attentionContainer, ...container];
-      console.log(components);
     } else {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)

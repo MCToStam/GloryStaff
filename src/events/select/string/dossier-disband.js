@@ -23,7 +23,7 @@ module.exports = {
     if (!entry) {
       return interaction.reply({
         content: `Le pays **${pays}** n'a pas été trouvé.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 

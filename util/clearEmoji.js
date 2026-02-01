@@ -1,3 +1,5 @@
+const log = require("../util/module/log.js");
+
 async function clearEmoji(client) {
   if (!client.application) await client.application.fetch();
 
@@ -12,7 +14,7 @@ async function clearEmoji(client) {
     }
   }
 
-  console.log(`✅ ${deleted} application emoji(s) supprimé(s)`);
+  log(`✅ ${deleted} application emoji(s) supprimé(s)`, "LOG", "gray");
 }
 
 module.exports = clearEmoji;

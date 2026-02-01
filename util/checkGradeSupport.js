@@ -1,16 +1,15 @@
 const { discordStaff } = require("../util/module/discordLink");
+const log = require("../util/module/log.js");
 const config = require("../config");
 
 async function checkGradeSupport(client) {
   try {
-    console.log("[updateStaffRoles] Début de la vérification.");
+    log(
+      "🔍 Début de la vérification des rôles du serveur support",
+      "LOG",
+      "gray",
+    );
     const supportGuild = client.guilds.cache.get(config.support_serveur_id);
-    if (!supportGuild) {
-      console.error(
-        "[updateStaffRoles] Impossible de trouver le serveur support.",
-      );
-      return;
-    }
 
     await supportGuild.members.fetch();
 
@@ -75,8 +74,10 @@ async function checkGradeSupport(client) {
         if (rolesToAdd.length > 0 || rolesToRemove.length > 0) {
           await member.roles.add(rolesToAdd).catch(() => {});
           await member.roles.remove(rolesToRemove).catch(() => {});
-          console.log(
-            `[updateStaffRoles] Mise à jour des rôles de ${member.user.tag} : +${rolesToAdd}, -${rolesToRemove}.`,
+          log(
+            `✅ Mise à jour des rôles de ${member.user.tag} : +${rolesToAdd}, -${rolesToRemove}`,
+            "LOG",
+            "gray",
           );
         }
       } catch (e) {
@@ -87,7 +88,7 @@ async function checkGradeSupport(client) {
       }
     }
 
-    console.log("[updateStaffRoles] Vérification terminée.");
+    log("✅ Vérification terminée des rôles support", "LOG", "gray");
   } catch (error) {
     console.error("[updateStaffRoles] Erreur générale :", error);
   }

@@ -3,6 +3,7 @@ const path = require("node:path");
 const readline = require("readline");
 const { google } = require("googleapis");
 const archiver = require("archiver");
+const log = require("../../util/module/log.js");
 
 const DATA_FOLDER = path.join(__dirname, "..", "..", "data");
 const BACKUP_FOLDER = path.join(__dirname, "..", "backups");
@@ -104,7 +105,7 @@ async function zipAndUpload() {
   await uploadToDrive(zipPath, zipName, auth);
 
   fs.unlinkSync(zipPath);
-  console.log(`✅ Backup ${zipName} envoyé sur Google Drive`);
+  log(`✅ Backup ${zipName} envoyé sur Google Drive`, "LOG", "gray");
 }
 
 module.exports = { zipAndUpload };

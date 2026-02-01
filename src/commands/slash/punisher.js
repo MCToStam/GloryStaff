@@ -64,7 +64,7 @@ module.exports = {
         thumbnail: { url: `https://i.imgur.com/ZB0yLME.png` },
         description: description,
       };
-      return interaction.editReply({ embeds: [errorembed], ephemeral: false });
+      return interaction.editReply({ embeds: [errorembed] });
     }
 
     const vraiJoueur = foundUser.username;

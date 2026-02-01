@@ -1,4 +1,5 @@
 const config = require("../../config");
+const log = require("../../util/module/log.js");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { SanctionStaff } = require("../../util/container/module");
 const { MessageFlags, TextDisplayBuilder } = require("discord.js");
@@ -146,8 +147,10 @@ async function sendSanctionMessage(
 
       if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
 
-      console.log(
+      log(
         `✅ Message nouvelle sanction envoyé | serveur ${serveur} | guild ${guildId}`,
+        "LOG",
+        "gray",
       );
     } catch (err) {
       console.error(
@@ -163,7 +166,11 @@ async function sanction(client, serveur) {
   const configData = dataFile.find((c) => c.nom === "Staff");
   const configSanction = configData.systeme["Sanction Staff"];
 
-  console.log(`[SANCTION] Vérification des sanctions sur ${serveur}`);
+  log(
+    `🔍 Vérification des sanctions pour le serveur ${serveur}`,
+    "LOG",
+    "gray",
+  );
 
   const staffServer = getData(`data/${serveur}/staff-serveur.json`);
   const currentStaff = new Set(

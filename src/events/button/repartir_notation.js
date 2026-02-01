@@ -62,7 +62,7 @@ module.exports = {
 };
 
 async function modeAutomatique(client, interaction, config, serveur) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const staffData = getData(`data/${serveur}/staff-serveur.json`);
   const staffList = [

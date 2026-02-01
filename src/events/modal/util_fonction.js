@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs");
+const { MessageFlags } = require("discord.js");
 
 function parseValue(value) {
   if (value === "true") return true;
@@ -78,7 +79,7 @@ module.exports = {
     } catch (err) {
       return interaction.reply({
         content: `❌ ${err.message}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -95,7 +96,7 @@ module.exports = {
 
     await interaction.reply({
       content: `✅ Fonction **${functionName}** exécutée avec succès`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     fn(...finalArgs);
   },

@@ -1,4 +1,5 @@
 const config = require("../../config");
+const log = require("../../util/module/log.js");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { Plainte, Plaintenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
@@ -151,8 +152,10 @@ async function plainte(client) {
 
               if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
 
-              console.log(
+              log(
                 `✅ Message plainte envoyé | serveur ${server} | guild ${guildId}`,
+                "LOG",
+                "gray",
               );
             } catch (err) {
               console.error(
@@ -228,8 +231,10 @@ async function plainte(client) {
               flags: MessageFlags.IsComponentsV2,
             });
 
-            console.log(
+            log(
               `✅ Alerte plainte non traitée | serveur ${server} | guild ${guildId}`,
+              "LOG",
+              "gray",
             );
           } catch (err) {
             console.error(
@@ -264,8 +269,10 @@ async function plainte(client) {
             if (!message?.deletable) continue;
 
             await message.delete();
-            console.log(
+            log(
               `🗑️ Message plainte supprimé | channel ${channelId} | message ${messageId}`,
+              "LOG",
+              "gray",
             );
           } catch (err) {
             console.error(

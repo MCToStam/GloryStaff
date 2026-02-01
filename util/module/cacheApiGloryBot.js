@@ -1,9 +1,10 @@
 const { saveData } = require("../../util/module/getAndSaveData");
+const log = require("../../util/module/log.js");
 const config = require("../../config");
 
 async function cacheApiGloryBot() {
   try {
-    console.log("📥 Récupération des données depuis l'API...");
+    log("📥 Récupération des données depuis l'API...", "LOG", "gray");
 
     const [getNgResponse, allStaffResponse] = await Promise.all([
       fetch(`${config.glorybot_url}/api/get-ng`, {
@@ -25,7 +26,7 @@ async function cacheApiGloryBot() {
     saveData("data/api_get_ng.json", dataNg);
     saveData("data/api_all_staff.json", dataStaff);
 
-    console.log("📦 Données enregistrées avec succès !");
+    log("📦 Données enregistrées avec succès !", "LOG", "gray");
   } catch (err) {
     console.error("🔥 Erreur lors de la récupération/enregistrement :", err);
   }

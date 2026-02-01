@@ -1,4 +1,5 @@
 const { getData } = require("../../util/module/getAndSaveData");
+const log = require("../../util/module/log.js");
 const { getEmojiDrapeau } = require("../../util/module/emoji");
 const {
   ContainerBuilder,
@@ -26,9 +27,10 @@ async function classement_notation(client) {
   );
   const data = await response.json();
   for (const serveur of config.liste_serveur) {
-    console.log(
-      "🔎 Exécution du classement notations pour le serveur",
-      serveur,
+    log(
+      `🔎 Exécution du classement notations pour le serveur ${serveur}`,
+      "LOG",
+      "gray",
     );
 
     const dataConfig = getData(`data/${serveur}/config.json`);
@@ -157,8 +159,10 @@ async function classement_notation(client) {
 
           if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
 
-          console.log(
+          log(
             `✅ Classement notations envoyé | serveur ${serveur} | guild ${guildId}`,
+            "LOG",
+            "gray",
           );
         } catch (err) {
           console.error(

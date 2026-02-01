@@ -1,4 +1,9 @@
-const { ModalBuilder, TextInputBuilder, LabelBuilder } = require("discord.js");
+const {
+  ModalBuilder,
+  TextInputBuilder,
+  LabelBuilder,
+  MessageFlags,
+} = require("discord.js");
 const path = require("path");
 const fs = require("fs");
 
@@ -28,7 +33,6 @@ function loadFunction({ file, name, folder }) {
       : path.join(__dirname, "../../../../../util", file);
 
   if (!fs.existsSync(basePath)) {
-    console.log(basePath);
     throw new Error("Fichier util introuvable");
   }
 
@@ -66,7 +70,7 @@ exports.execute = async (client, interaction, config) => {
   } catch (err) {
     return interaction.reply({
       content: `❌ ${err.message}`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -82,7 +86,7 @@ exports.execute = async (client, interaction, config) => {
 
     await interaction.reply({
       content: `✅ Fonction **${functionName}** exécutée avec succès`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     return await fn(...callArgs);

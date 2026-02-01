@@ -1,4 +1,5 @@
 const config = require("../../config");
+const log = require("../../util/module/log.js");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { getEmojiDrapeau, getEmojiTete } = require("../../util/module/emoji");
 const { DateTime } = require("luxon");
@@ -237,8 +238,10 @@ async function disband_14h00(client) {
 
         if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
 
-        console.log(
+        log(
           `✅ Message disband pillage | serveur ${serveur} | guild ${guildId}`,
+          "LOG",
+          "gray",
         );
       } catch (err) {
         console.error(
@@ -271,7 +274,7 @@ async function disband_17h59() {
   }
 
   saveData("data/country_list.json", countrySnapshot);
-  console.log("✅ Sauvegarde des pays (JSON + HTML) à 17h58 terminée.");
+  log("✅ Sauvegarde des pays (JSON + HTML) à 17h58 terminée.", "LOG", "gray");
 }
 
 async function disband_18h15(client) {
@@ -445,8 +448,10 @@ async function disband_18h15(client) {
 
         if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
 
-        console.log(
+        log(
           `✅ Message disband 18h15 | serveur ${serveur} | guild ${guildId}`,
+          "LOG",
+          "gray",
         );
       } catch (err) {
         console.error(

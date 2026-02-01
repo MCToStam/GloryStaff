@@ -4,6 +4,7 @@ const {
   ContainerBuilder,
   ButtonBuilder,
   ButtonStyle,
+  MessageFlags,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -67,7 +68,7 @@ exports.execute = async (client, interaction, config) => {
   if (!actions.length) {
     return interaction.reply({
       content: "❌ Aucune fonction trouvée dans ce dossier",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
