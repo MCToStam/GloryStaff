@@ -1437,7 +1437,7 @@ app.post("/api/attenteStaff", async (req, res) => {
       );
     } catch (err) {
       console.error(
-        `❌ Erreur envoi disband 18h15 | serveur ${serveur} | guild ${guildId}`,
+        `❌ Erreur envoi attente staff 18h15 | serveur ${serveur} | guild ${guildId}`,
         err,
       );
     }
@@ -1623,44 +1623,6 @@ app.post("/api/forumulaire_espilon_rp2", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Erreur lors de l'envoi de l'embed.");
-  }
-});
-
-app.post("/api/dossierDisband/:serveur", async (req, res) => {
-  try {
-    const { serveur } = req.params;
-    const data = req.body;
-
-    if (!serveur) {
-      return res.status(400).json({ error: "Paramètre 'serveur' manquant" });
-    }
-
-    if (!Array.isArray(data)) {
-      return res
-        .status(400)
-        .json({ error: "Les données envoyées doivent être un tableau JSON" });
-    }
-
-    const dirPath = path.join(__dirname, "data", serveur);
-    if (!fs.existsSync(dirPath)) {
-      fs.mkdirSync(dirPath, { recursive: true });
-    }
-
-    const filePath = path.join(dirPath, "dossierDisband.json");
-
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
-
-    log(
-      `✅ Fichier dossierDisband.json sauvegardé pour ${serveur}`,
-      "LOG",
-      "gray",
-    );
-    res
-      .status(200)
-      .json({ success: true, message: `Fichier enregistré pour ${serveur}` });
-  } catch (error) {
-    console.error("❌ Erreur lors de la sauvegarde du dossierDisband :", error);
-    res.status(500).json({ error: "Erreur interne lors de la sauvegarde" });
   }
 });
 

@@ -107,23 +107,23 @@ async function disband_14h00(client) {
     const fhomeCountries = [];
 
     for (const country of disbandData) {
-      if (!country.name) continue;
+      if (!country.nom) continue;
 
-      if (country.reason === "member" && !uniqueCountries.has(country.name)) {
+      if (country.raison === "membre" && !uniqueCountries.has(country.nom)) {
         memberCountries.push(country);
         uniqueCountries.add(country.name);
       } else if (
-        country.reason === "inactivity" &&
-        !uniqueCountries.has(country.name)
+        country.raison === "inactivite" &&
+        !uniqueCountries.has(country.nom)
       ) {
         inactiveCountries.push(country);
-        uniqueCountries.add(country.name);
+        uniqueCountries.add(country.nom);
       } else if (
-        country.reason === "fhome" &&
-        !uniqueCountries.has(country.name)
+        country.raison === "fhome" &&
+        !uniqueCountries.has(country.nom)
       ) {
         fhomeCountries.push(country);
-        uniqueCountries.add(country.name);
+        uniqueCountries.add(country.nom);
       }
     }
 
@@ -134,16 +134,16 @@ async function disband_14h00(client) {
           const emoji = await getEmojiDrapeau(
             client,
             serveur,
-            country.name.toLowerCase(),
+            country.nom.toLowerCase(),
           );
           if (emoji) {
-            result.push(`<:${emoji.name}:${emoji.id}> ${country.name}`);
+            result.push(`<:${emoji.nom}:${emoji.id}> ${country.nom}`);
           } else {
-            result.push(`${country.name}`);
+            result.push(`${country.nom}`);
           }
         } catch (err) {
-          console.error(`Erreur pour le pays ${country.name}:`, err);
-          result.push(`${country.name}`);
+          console.error(`Erreur pour le pays ${country.nom}:`, err);
+          result.push(`${country.nom}`);
         }
       }
       return result.join("\n");

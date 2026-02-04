@@ -105,7 +105,10 @@ module.exports = {
           "Vous n'avez pas les permissions requises pour effectuer cette commande.",
         )
         .setFooter({ text: config.footer });
-      return interaction.reply({ embeds: [error], ephemeral: true });
+      return interaction.reply({
+        embeds: [error],
+        flags: MessageFlags.Ephemeral,
+      });
     }
 
     const actions = scanUtil();
