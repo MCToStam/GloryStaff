@@ -98,7 +98,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
 
   const embedDescription = await Promise.all(
     Object.entries(repartition).map(async ([staff, range]) => {
-      const emoji = await getEmojiTete(client, staff);
+      const emoji = (await getEmojiTete(client, staff)) || "🧑";
       return `${emoji} **${staff}** : ${range}`;
     }),
   );
@@ -196,20 +196,25 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       staffList.map(async (s) => {
         const emoji = await getEmojiTete(client, s);
         const isChosen = cache.has(s);
-        return new ButtonBuilder()
+        const button = new ButtonBuilder()
           .setCustomId(
             `notation_module-manual-assign-${number}-${start - 1}-${ranges
               .map((r) => r.join(","))
               .join(";")}-${s}`,
           )
           .setLabel(s)
-          .setEmoji({
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(isChosen);
+
+        if (emoji) {
+          button.setEmoji({
             id: emoji.id,
             name: emoji.name,
             animated: emoji.animated,
-          })
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(isChosen);
+          });
+        }
+
+        return button;
       }),
     );
 
@@ -279,7 +284,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       const repartitionText = (
         await Promise.all(
           Array.from(cache.entries()).map(async ([s, range]) => {
-            const emoji = await getEmojiTete(client, s);
+            const emoji = (await getEmojiTete(client, s)) || "🧑";
             return `${emoji} **${s}** : ${range}`;
           }),
         )
@@ -304,20 +309,25 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       staffList.map(async (s) => {
         const emoji = await getEmojiTete(client, s);
         const isChosen = cache.has(s);
-        return new ButtonBuilder()
+        const button = new ButtonBuilder()
           .setCustomId(
             `notation_module-manual-assign-${total}-${nextIndex}-${ranges
               .map((r) => r.join(","))
               .join(";")}-${s}`,
           )
           .setLabel(s)
-          .setEmoji({
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(isChosen);
+
+        if (emoji) {
+          button.setEmoji({
             id: emoji.id,
             name: emoji.name,
             animated: emoji.animated,
-          })
-          .setStyle(ButtonStyle.Secondary)
-          .setDisabled(isChosen);
+          });
+        }
+
+        return button;
       }),
     );
 

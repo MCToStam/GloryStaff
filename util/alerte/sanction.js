@@ -27,12 +27,12 @@ function parseSanctions(rawText) {
     .filter((p) => p.includes("[Punisher]"))
     .map((line) => {
       const regex =
-        /\[Punisher\]\s*\[(.+?) · (.+?)\]\s*'(.+?)'\s*by\s*(.+?)\s*on\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/i;
+        /\[Punisher\] \[(\w+)\s*·\s*(.*?)\s*\] '(.+?)' by (.+?) on (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/i;
       const match = line.match(regex);
       if (!match) return { raw: line };
       return {
         type: match[1],
-        duree: match[2],
+        duree: match[2] || "",
         raison: match[3],
         staff: match[4],
         date: match[5],
@@ -110,6 +110,8 @@ async function sendSanctionMessage(
   serveur,
   client,
 ) {
+  if (!Object.values(active || {}).some((value) => value === true)) return;
+
   const container = await SanctionStaff(
     client,
     serveur,

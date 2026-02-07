@@ -130,21 +130,11 @@ async function disband_14h00(client) {
     async function formatCountriesWithFlags(list) {
       const result = [];
       for (const country of list) {
-        try {
-          const emoji = await getEmojiDrapeau(
-            client,
-            serveur,
-            country.nom.toLowerCase(),
-          );
-          if (emoji) {
-            result.push(`<:${emoji.nom}:${emoji.id}> ${country.nom}`);
-          } else {
-            result.push(`${country.nom}`);
-          }
-        } catch (err) {
-          console.error(`Erreur pour le pays ${country.nom}:`, err);
-          result.push(`${country.nom}`);
-        }
+        const emoji =
+          (await getEmojiDrapeau(client, serveur, country.nom.toLowerCase())) ||
+          "🏳️";
+        if (emoji) result.push(`${emoji} ${country.nom}`);
+        else result.push(`${country.nom}`);
       }
       return result.join("\n");
     }
@@ -331,13 +321,10 @@ async function disband_18h15(client) {
       a.name.localeCompare(b.name),
     )) {
       try {
-        const flagEmoji = await getEmojiDrapeau(
-          client,
-          serveur,
-          c.name.toLowerCase(),
-        );
+        const flag =
+          (await getEmojiDrapeau(client, serveur, c.name.toLowerCase())) ||
+          "🏳️";
 
-        const flag = flagEmoji ? `<:${flagEmoji.name}:${flagEmoji.id}> ` : "";
         formattedJsonCountries.push(`${flag}${c.name}`);
       } catch (err) {
         console.error(
@@ -358,26 +345,15 @@ async function disband_18h15(client) {
       a.nom.localeCompare(b.nom),
     )) {
       try {
-        const flagEmoji = await getEmojiDrapeau(
-          client,
-          serveur,
-          c.nom.toLowerCase(),
-        );
+        const flag =
+          (await getEmojiDrapeau(client, serveur, c.nom.toLowerCase())) || "🏳️";
 
         let headEmoji = null;
         if (c.chef) {
-          try {
-            headEmoji = await getEmojiTete(client, c.chef);
-          } catch (err) {
-            console.error(
-              `Erreur lors de la récupération de l'emoji tête pour ${c.chef}:`,
-              err,
-            );
-          }
+          headEmoji = (await getEmojiTete(client, c.chef)) || "🧑";
         }
 
-        const flag = flagEmoji ? `<:${flagEmoji.name}:${flagEmoji.id}> ` : "";
-        const head = headEmoji ? `<:${headEmoji.name}:${headEmoji.id}> ` : "";
+        const head = headEmoji ? `<:${headEmoji}> ` : "";
         const leaderInfo = c.chef ? `\n↪ Créé par ${head}${c.chef}` : "";
 
         formattedHtmlCountries.push(`${flag}${c.nom}${leaderInfo}`);

@@ -53,12 +53,12 @@ module.exports = {
         infractionsText.length > 0 &&
         infractionsText !== "**Fin de la routine :**";
 
-      const teteEmoji = await getEmojiTete(client, pseudo);
+      const teteEmoji = (await getEmojiTete(client, pseudo)) || "⏱️";
       const routineContainer = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `## ${teteEmoji || "⏱️"} Routine de ${pseudo.replace(/_/g, "\\_")}`,
+            `## ${teteEmoji} Routine de ${pseudo.replace(/_/g, "\\_")}`,
           ),
         )
         .addSeparatorComponents((separator) => separator)

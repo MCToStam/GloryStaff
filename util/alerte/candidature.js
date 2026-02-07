@@ -221,10 +221,9 @@ async function sendCandidatures(client, AllCandidatures) {
           { type: 14, spacing: SeparatorSpacingSize.Small },
           {
             type: 10,
-            content: `${await getEmojiTete(
-              client,
-              candidature.auteur,
-            )} **Auteur :** ${candidature.auteur}`,
+            content: `${
+              (await getEmojiTete(client, candidature.auteur)) || "🧑"
+            } **Auteur :** ${candidature.auteur}`,
           },
           {
             type: 10,
@@ -330,10 +329,9 @@ async function sendCandidatures(client, AllCandidatures) {
 
               components.push({
                 type: 10,
-                content: `🚫 **Dernière Sanction :** ${type} : ${reason} par ${await getEmojiTete(
-                  client,
-                  auteur,
-                )} ${auteur} <t:${timestamp}:R>`,
+                content: `🚫 **Dernière Sanction :** ${type} : ${reason} par ${
+                  (await getEmojiTete(client, auteur)) || "🧑"
+                } ${auteur} <t:${timestamp}:R>`,
               });
             }
           }

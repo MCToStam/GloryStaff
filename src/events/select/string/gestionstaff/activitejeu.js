@@ -236,7 +236,7 @@ module.exports = {
       name: "gestionstaff_activitejeu.png",
     });
 
-    const emojiTete = await getEmojiTete(client, joueur);
+    const emojiTete = (await getEmojiTete(client, joueur)) || "🧑";
 
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])

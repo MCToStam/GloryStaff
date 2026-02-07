@@ -65,12 +65,9 @@ module.exports = {
           for (const s of entry.servers.filter(
             (srv) => srv.compte === pseudo,
           )) {
-            const emojiTete = await getEmojiTete(client, pseudo);
-            const emojiDrapeau = await getEmojiDrapeau(
-              client,
-              s.server,
-              s.country,
-            );
+            const emojiTete = (await getEmojiTete(client, pseudo)) || "🧑";
+            const emojiDrapeau =
+              (await getEmojiDrapeau(client, s.server, s.country)) || "🏳️";
 
             lines.push(
               s.server.toLowerCase() === serveur

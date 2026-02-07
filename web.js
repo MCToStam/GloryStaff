@@ -475,7 +475,7 @@ app.post("/staff", async (req, res) => {
             ? (
                 await Promise.all(
                   membres.map(async (m) => {
-                    const emoji = await getEmojiTete(client, m);
+                    const emoji = (await getEmojiTete(client, m)) || "🧑";
                     return `${emoji} ${escapeUnderscore(m)}`;
                   }),
                 )

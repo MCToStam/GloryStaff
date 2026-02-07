@@ -33,7 +33,7 @@ async function Guerre(client, serveur, guerre) {
       date: "1763222880",
       lien: "https://nationsglory.fr/forums/thread/declaration-de-guerre-empiretibetain-vs-alaska-provocation-rp.140577",
     };
-  const emoji = await getEmojiTete(client, guerre.auteur);
+  const emoji = (await getEmojiTete(client, guerre.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -68,7 +68,7 @@ async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
       lien: "https://nationsglory.fr/forums/thread/declaration-de-guerre-empiretibetain-vs-alaska-provocation-rp.140577",
     };
   if (!delaiJour) delaiJour = 2;
-  const emoji = await getEmojiTete(client, guerre.auteur);
+  const emoji = (await getEmojiTete(client, guerre.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -104,7 +104,7 @@ async function Plainte(client, serveur, plainte) {
       date: "1768063680",
       lien: "https://nationsglory.fr/forums/thread/plainte-n6364-onu-contre-freez3r.237636",
     };
-  const emoji = await getEmojiTete(client, plainte.auteur);
+  const emoji = (await getEmojiTete(client, plainte.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -139,7 +139,7 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
       lien: "https://nationsglory.fr/forums/thread/plainte-n6364-onu-contre-freez3r.237636",
     };
   if (!delaiJour) delaiJour = 2;
-  const emoji = await getEmojiTete(client, plainte.auteur);
+  const emoji = (await getEmojiTete(client, plainte.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -173,7 +173,9 @@ async function AttenteStaff(client, serveur, joueur, id, salon) {
   if (!salon) salon = "1391047893678293094";
 
   const pseudo = await discordLink(id);
-  const emoji = pseudo ? await getEmojiTete(client, pseudo) : undefined;
+  const emoji = pseudo
+    ? (await getEmojiTete(client, pseudo)) || "🧑"
+    : undefined;
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -213,13 +215,13 @@ async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
     ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
     : `**Raison :** ${lien_raison}`;
 
-  const teteEmoji = await getEmojiTete(client, vraiCriminel);
+  const teteEmoji = (await getEmojiTete(client, vraiCriminel)) || "🚧";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
-        `## ${teteEmoji || "🚧"} Jail sur ${vraiCriminel.replace(/_/g, "\\_")}`,
+        `## ${teteEmoji} Jail sur ${vraiCriminel.replace(/_/g, "\\_")}`,
       ),
     )
     .addSeparatorComponents((separator) => separator)
@@ -254,13 +256,13 @@ async function Routine(client, serveur, pseudonym) {
   const buttonEnable = pseudonym ? false : true;
   if (!pseudonym) pseudonym = "ToStam";
 
-  const teteEmoji = await getEmojiTete(client, pseudonym);
+  const teteEmoji = (await getEmojiTete(client, pseudonym)) || "⏱️";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
-        `## ${teteEmoji || "⏱️"} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
+        `## ${teteEmoji} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
       ),
     )
     .addSeparatorComponents((separator) => separator)
@@ -338,9 +340,9 @@ async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
   if (!paysa) paysa = "France";
   if (!paysb) paysb = "Allemagne";
 
-  const tete = await getEmojiTete(client, pseudo);
-  const drapeauA = await getEmojiDrapeau(client, serveur, paysa);
-  const drapeauB = await getEmojiDrapeau(client, serveur, paysb);
+  const tete = (await getEmojiTete(client, pseudo)) || "🧑";
+  const drapeauA = (await getEmojiDrapeau(client, serveur, paysa)) || "🏳️";
+  const drapeauB = (await getEmojiDrapeau(client, serveur, paysb)) || "🏳️";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -364,9 +366,9 @@ async function FullBuild(client, serveur, pseudo, paysa, paysb) {
   if (!paysa) paysa = "France";
   if (!paysb) paysb = "Allemagne";
 
-  const tete = await getEmojiTete(client, pseudo);
-  const drapeauA = await getEmojiDrapeau(client, serveur, paysa);
-  const drapeauB = await getEmojiDrapeau(client, serveur, paysb);
+  const tete = (await getEmojiTete(client, pseudo)) || "🧑";
+  const drapeauA = (await getEmojiDrapeau(client, serveur, paysa)) || "🏳️";
+  const drapeauB = (await getEmojiDrapeau(client, serveur, paysb)) || "🏳️";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -410,7 +412,7 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
             ? `pendant ${formatDuree(s.duree)} `
             : "";
 
-      const tete = await getEmojiTete(client, s.staff);
+      const tete = (await getEmojiTete(client, s.staff)) || "🧑";
 
       return `${config.emoji_formate[s.serveur] || ""} **${
         s.type
@@ -418,10 +420,9 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
     }),
   );
 
-  const message = `**${await getEmojiTete(
-    client,
-    pseudonyme,
-  )} ${pseudonyme}** a reçu ${newSanctions.length} ${
+  const message = `**${
+    (await getEmojiTete(client, pseudonyme)) || "🧑"
+  } ${pseudonyme}** a reçu ${newSanctions.length} ${
     newSanctions.length > 1 ? "nouvelles sanctions" : "nouvelle sanction"
   } :\n\n${lignes.join("\n")}`;
 
@@ -461,28 +462,28 @@ async function DoubleLead(client, serveur, leaderPseudos, servers) {
   let message;
 
   if (leaderPseudos.length === 1) {
-    const emoji = await getEmojiTete(client, leaderPseudos[0]);
+    const emoji = (await getEmojiTete(client, leaderPseudos[0])) || "🧑";
     message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays :\n`;
   } else if (leaderPseudos.length === 2) {
     const [p1, p2] = leaderPseudos;
     const [e1, e2] = await Promise.all([
-      getEmojiTete(client, p1),
-      getEmojiTete(client, p2),
+      getEmojiTete(client, p1) || "🧑",
+      getEmojiTete(client, p2) || "🧑",
     ]);
     message = `Les joueurs ${e1} **${p1}** et ${e2} **${p2}** possèdent différents pays :\n`;
   } else {
     const last = leaderPseudos.pop();
     const emojis = await Promise.all(
-      leaderPseudos.map((p) => getEmojiTete(client, p)),
+      leaderPseudos.map((p) => getEmojiTete(client, p)) || "🧑",
     );
-    const lastEmoji = await getEmojiTete(client, last);
+    const lastEmoji = (await getEmojiTete(client, last)) || "🧑";
     message = `Les joueurs ${leaderPseudos
       .map((p, i) => `${emojis[i]} **${p}**`)
       .join(", ")} et ${lastEmoji} **${last}** possèdent différents pays :\n`;
   }
 
   for (const { compte, server, country } of servers) {
-    const emojiCompte = await getEmojiTete(client, compte);
+    const emojiCompte = (await getEmojiTete(client, compte)) || "🧑";
     message += `<:NG${
       server.charAt(0).toUpperCase() + server.slice(1)
     }:${config.emoji[server.toLowerCase()]}> **${

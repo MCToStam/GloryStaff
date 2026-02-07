@@ -224,7 +224,7 @@ module.exports = {
           const data = await res.json();
           return data.pseudo_mc || null;
         })(),
-        getEmojiTete(client, staff),
+        getEmojiTete(client, staff) || "🧑",
       ]);
 
       const jailData = getData(`data/${serveur}/config-jail.json`);

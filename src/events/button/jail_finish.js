@@ -97,7 +97,7 @@ module.exports = {
       }
     }
 
-    const emojiTete = await getEmojiTete(client, jailedUser);
+    const emojiTete = (await getEmojiTete(client, jailedUser)) || "🧑";
     const userContainer = new ContainerBuilder()
       .setAccentColor(config.colors.success)
       .addTextDisplayComponents((textDisplay) =>

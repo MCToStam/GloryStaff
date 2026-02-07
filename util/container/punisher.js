@@ -35,7 +35,7 @@ async function getPunisherContainer(
                     ? `pendant ${s.duree} `
                     : "";
             const emoji = config.emoji_formate[s.serveur] || "";
-            const emojiTete = await getEmojiTete(client, s.staff);
+            const emojiTete = (await getEmojiTete(client, s.staff)) || "🧑";
             return `${emoji} **${s.type}** ${duree}pour **${s.raison}** par ${emojiTete} **${s.staff}** ${ts}`;
           }),
         )

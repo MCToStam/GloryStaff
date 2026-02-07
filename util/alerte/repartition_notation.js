@@ -67,7 +67,7 @@ async function repartition_notation(client) {
           await Promise.all(
             Object.entries(configRepartition.donnee[guildId]).map(
               async ([key, value]) => {
-                const emoji = await getEmojiTete(client, key);
+                const emoji = (await getEmojiTete(client, key)) || "🧑";
                 const emojiText = emoji.id
                   ? `<:${emoji.name}:${emoji.id}>`
                   : emoji.name;

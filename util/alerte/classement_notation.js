@@ -66,21 +66,7 @@ async function classement_notation(client) {
 
       for (const entry of topServerCountriesRaw) {
         const pays = entry.pays.toLowerCase();
-        try {
-          const emoji = await getEmojiDrapeau(client, serveur, pays);
-
-          if (emoji) {
-            emojis[pays] = `<:${emoji.name}:${emoji.id}>`;
-          } else {
-            emojis[pays] = "🏳️";
-          }
-        } catch (err) {
-          console.error(
-            `Erreur lors de la récupération de l'emoji pour ${pays}:`,
-            err,
-          );
-          emojis[pays] = "🏳️";
-        }
+        emojis[pays] = (await getEmojiDrapeau(client, serveur, pays)) || "🏳️";
       }
 
       const topServerCountries = topServerCountriesRaw
