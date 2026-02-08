@@ -122,10 +122,7 @@ async function updateAllStaffWebhooks() {
       components.push(container);
     }
 
-    if (!webhookUrl) {
-      console.warn(`webhookUrl manquant pour ${serveur}`);
-      continue;
-    }
+    if (!webhookUrl) continue;
 
     const [webhookId, webhookToken] = webhookUrl.split("/").slice(-2);
     const webhookClient = new WebhookClient({

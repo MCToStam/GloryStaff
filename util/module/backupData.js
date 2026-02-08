@@ -6,7 +6,7 @@ const archiver = require("archiver");
 const log = require("../../util/module/log.js");
 
 const DATA_FOLDER = path.join(__dirname, "..", "..", "data");
-const BACKUP_FOLDER = path.join(__dirname, "..", "backups");
+const BACKUP_FOLDER = path.join(__dirname, "..", "..", "backups");
 const TOKEN_PATH = path.join(__dirname, "..", "..", "token.json");
 
 function getTodayDate() {

@@ -87,6 +87,7 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
   } catch {
     allStaff = getData("data/api_api_all_staff.json");
   }
+  if (!allStaff) allStaff = getData("data/api_api_all_staff.json");
 
   const gradesHierarchie = [
     "administrateur",

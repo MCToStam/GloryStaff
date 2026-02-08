@@ -325,7 +325,7 @@ async function disband_18h15(client) {
           (await getEmojiDrapeau(client, serveur, c.name.toLowerCase())) ||
           "🏳️";
 
-        formattedJsonCountries.push(`${flag}${c.name}`);
+        formattedJsonCountries.push(`${flag} ${c.name}`);
       } catch (err) {
         console.error(
           `Erreur lors de la récupération de l'emoji pour ${c.name}:`,
@@ -353,10 +353,9 @@ async function disband_18h15(client) {
           headEmoji = (await getEmojiTete(client, c.chef)) || "🧑";
         }
 
-        const head = headEmoji ? `<:${headEmoji}> ` : "";
-        const leaderInfo = c.chef ? `\n↪ Créé par ${head}${c.chef}` : "";
+        const leaderInfo = c.chef ? `\n↪ Créé par ${headEmoji}${c.chef}` : "";
 
-        formattedHtmlCountries.push(`${flag}${c.nom}${leaderInfo}`);
+        formattedHtmlCountries.push(`${flag} ${c.nom}${leaderInfo}`);
       } catch (err) {
         console.error(`Erreur pour le pays ${c.nom}:`, err);
         formattedHtmlCountries.push(c.nom);
