@@ -85,9 +85,9 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
     if (!response.ok) throw new Error("API non fonctionnelle");
     allStaff = await response.json();
   } catch {
-    allStaff = getData("data/api_api_all_staff.json");
+    allStaff = getData("data/api_all_staff.json");
   }
-  if (!allStaff) allStaff = getData("data/api_api_all_staff.json");
+  if (!allStaff) allStaff = getData("data/api_all_staff.json");
 
   const gradesHierarchie = [
     "administrateur",
