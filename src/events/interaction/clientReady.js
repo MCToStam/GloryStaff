@@ -42,12 +42,11 @@ async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
   const playerCount = await getServerPlayer(server);
 
-  const statusName =
-    playerCount !== null
-      ? `${
-          playerCount.nombre
-        } joueurs connectés sur NationsGlory ${server.toUpperCase()}`
-      : `NationsGlory ${server.toUpperCase()}`;
+  const statusName = playerCount
+    ? `${
+        playerCount.nombre
+      } joueurs connectés sur NationsGlory ${server.toUpperCase()}`
+    : `NationsGlory ${server.toUpperCase()}`;
 
   client.user.setPresence({
     activities: [{ name: statusName, type: ActivityType.Watching }],

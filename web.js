@@ -539,9 +539,9 @@ app.post("/staff", async (req, res) => {
         const channel = guild.channels.cache.get(channelId);
         if (!channel) continue;
 
-        const message = await channel.messages.fetch(
-          configAffichage.Message[guildId],
-        );
+        const message = await channel.messages
+          .fetch(configAffichage.Message[guildId])
+          .catch(() => null);
         if (!message) continue;
 
         try {

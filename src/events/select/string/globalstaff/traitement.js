@@ -63,7 +63,7 @@ module.exports = {
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
         t.setContent(
-          `## Activité Vocal sur Discord - ${
+          `## Traitement des Attentes Staffs - ${
             serveur.charAt(0).toUpperCase() + serveur.slice(1)
           }`,
         ),
