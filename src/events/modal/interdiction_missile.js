@@ -21,7 +21,29 @@ module.exports = {
 
     if (action === "create") {
       const pays = interaction.fields.getTextInputValue("pays");
-      data.push({ nom: pays });
+
+      const channelContainer = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `## 🚀 Interdiction Missile - ${pays.charAt(0).toUpperCase() + pays.slice(1)}`,
+          ),
+        )
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            "Ce pays est désormais en interdiction missile, cet-à-dire qui possède des trous ou des résidus de missile. Il n'a donc plus le droit d'envoyer des missiles, ni de faire exploser des TnTs lors d'assauts.",
+          ),
+        );
+
+      const channel = await client.channels.fetch("743741992730624092");
+
+      const message = await channel.send({
+        components: [channelContainer],
+        flags: MessageFlags.IsComponentsV2,
+      });
+
+      data.push({ nom: pays, message: message.id });
       saveData(`data/${serveur}/interdiction-missile.json`, data);
 
       const container = new ContainerBuilder()

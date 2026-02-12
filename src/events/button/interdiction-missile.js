@@ -24,8 +24,13 @@ module.exports = {
     let data = getData(`data/${serveur}/interdiction-missile.json`);
 
     if (action === "delete") {
+      const paysData = data.find((p) => p.nom == pays);
       data = data.filter((p) => p.nom !== pays);
       saveData(`data/${serveur}/interdiction-missile.json`, data);
+
+      const channel = await client.channels.fetch("743741992730624092");
+      const message = await channel.messages.fetch(paysData.message);
+      await message.delete();
 
       const container = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
