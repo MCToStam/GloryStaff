@@ -36,7 +36,7 @@ module.exports = {
           ),
         );
 
-      const channel = await client.channels.fetch("743741992730624092");
+      const channel = await client.channels.fetch("1389999729747824841");
 
       const message = await channel.send({
         components: [channelContainer],
