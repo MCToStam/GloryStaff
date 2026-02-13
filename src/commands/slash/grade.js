@@ -43,12 +43,12 @@ module.exports = {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_edit_${cat.id}`)
-                .setLabel("Modifier la catégorie")
+                .setCustomId(`grade_categorie_edit-${cat.id}`)
+                .setLabel("✏️ Modifier la Catégorie")
                 .setStyle(ButtonStyle.Primary),
               new ButtonBuilder()
-                .setCustomId(`grade_categorie_delete_${cat.id}`)
-                .setLabel("Supprimer la catégorie")
+                .setCustomId(`grade_categorie_delete-${cat.id}`)
+                .setLabel("🗑️ Supprimer la Catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -61,14 +61,13 @@ module.exports = {
 
     const options = categories.map((cat) => ({
       label: cat.nom,
-      value: cat.id,
+      value: `grade_categorie_manage-${cat.id}`,
     }));
 
     gradeContainer.addSeparatorComponents((separator) => separator);
 
     if (options.length > 0) {
       gradeContainer
-        .addSeparatorComponents((separator) => separator)
         .addActionRowComponents(
           new ActionRowBuilder().addComponents(
             new StringSelectMenuBuilder()
@@ -76,14 +75,15 @@ module.exports = {
               .setPlaceholder("Gérer une catégorie")
               .addOptions(options),
           ),
-        );
+        )
+        .addSeparatorComponents((separator) => separator);
     }
 
     gradeContainer.addActionRowComponents(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("grade_categorie_create")
-          .setLabel("Créer une catégorie")
+          .setLabel("➕ Créer une Catégorie")
           .setStyle(ButtonStyle.Success),
       ),
     );

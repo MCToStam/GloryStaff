@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const Canvas = require("canvas");
 const {
   ContainerBuilder,
   StringSelectMenuBuilder,
@@ -13,85 +12,11 @@ const {
   InteractionType,
   MessageFlags,
   RoleSelectMenuBuilder,
-  AttachmentBuilder,
 } = require("discord.js");
 const config = require("../config");
-
-const cachePath = path.join(__dirname, "..", "data", "emojisCache.json");
-let emojisCache = fs.existsSync(cachePath)
-  ? JSON.parse(fs.readFileSync(cachePath, "utf8"))
-  : {};
-
-async function getGradeEmoji(serveur, guild, idCat, grade) {
-  const now = Date.now();
-  const key = `${serveur}_${idCat}_${grade.id}`;
-  const colorKey = grade.couleur.toLowerCase();
-
-  const existingColorEmoji = Object.values(emojisCache).find(
-    (e) => e.color === colorKey,
-  );
-  if (existingColorEmoji) {
-    const emoji = guild.emojis.cache.get(existingColorEmoji.emojiId);
-    if (emoji) {
-      emojisCache[key] = {
-        emojiId: emoji.id,
-        color: colorKey,
-        createdAt: now,
-      };
-      fs.writeFileSync(cachePath, JSON.stringify(emojisCache, null, 2));
-      return emoji;
-    }
-  }
-
-  if (emojisCache[key]) {
-    const { emojiId } = emojisCache[key];
-    try {
-      await guild.emojis.delete(emojiId);
-    } catch (e) {
-      console.warn(`Impossible de supprimer l'emoji ${emojiId}:`, e.message);
-    }
-  }
-
-  const canvas = Canvas.createCanvas(32, 32);
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = grade.couleur;
-  ctx.beginPath();
-  ctx.arc(16, 16, 16, 0, Math.PI * 2);
-  ctx.fill();
-
-  const safeKey = key.toLowerCase().replace(/[^a-z0-9_]/g, "_");
-
-  const attachment = new AttachmentBuilder(canvas.toBuffer("image/png"), {
-    name: `${safeKey}.png`,
-  });
-  const emoji = await guild.emojis.create({
-    attachment: attachment.attachment,
-    name: `${serveur}_${idCat}_${grade.id}`.slice(0, 32),
-  });
-
-  emojisCache[key] = {
-    emojiId: emoji.id,
-    color: colorKey,
-    createdAt: now,
-  };
-  fs.writeFileSync(cachePath, JSON.stringify(emojisCache, null, 2));
-
-  setTimeout(
-    async () => {
-      try {
-        const stillHere = guild.emojis.cache.get(emoji.id);
-        if (stillHere) await stillHere.delete();
-        delete emojisCache[key];
-        fs.writeFileSync(cachePath, JSON.stringify(emojisCache, null, 2));
-      } catch (e) {
-        console.warn(`Erreur suppression emoji ${emoji.id}:`, e.message);
-      }
-    },
-    60 * 60 * 1000,
-  );
-
-  return emoji;
-}
+const { getHexEmoji } = require("../util/module/emoji");
+const { getData } = require("../util/module/getAndSaveData");
+const { getServeur } = require("../util/module/getServeur");
 
 function formatHexColor(input) {
   let color = input.toUpperCase();
@@ -101,13 +26,7 @@ function formatHexColor(input) {
 }
 
 async function generateContainer(serveur) {
-  const filePath = path.join(__dirname, "..", "data", serveur, "grade.json");
-  let roleData = {};
-  try {
-    roleData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  } catch (err) {
-    roleData = {};
-  }
+  const roleData = getData(`data/${serveur}/grade.json`);
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
@@ -126,11 +45,11 @@ async function generateContainer(serveur) {
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId(`grade_categorie_edit-${cat.id}`)
-              .setLabel("Modifier")
+              .setLabel("✏️ Modifier la Catégorie")
               .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
               .setCustomId(`grade_categorie_delete-${cat.id}`)
-              .setLabel("Supprimer")
+              .setLabel("🗑️ Supprimer la Catégorie")
               .setStyle(ButtonStyle.Danger),
           ),
         );
@@ -143,26 +62,29 @@ async function generateContainer(serveur) {
 
   const options = categories.map((cat) => ({
     label: cat.nom,
-    value: cat.id,
+    value: `grade_categorie_manage-${cat.id}`,
   }));
 
   container.addSeparatorComponents((separator) => separator);
 
   if (categories.length > 0) {
-    container.addActionRowComponents(
-      new ActionRowBuilder().addComponents(
-        new StringSelectMenuBuilder()
-          .setCustomId("grade_categorie_manage")
-          .setPlaceholder("Gérer une catégorie")
-          .addOptions(options),
-      ),
-    );
+    container
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId("grade_categorie_manage")
+            .setPlaceholder("Gérer une catégorie")
+            .addOptions(options),
+        ),
+      )
+      .addSeparatorComponents((separator) => separator);
   }
+
   container.addActionRowComponents(
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("grade_categorie_create")
-        .setLabel("Créer une catégorie")
+        .setLabel("➕ Créer une Catégorie")
         .setStyle(ButtonStyle.Success),
     ),
   );
@@ -171,13 +93,7 @@ async function generateContainer(serveur) {
 }
 
 async function generateGradesContainer(client, serveur, idCat) {
-  const filePath = path.join(__dirname, "..", "data", serveur, "grade.json");
-  let roleData = {};
-  try {
-    roleData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  } catch (err) {
-    roleData = {};
-  }
+  const roleData = getData(`data/${serveur}/grade.json`);
 
   const grades = (roleData.grade || []).filter((g) => g.categorie === idCat);
   const categorie = roleData.categorie.find((c) => c.id === idCat);
@@ -191,15 +107,9 @@ async function generateGradesContainer(client, serveur, idCat) {
     )
     .addSeparatorComponents((sep) => sep);
 
-  const guild = client
-    ? await client.guilds.fetch("1349379748576366633")
-    : null;
-
   if (grades.length > 0) {
     for (const g of grades) {
-      const emoji = guild
-        ? await getGradeEmoji(serveur, guild, idCat, g)
-        : null;
+      const emoji = await getHexEmoji(client, g.couleur);
 
       container
         .addTextDisplayComponents((td) =>
@@ -209,11 +119,11 @@ async function generateGradesContainer(client, serveur, idCat) {
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId(`grade_edit-${idCat}-${g.id}`)
-              .setLabel("Modifier")
+              .setLabel("✏️ Modifier le Grade")
               .setStyle(ButtonStyle.Primary),
             new ButtonBuilder()
               .setCustomId(`grade_delete-${idCat}-${g.id}`)
-              .setLabel("Supprimer")
+              .setLabel("🗑️ Supprimer le Grade")
               .setStyle(ButtonStyle.Danger),
           ),
         );
@@ -230,11 +140,11 @@ async function generateGradesContainer(client, serveur, idCat) {
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("categorie_grade_back")
-          .setLabel("Retour aux catégories")
+          .setLabel("🚪 Retour aux Catégories")
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId(`grade_create-${idCat}`)
-          .setLabel("Créer un grade")
+          .setLabel("➕ Créer un Grade")
           .setStyle(ButtonStyle.Success),
       ),
     );
@@ -244,22 +154,10 @@ async function generateGradesContainer(client, serveur, idCat) {
 
 async function handleInteraction(interaction, client, config) {
   try {
-    const color = interaction.message?.components?.[0]?.data?.accent_color;
-    const serveur = Object.keys(config.couleur).find((key) => {
-      const hexValue = config.couleur[key];
-      const decimalValue =
-        typeof hexValue === "string" ? parseInt(hexValue, 16) : hexValue;
-      return decimalValue === color;
-    });
-    if (!serveur) return;
+    const serveur = await getServeur(interaction);
 
     const filePath = path.join(__dirname, "..", "data", serveur, "grade.json");
-    let roleData = {};
-    try {
-      roleData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-    } catch {
-      roleData = {};
-    }
+    let roleData = getData(`data/${serveur}/grade.json`);
 
     if (interaction.isButton() || interaction.isAnySelectMenu()) {
       const id = interaction.customId;
@@ -289,7 +187,7 @@ async function handleInteraction(interaction, client, config) {
       }
 
       if (id.startsWith("grade_categorie_delete-")) {
-        const idCat = id.replace("grade_categorie_delete_", "");
+        const idCat = id.replace("grade_categorie_delete-", "");
         roleData.categorie =
           roleData.categorie?.filter((c) => c.id !== idCat) || [];
         roleData.grade =
@@ -320,7 +218,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_rename-${idCat}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -353,11 +251,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId("categorie_grade_back")
-                .setLabel("Retour aux catégories")
+                .setLabel("🚪 Retour aux Catégories")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_delete-${idCat}`)
-                .setLabel("Supprimer la catégorie")
+                .setLabel("🗑️ Supprimer la Catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -389,7 +287,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_rename-${idCat}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -422,11 +320,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId("categorie_grade_back")
-                .setLabel("Retour aux catégories")
+                .setLabel("🚪 Retour aux Catégories")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_delete-${idCat}`)
-                .setLabel("Supprimer la catégorie")
+                .setLabel("🗑️ Supprimer la Catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -456,7 +354,10 @@ async function handleInteraction(interaction, client, config) {
       }
 
       if (id === "grade_categorie_manage") {
-        const idCat = interaction.values[0];
+        const idCat = interaction.values[0].replace(
+          "grade_categorie_manage-",
+          "",
+        );
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
         const { container } = await generateGradesContainer(
           interaction.client,
@@ -501,11 +402,7 @@ async function handleInteraction(interaction, client, config) {
         );
         if (!grade) return;
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -520,7 +417,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -533,7 +430,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -546,7 +443,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -559,7 +456,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de dérank")
+                .setLabel("Modifier la Description de Dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -592,11 +489,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -634,11 +531,7 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -653,7 +546,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -666,7 +559,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -679,7 +572,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -725,11 +618,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -934,7 +827,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_rename-${idCat}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -967,11 +860,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId("categorie_grade_back")
-                .setLabel("Retour aux catégories")
+                .setLabel("🚪 Retour aux Catégories")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_categorie_delete-${idCat}`)
-                .setLabel("Supprimer la catégorie")
+                .setLabel("🗑️ Supprimer la Catégorie")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -1007,6 +900,10 @@ async function handleInteraction(interaction, client, config) {
           const erreurContainer = new ContainerBuilder()
             .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent("## ❌ Nom déjà Utilisé"),
+            )
+            .addSeparatorComponents((sep) => sep)
+            .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
                 `Le grade **${nom}** existe déjà dans la catégorie ayant l'ID **${idCat}**.`,
               ),
@@ -1039,11 +936,7 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -1058,7 +951,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${newGradeId}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1069,7 +962,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${newGradeId}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1082,7 +975,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${newGradeId}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1095,7 +988,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlederank-${idCat}-${newGradeId}`)
-                .setLabel("Modifier la description de dérank")
+                .setLabel("Modifier la Description de Dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1120,11 +1013,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${newGradeId}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -1140,19 +1033,19 @@ async function handleInteraction(interaction, client, config) {
         const grade = roleData.grade.find(
           (g) => g.id === idGrade && g.categorie === idCat,
         );
-        const categorie = roleData.categorie.find((c) => c.id === idCat);
 
         if (
-          roleData.grade.find(
-            (g) => g.id === idGrade && g.categorie === idCat,
-          ) &&
-          grade.nom !== nom
+          roleData.grade.find((g) => g.nom === nom && g.categorie === idCat)
         ) {
           const erreurContainer = new ContainerBuilder()
             .setAccentColor(config.colors.error)
             .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent("## ❌ Nom déjà Utilisé"),
+            )
+            .addSeparatorComponents((sep) => sep)
+            .addTextDisplayComponents((textDisplay) =>
               textDisplay.setContent(
-                `Le grade **${nom}** existe déjà dans la catégorie **${categorie.nom}**.`,
+                `Le grade **${nom}** existe déjà dans la catégorie ayant l'ID **${idCat}**.`,
               ),
             );
           return interaction.reply({
@@ -1169,11 +1062,7 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -1182,13 +1071,13 @@ async function handleInteraction(interaction, client, config) {
           )
           .addSeparatorComponents((sep) => sep)
           .addTextDisplayComponents((td) =>
-            td.setContent(`**Nom du grade :** ${grade.nom}`),
+            td.setContent(`**Nom du grade :** ${nom}`),
           )
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1201,7 +1090,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1214,7 +1103,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1227,7 +1116,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de dérank")
+                .setLabel("Modifier la Description de Dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1260,11 +1149,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -1294,11 +1183,7 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -1313,7 +1198,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1324,7 +1209,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1337,7 +1222,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1350,7 +1235,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de dérank")
+                .setLabel("Modifier la Description de Dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1383,11 +1268,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -1411,11 +1296,7 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -1430,7 +1311,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1443,7 +1324,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${idGrade}}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1456,7 +1337,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1469,7 +1350,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de dérank")
+                .setLabel("Modifier la Description de Dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1502,11 +1383,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -1530,11 +1411,7 @@ async function handleInteraction(interaction, client, config) {
 
         await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
 
-        const guild = await interaction.client.guilds.fetch(
-          "1349379748576366633",
-        );
-
-        const emoji = await getGradeEmoji(serveur, guild, idCat, grade);
+        const emoji = await getHexEmoji(client, grade.couleur);
 
         const container = new ContainerBuilder()
           .setAccentColor(config.couleur[serveur])
@@ -1549,7 +1426,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-                .setLabel("Modifier le nom")
+                .setLabel("Modifier le Nom")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1562,7 +1439,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-                .setLabel("Modifier la couleur")
+                .setLabel("Modifier la Couleur")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1575,7 +1452,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de rank")
+                .setLabel("Modifier la Description de Rank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1588,7 +1465,7 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-                .setLabel("Modifier la description de dérank")
+                .setLabel("Modifier la Description de Dérank")
                 .setStyle(ButtonStyle.Primary),
             ),
           )
@@ -1621,11 +1498,11 @@ async function handleInteraction(interaction, client, config) {
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
                 .setCustomId(`grade_back-${idCat}`)
-                .setLabel("Retour à la catégorie")
+                .setLabel("🚪 Retour à la Catégorie")
                 .setStyle(ButtonStyle.Secondary),
               new ButtonBuilder()
                 .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-                .setLabel("Supprimer le grade")
+                .setLabel("🗑️ Supprimer le Grade")
                 .setStyle(ButtonStyle.Danger),
             ),
           );
@@ -1642,7 +1519,6 @@ async function handleInteraction(interaction, client, config) {
 
 module.exports = {
   handleInteraction,
-  getGradeEmoji,
   formatHexColor,
   generateContainer,
   generateGradesContainer,
