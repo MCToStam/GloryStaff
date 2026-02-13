@@ -193,38 +193,11 @@ const port = 21319;
 
 app.use(bodyParser.json());
 
-app.get("/api/statuts", (req, res) => {
-  try {
-    const uptimeSeconds = os.uptime();
-    const uptimeFormatted = new Date(uptimeSeconds * 1000)
-      .toISOString()
-      .substr(11, 8);
-
-    const cpuLoad = os.loadavg()[0];
-    const cpuUsage = (cpuLoad / os.cpus().length) * 100;
-
-    const totalMemory = os.totalmem();
-    const freeMemory = os.freemem();
-    const usedMemory = totalMemory - freeMemory;
-    const ramUsage = (usedMemory / totalMemory) * 100;
-
-    const isOnline = true;
-
-    res.json({
-      statut: isOnline ? "En ligne" : "Hors ligne",
-      uptime: uptimeFormatted,
-      cpu: `${cpuUsage.toFixed(2)}%`,
-      ram: `${ramUsage.toFixed(2)}%`,
-      load_average: cpuLoad.toFixed(2),
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Erreur lors de la récupération des statistiques." });
-  }
-});
-
 app.post("/staff", async (req, res) => {
+  res.status(200).json({
+    message: "Données reçues et sauvegardées avec succès.",
+  });
+
   const staffData = req.body;
 
   if (Array.isArray(staffData)) {
@@ -592,9 +565,6 @@ app.post("/staff", async (req, res) => {
     }
 
     updateAllStaffWebhooks();
-    res.status(200).json({
-      message: "Données reçues et sauvegardées avec succès.",
-    });
   } else {
     res.status(400).json({
       error: "Les données envoyées ne sont pas au format attendu.",
@@ -671,6 +641,8 @@ app.get("/historique", (req, res) => {
 });
 
 app.post("/update-leaders", async (req, res) => {
+  res.json({ message: "File updated successfully" });
+
   const filePath = path.join(__dirname, "data", "doublelead.json");
   const newData = req.body;
 
@@ -821,7 +793,6 @@ app.post("/update-leaders", async (req, res) => {
                 .status(500)
                 .json({ error: "Error updating alert data" });
             }
-            res.json({ message: "File updated successfully" });
           },
         );
       },
