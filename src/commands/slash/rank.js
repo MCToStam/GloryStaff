@@ -489,10 +489,20 @@ module.exports = {
       embed.setDescription(historique);
     }
 
-    replyInteraction.editReply({
-      embeds: [embed],
-      files: [{ attachment: buffer, name: `affiche-rank.png` }],
-    });
+    const categorie = gradeConfig.categorie.find((g) => g.id === categorieId);
+
+    if (categorie.role.length > 0) {
+      replyInteraction.editReply({
+        content: categorie.role.map((r) => `<@&${r}>`).join(" "),
+        embeds: [embed],
+        files: [{ attachment: buffer, name: `affiche-rank.png` }],
+      });
+    } else {
+      replyInteraction.editReply({
+        embeds: [embed],
+        files: [{ attachment: buffer, name: `affiche-rank.png` }],
+      });
+    }
 
     for (const guild of interaction.client.guilds.cache.values()) {
       const member = guild.members.cache.get(pseudo);

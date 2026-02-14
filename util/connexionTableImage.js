@@ -83,7 +83,7 @@ function generateTableImage(dates, data, staffRaw) {
     const grade = staffList[pseudo];
     let gradeColor =
       grade && config.grade[grade] ? config.grade[grade] : "#ffffff";
-    if (grade === "Super-Modérateur") gradeColor = "#3bb0c2"
+    if (grade === "Super-Modérateur") gradeColor = "#3bb0c2";
     ctx.fillStyle = gradeColor;
     ctx.fillText(
       pseudo,
@@ -175,7 +175,7 @@ function generateTableNombreImage(dates, data, staffRaw) {
     const grade = staffList[pseudo];
     let gradeColor =
       grade && config.grade[grade] ? config.grade[grade] : "#ffffff";
-    if (grade === "Super-Modérateur") gradeColor = "#3bb0c2"
+    if (grade === "Super-Modérateur") gradeColor = "#3bb0c2";
     ctx.fillStyle = gradeColor;
     ctx.fillText(
       pseudo,
