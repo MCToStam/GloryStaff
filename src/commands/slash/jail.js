@@ -313,9 +313,9 @@ module.exports = {
     }
 
     setTimeout(async () => {
-      if (!sentMessage.deleted) {
+      try {
         await sentMessage.resource.message.delete();
-      }
+      } catch (error) {}
     }, 10_000);
   },
 };

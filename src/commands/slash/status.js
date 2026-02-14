@@ -45,13 +45,13 @@ module.exports = {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    const { serveur, status, message, salon, role } = interaction.parametre;
+    const { serveur, type, message, salon, role } = interaction.parametre;
 
     const channel = await client.channels.fetch(salon || interaction.channelId);
 
     const container = new ContainerBuilder()
       .setAccentColor(
-        status === "on" ? config.colors.error : config.colors.success,
+        type === "on" ? config.colors.error : config.colors.success,
       )
       .addTextDisplayComponents((t) => t.setContent("## 🚧 Maintenance"))
       .addSeparatorComponents((s) => s)
@@ -64,7 +64,7 @@ module.exports = {
       );
 
     const imagePath = getAbsolutePath(
-      `data/${status === "on" ? "MAINTENANCE_ON.png" : "MAINTENANCE_OFF.png"}`,
+      `data/${type === "on" ? "MAINTENANCE_ON.png" : "MAINTENANCE_OFF.png"}`,
     );
     const attachment = new AttachmentBuilder(imagePath, {
       name: "status.png",
@@ -113,9 +113,9 @@ module.exports = {
     }
 
     setTimeout(async () => {
-      if (!sentMessage.deleted) {
+      try {
         await sentMessage.resource.message.delete();
-      }
+      } catch (error) {}
     }, 10_000);
   },
 };
