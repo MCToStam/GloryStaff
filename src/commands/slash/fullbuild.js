@@ -130,10 +130,17 @@ module.exports = {
         ),
       );
 
-    interaction.editReply({
+    const sentMessage = await interaction.editReply({
       components: [userContainer],
       flags: MessageFlags.IsComponentsV2,
+      withResponse: true,
     });
+
+    setTimeout(async () => {
+      if (!sentMessage.deleted) {
+        await sentMessage.resource.message.delete();
+      }
+    }, 10_000);
 
     if (salon.type === "GUILD_NEWS") await message.crosspost();
   },

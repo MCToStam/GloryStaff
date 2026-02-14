@@ -302,19 +302,19 @@ module.exports = {
       sentMessage = await interaction.update({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
-        fetchReply: true,
+        withResponse: true,
       });
     } else {
       sentMessage = await interaction.reply({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
-        fetchReply: true,
+        withResponse: true,
       });
     }
 
     setTimeout(async () => {
       if (!sentMessage.deleted) {
-        await sentMessage.delete();
+        await sentMessage.resource.message.delete();
       }
     }, 10_000);
   },
