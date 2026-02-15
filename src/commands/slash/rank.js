@@ -134,12 +134,12 @@ module.exports = {
           );
 
         if (interaction.isMessageComponent()) {
-          return interaction.update({
+          return replyInteraction.update({
             components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
           });
         } else {
-          return interaction.reply({
+          return replyInteraction.reply({
             components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
           });
@@ -491,18 +491,45 @@ module.exports = {
 
     const categorie = gradeConfig.categorie.find((g) => g.id === categorieId);
 
+    const channel = await client.channels.fetch(interaction.channelId);
+
     if (categorie.role.length > 0) {
-      replyInteraction.editReply({
+      channel.send({
         content: categorie.role.map((r) => `<@&${r}>`).join(" "),
         embeds: [embed],
         files: [{ attachment: buffer, name: `affiche-rank.png` }],
       });
     } else {
-      replyInteraction.editReply({
+      channel.send({
         embeds: [embed],
         files: [{ attachment: buffer, name: `affiche-rank.png` }],
       });
     }
+
+    const userContainer = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) => t.setContent("## ⬆️ Rank"))
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(`Le message de rank de <@${pseudo}> a bien été envoyé !`),
+      );
+
+    const sentMessage = await replyInteraction.editReply({
+      components: [userContainer],
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] },
+      withResponse: true,
+    });
+
+    setTimeout(async () => {
+      try {
+        if (sentMessage.resource) {
+          await sentMessage.resource.message.delete();
+        } else {
+          await sentMessage.delete();
+        }
+      } catch (error) {}
+    }, 5_000);
 
     for (const guild of interaction.client.guilds.cache.values()) {
       const member = guild.members.cache.get(pseudo);
