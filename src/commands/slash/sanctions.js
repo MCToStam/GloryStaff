@@ -1,31 +1,13 @@
 const {
   SlashCommandBuilder,
   ContainerBuilder,
+  AttachmentBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
   MessageFlags,
 } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
-
-const YES = "✅";
-const NO = "❌";
-
-function formatMinutes(min) {
-  return min && min > 0 ? `${min}` : "—";
-}
-
-function pad(value, length) {
-  return String(value).padEnd(length, " ");
-}
-
-const COLS = {
-  name: 28,
-  toxicity: 20,
-  warn: 6,
-  mute: 10,
-  jail: 10,
-  ban: 10,
-};
+const { getAbsolutePath } = require("../../../util/module/getAndSaveData");
+const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -33,53 +15,93 @@ module.exports = {
     .setDescription("Affiche les sanctions et les paliers de toxicité"),
 
   async execute(client, interaction, config) {
-    const data = getData("data/sanctionsCache.json");
-    const category = "chat";
+    await proxyCommande(client, interaction, config);
+  },
+  async proxy(client, interaction, config) {
+    const { serveur } = interaction.parametre;
 
-    const sanctions = data.sanctions.filter(
-      (sanction) => sanction.category === category,
-    );
+    if (config.liste_serveur_java.includes(serveur)) {
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addTextDisplayComponents((t) =>
+          t.setContent("## 💢 Tableau des Sanctions - Tchat"),
+        )
+        .addSeparatorComponents((s) => s)
+        .addMediaGalleryComponents((m) =>
+          m.addItems((mediaGalleryItem) =>
+            mediaGalleryItem.setURL("attachment://sanctions.png"),
+          ),
+        )
+        .addSeparatorComponents((s) => s)
+        .addActionRowComponents(
+          new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId("sanctions")
+              .setPlaceholder("Sélectionnez un type de sanctions")
+              .addOptions([
+                {
+                  label: "Tchat",
+                  value: "sanctions-chat",
+                  emoji: "1472690901972160613",
+                  default: true,
+                },
+                {
+                  label: "Vocal",
+                  value: "sanctions-vocal",
+                  emoji: "1472690904555978752",
+                },
+                {
+                  label: "En Jeu",
+                  value: "sanctions-game",
+                  emoji: "1472690903318528020",
+                },
+              ]),
+          ),
+        );
 
-    let description = "aaaa";
+      const imagePath = getAbsolutePath("data/sanctions-chat.png");
 
-    const container = new ContainerBuilder()
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(`## 💢 Sanctions`),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(description),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addActionRowComponents(
-        new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId("sanctions")
-            .setPlaceholder("Sélectionnez une option")
-            .addOptions([
-              {
-                label: "Sanction Tchat",
-                value: "sanctions-sanctions-chat",
-                default: true,
-              },
-              {
-                label: "Sanction Vocale",
-                value: "sanctions-sanctions-vocal",
-                default: true,
-              },
-              {
-                label: "Sanctions de Jeu",
-                value: "sanctions-sanctions-game",
-                default: true,
-              },
-              { label: "Tiers", value: "sanctions-tiers" },
-            ]),
-        ),
-      );
+      const attachment = new AttachmentBuilder(imagePath, {
+        name: "sanctions.png",
+      });
 
-    return interaction.reply({
-      components: [container],
-      flags: MessageFlags.IsComponentsV2,
-    });
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [container],
+          files: [attachment],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [container],
+          files: [attachment],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+    } else {
+      const erreurContainer = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addTextDisplayComponents((t) =>
+          t.setContent(`## ❌ Commande en Développement`),
+        )
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            "Cette commande est actuellement en cours de développement pour les serveurs Bedrock. Elle sera disponible prochainement...",
+          ),
+        );
+
+      if (interaction.isMessageComponent()) {
+        return interaction.update({
+          components: [erreurContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      } else {
+        return interaction.reply({
+          components: [erreurContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+      }
+    }
   },
 };
