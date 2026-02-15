@@ -92,7 +92,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
     current += size;
   });
 
-  configNotation.systeme["répartition"].donnee[interaction.guild.id] =
+  configNotation.systeme["Répartition"].donnee[interaction.guild.id] =
     repartition;
   saveData(configNotationPath, configGlobale);
 
@@ -112,6 +112,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
         }`,
       ),
     )
+    .addSeparatorComponents((separator) => separator)
     .addTextDisplayComponents((t) => t.setContent(embedDescription.join("\n")));
 
   await interaction.editReply({
@@ -267,15 +268,15 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       const configGlobale = getData(configNotationPath);
       const configNotation = configGlobale.find((c) => c.nom === "Notations");
       for (const key of Object.keys(
-        configNotation.systeme["répartition"].donnee[interaction.guild.id],
+        configNotation.systeme["Répartition"].donnee[interaction.guild.id],
       )) {
-        delete configNotation.systeme["répartition"].donnee[
+        delete configNotation.systeme["Répartition"].donnee[
           interaction.guild.id
         ][key];
       }
 
       for (const [s, range] of cache.entries()) {
-        configNotation.systeme["répartition"].donnee[interaction.guild.id][s] =
+        configNotation.systeme["Répartition"].donnee[interaction.guild.id][s] =
           range;
       }
       saveData(configNotationPath, configGlobale);
@@ -295,6 +296,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
         .addTextDisplayComponents((t) =>
           t.setContent("## ✅ Répartition manuelle terminée et enregistrée !"),
         )
+        .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((t) => t.setContent(repartitionText));
 
       return interaction.editReply({

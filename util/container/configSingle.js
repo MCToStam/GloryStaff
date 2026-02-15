@@ -104,7 +104,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
             .setCustomId(item.customId)
             .setLabel(key)
             .setStyle(ButtonStyle[item.style] ?? ButtonStyle.Secondary)
-            .setDisabled(item.disabled && !settings.active[guildId]),
+            .setDisabled(item.disabled === true && settings.active[guildId]),
         );
         break;
 
