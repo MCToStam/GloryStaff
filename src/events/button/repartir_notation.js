@@ -56,7 +56,11 @@ module.exports = {
     }
 
     if (subId.startsWith("notation_module-manual")) {
-      return await modeManuel(client, interaction, config, serveur, subId);
+      try {
+        return await modeManuel(client, interaction, config, serveur, subId);
+      } catch (e) {
+        console.log(e);
+      }
     }
   },
 };
@@ -99,7 +103,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
   const embedDescription = await Promise.all(
     Object.entries(repartition).map(async ([staff, range]) => {
       const emoji = (await getEmojiTete(client, staff)) || "🧑";
-      return `${emoji} **${staff}** : ${range}`;
+      return `${emoji} **${staff.replace(/_/g, "\\_")}** : ${range}`;
     }),
   );
 
@@ -156,9 +160,11 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       .addTextDisplayComponents((t) =>
         t.setContent("## 🧮 Répartition manuelle"),
       )
+      .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((t) =>
         t.setContent("En combien de personnes veux-tu partager la notation ?"),
       )
+      .addSeparatorComponents((separator) => separator)
       .addActionRowComponents(...actionRows);
 
     return interaction.editReply({
@@ -193,46 +199,34 @@ async function modeManuel(client, interaction, config, serveur, subId) {
 
     const [start, end] = ranges[0];
 
+    const batchId = `m${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    manualCache.set(batchId, { ranges, number });
+
     const staffButtons = await Promise.all(
       staffList.map(async (s) => {
         const emoji = await getEmojiTete(client, s);
         const isChosen = cache.has(s);
         const button = new ButtonBuilder()
-          .setCustomId(
-            `notation_module-manual-assign-${number}-${start - 1}-${ranges
-              .map((r) => r.join(","))
-              .join(";")}-${s}`,
-          )
+          .setCustomId(`notation_module-manual-assign-${batchId}-0-${s}`)
           .setLabel(s)
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(isChosen);
 
-        if (emoji) {
+        if (emoji)
           button.setEmoji({
             id: emoji.id,
             name: emoji.name,
             animated: emoji.animated,
           });
-        }
-
         return button;
       }),
     );
 
     const actionRows = [];
-    let startIndex = 0;
-    let remaining = staffButtons.length;
-
-    while (startIndex < staffButtons.length) {
-      const remainingRows = Math.ceil(remaining / 5);
-      const buttonsThisRow = Math.ceil(remaining / remainingRows);
+    for (let i = 0; i < staffButtons.length; i += 5) {
       actionRows.push(
-        new ActionRowBuilder().addComponents(
-          staffButtons.slice(startIndex, startIndex + buttonsThisRow),
-        ),
+        new ActionRowBuilder().addComponents(staffButtons.slice(i, i + 5)),
       );
-      startIndex += buttonsThisRow;
-      remaining -= buttonsThisRow;
     }
 
     const container = new ContainerBuilder()
@@ -240,6 +234,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       .addTextDisplayComponents((t) =>
         t.setContent(`## 🧑‍⚖️ Qui note de **${start} à ${end}** ?`),
       )
+      .addSeparatorComponents((separator) => separator)
       .addActionRowComponents(...actionRows);
 
     return interaction.editReply({
@@ -251,42 +246,41 @@ async function modeManuel(client, interaction, config, serveur, subId) {
   if (subId.startsWith("notation_module-manual-assign-")) {
     await interaction.deferUpdate();
 
-    const parts = subId.split("-");
-    const total = parseInt(parts[3]);
-    const index = parseInt(parts[4]);
-    const rawRanges = parts[5];
-    const staff = parts.slice(6).join("-");
+    const [, , , batchId, indexStr, ...staffParts] = subId.split("-");
+    const index = parseInt(indexStr);
+    const staff = staffParts.join("-");
 
-    const ranges = rawRanges.split(";").map((r) => r.split(",").map(Number));
+    const batch = manualCache.get(batchId);
+    if (!batch)
+      return interaction.reply({
+        content: "❌ Session expirée ou invalide.",
+        ephemeral: true,
+      });
+
+    const { ranges, number } = batch;
     const [start, end] = ranges[index];
-
     cache.set(staff, `${start} à ${end}`);
 
     const nextIndex = index + 1;
-    if (nextIndex >= total) {
+    if (nextIndex >= number) {
       const configNotationPath = `data/${serveur}/config.json`;
       const configGlobale = getData(configNotationPath);
       const configNotation = configGlobale.find((c) => c.nom === "Notations");
-      for (const key of Object.keys(
-        configNotation.systeme["Répartition"].donnee[interaction.guild.id],
-      )) {
-        delete configNotation.systeme["Répartition"].donnee[
-          interaction.guild.id
-        ][key];
-      }
 
+      configNotation.systeme["Répartition"].donnee[interaction.guild.id] = {};
       for (const [s, range] of cache.entries()) {
         configNotation.systeme["Répartition"].donnee[interaction.guild.id][s] =
           range;
       }
       saveData(configNotationPath, configGlobale);
+      manualCache.delete(batchId);
       manualCache.delete(serveur);
 
       const repartitionText = (
         await Promise.all(
           Array.from(cache.entries()).map(async ([s, range]) => {
             const emoji = (await getEmojiTete(client, s)) || "🧑";
-            return `${emoji} **${s}** : ${range}`;
+            return `${emoji} **${s.replace(/_/g, "\\_")}** : ${range}`;
           }),
         )
       ).join("\n");
@@ -313,40 +307,27 @@ async function modeManuel(client, interaction, config, serveur, subId) {
         const isChosen = cache.has(s);
         const button = new ButtonBuilder()
           .setCustomId(
-            `notation_module-manual-assign-${total}-${nextIndex}-${ranges
-              .map((r) => r.join(","))
-              .join(";")}-${s}`,
+            `notation_module-manual-assign-${batchId}-${nextIndex}-${s}`,
           )
           .setLabel(s)
           .setStyle(ButtonStyle.Secondary)
           .setDisabled(isChosen);
 
-        if (emoji) {
+        if (emoji)
           button.setEmoji({
             id: emoji.id,
             name: emoji.name,
             animated: emoji.animated,
           });
-        }
-
         return button;
       }),
     );
 
     const actionRows = [];
-    let startIndex = 0;
-    let remaining = staffButtons.length;
-
-    while (startIndex < staffButtons.length) {
-      const remainingRows = Math.ceil(remaining / 5);
-      const buttonsThisRow = Math.ceil(remaining / remainingRows);
+    for (let i = 0; i < staffButtons.length; i += 5) {
       actionRows.push(
-        new ActionRowBuilder().addComponents(
-          staffButtons.slice(startIndex, startIndex + buttonsThisRow),
-        ),
+        new ActionRowBuilder().addComponents(staffButtons.slice(i, i + 5)),
       );
-      startIndex += buttonsThisRow;
-      remaining -= buttonsThisRow;
     }
 
     const nextContainer = new ContainerBuilder()
@@ -354,6 +335,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       .addTextDisplayComponents((t) =>
         t.setContent(`## 🧑‍⚖️ Qui note de **${nextStart} à ${nextEnd}** ?`),
       )
+      .addSeparatorComponents((separator) => separator)
       .addActionRowComponents(...actionRows);
 
     return interaction.editReply({
