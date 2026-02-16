@@ -80,20 +80,34 @@ async function modeAutomatique(client, interaction, config, serveur) {
   const configGlobale = getData(configNotationPath);
   const configNotation = configGlobale.find((c) => c.nom === "Notations");
 
-  const totalNumbers = ["alpha", "sigma", "omega", "delta", "epsilon"].includes(
-    serveur,
-  )
-    ? 219
-    : 267;
+  let numbers = [];
+
+  if (config.liste_serveur_bedrock.includes(serveur)) {
+    numbers = Array.from({ length: 238 }, (_, i) => i + 1);
+    const excluded = new Set([
+      1,
+      187,
+      ...Array.from({ length: 17 }, (_, i) => 203 + i),
+    ]);
+
+    numbers = numbers.filter((n) => !excluded.has(n));
+  } else {
+    numbers = Array.from({ length: 267 }, (_, i) => i + 1);
+  }
+
+  const totalNumbers = numbers.length;
   const base = Math.floor(totalNumbers / staffList.length);
   const remainder = totalNumbers % staffList.length;
 
-  let current = 1;
   const repartition = {};
+  let indexPointer = 0;
+
   staffList.forEach((staff, index) => {
     const size = base + (index < remainder ? 1 : 0);
-    repartition[staff] = `${current} à ${current + size - 1}`;
-    current += size;
+    const slice = numbers.slice(indexPointer, indexPointer + size);
+
+    repartition[staff] = `${slice[0]} à ${slice[slice.length - 1]}`;
+    indexPointer += size;
   });
 
   configNotation.systeme["Répartition"].donnee[interaction.guild.id] =
@@ -177,24 +191,36 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     await interaction.deferUpdate();
     const number = parseInt(subId.split("-").pop());
 
-    const totalNumbers = [
-      "alpha",
-      "sigma",
-      "omega",
-      "delta",
-      "epsilon",
-    ].includes(serveur)
-      ? 219
-      : 267;
+    let numbers = [];
+
+    if (config.liste_serveur_bedrock.includes(serveur)) {
+      numbers = Array.from({ length: 238 }, (_, i) => i + 1);
+
+      const excluded = new Set([
+        1,
+        187,
+        ...Array.from({ length: 17 }, (_, i) => 203 + i), // 203 → 219
+      ]);
+
+      numbers = numbers.filter((n) => !excluded.has(n));
+    } else {
+      numbers = Array.from({ length: 267 }, (_, i) => i + 1);
+    }
+
+    const totalNumbers = numbers.length;
+
     const base = Math.floor(totalNumbers / number);
     const remainder = totalNumbers % number;
 
-    let current = 1;
     const ranges = [];
+    let index = 0;
+
     for (let i = 0; i < number; i++) {
       const size = base + (i < remainder ? 1 : 0);
-      ranges.push([current, current + size - 1]);
-      current += size;
+      const slice = numbers.slice(index, index + size);
+
+      ranges.push([slice[0], slice[slice.length - 1]]);
+      index += size;
     }
 
     const [start, end] = ranges[0];
