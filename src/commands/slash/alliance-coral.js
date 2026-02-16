@@ -42,7 +42,6 @@ module.exports = {
       return interaction.reply({
         components: [erreurContainer],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
       });
     }
 
