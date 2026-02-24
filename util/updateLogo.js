@@ -1,13 +1,12 @@
-const {
-  getData,
-  getImage,
-  saveData,
-} = require("../util/module/getAndSaveData");
+const { getData, getImage } = require("./module/getAndSaveData");
 const config = require("../config");
+const ServeurDiscord = require("./database/models/ServeurDiscord");
 
 async function updateLogo(client) {
   const token = process.env.DISCORD_TOKEN;
-  const cache = getData("data/logo/serveur.json") || {};
+
+  const cacheDocs = await ServeurDiscord.find({});
+  const cache = new Map(cacheDocs.map((doc) => [doc.guildId, doc.serveur]));
 
   const guildServers = new Map();
 
@@ -43,10 +42,8 @@ async function updateLogo(client) {
     if (guildId === config.support_serveur_id) continue;
 
     if (serveurs.size !== 1) continue;
-
     const [serveur] = [...serveurs];
-
-    if (cache[guildId] === serveur) continue;
+    if (cache.get(guildId) === serveur) continue;
 
     try {
       const imageBase64 =
@@ -74,9 +71,14 @@ async function updateLogo(client) {
         continue;
       }
 
-      cache[guildId] = serveur;
-      saveData("data/logo/serveur.json", cache);
-      await new Promise((r) => setTimeout(r, 1500));
+      await ServeurDiscord.updateOne(
+        { guildId },
+        { serveur },
+        { upsert: true },
+      );
+      cache.set(guildId, serveur);
+
+      await new Promise((r) => setTimeout(r, 5000));
     } catch (err) {
       console.error(`Erreur update logo → ${guildId}:`, err);
     }
@@ -90,7 +92,7 @@ async function updateLogo(client) {
     const mustRemove =
       guildId === config.support_serveur_id || !serveurs || serveurs.size !== 1;
 
-    if (mustRemove && cache[guildId]) {
+    if (mustRemove && cache.has(guildId)) {
       try {
         await fetch(
           `https://discord.com/api/v10/guilds/${guildId}/members/@me`,
@@ -105,8 +107,9 @@ async function updateLogo(client) {
           },
         );
 
-        delete cache[guildId];
-        saveData("data/logo/serveur.json", cache);
+        await ServeurDiscord.deleteOne({ guildId });
+        cache.delete(guildId);
+
         await new Promise((r) => setTimeout(r, 1500));
       } catch (err) {
         console.error(`Erreur suppression logo → ${guildId}:`, err);

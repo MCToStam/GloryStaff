@@ -2,7 +2,7 @@ const config = require("../../../config");
 const { ActivityType } = require("discord.js");
 const log = require("../../../util/module/log");
 const getServerPlayer = require("../../../util/module/getServerPlayer");
-const { updateLogo } = require("../../../util/updateLogo");
+const { updateLogo } = require("../../../util/updateLogo.js");
 const { botLaunch } = require("../../../main.js");
 const { checkEmojiCache } = require("../../../util/module/emoji");
 const { updateSanctionsCache } = require("../../../util/updateCache/sanctions");
@@ -37,6 +37,7 @@ const { checkONU } = require("../../../util/alerte/onu");
 const { checkGradeSupport } = require("../../../util/checkGradeSupport");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 const { zipAndUpload } = require("../../../util/module/backupData");
+const connectMongo = require("../../../util/database/index");
 
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
@@ -60,6 +61,7 @@ async function cycleStatus(client, index = 0) {
 }
 
 module.exports = async (client, interaction) => {
+  await connectMongo();
   const botStart = new Date();
   const latence = (botStart.getTime() - botLaunch[0].getTime()) / 1000;
 
