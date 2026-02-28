@@ -15,16 +15,13 @@ async function classement_notation(client) {
   const weekRes = await fetch(`${config.glorybot_url}/api/notationWeek`);
   const weekJson = await weekRes.json();
   const week = weekJson.semaine;
-  const response = await fetch(
-    `https://publicapi.nationsglory.fr/notations?week=${week}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${config.apitoken}`,
-        "Content-Type": "application/json",
-      },
+  const response = await fetch(`${config.glorybot_url}/api/notations/${week}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${config.glorybot_token}`,
+      "Content-Type": "application/json",
     },
-  );
+  });
   const data = await response.json();
   for (const serveur of config.liste_serveur) {
     log(

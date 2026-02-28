@@ -63,11 +63,11 @@ const prepareServerRankings = async () => {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const responseArgent = await fetch(
-      `https://publicapi.nationsglory.fr/notations?week=${week}&server=${serveur}`,
+      `${config.glorybot_url}/api/notations/?week=${week}&serveur=${serveur}`,
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${config.apitoken}`,
+          Authorization: `Bearer ${config.glorybot_token}`,
           "Content-Type": "application/json",
         },
       },
@@ -76,10 +76,9 @@ const prepareServerRankings = async () => {
     let argentNotation = 0;
     if (responseArgent.ok) {
       const dataArgent = await responseArgent.json();
-      argentNotation = dataArgent.reduce(
-        (total, item) => total + (item.bourse || 0),
-        0,
-      );
+      argentNotation = dataArgent
+        .filter((p) => p.server === serveur)
+        .reduce((total, item) => total + (item.bourse || 0), 0);
     } else {
       console.log(`Erreur API pour ${serveur} : ${responseArgent.statusText}`);
       continue;
