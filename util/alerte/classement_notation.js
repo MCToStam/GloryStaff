@@ -42,7 +42,9 @@ async function classement_notation(client) {
       continue;
 
     try {
-      const topCountries = data
+      const sortedData = [...data].sort((a, b) => b.bourse - a.bourse);
+
+      const topCountries = sortedData
         .slice(0, 3)
         .map(
           (entry, index) =>
@@ -57,7 +59,7 @@ async function classement_notation(client) {
 
       const emojis = {};
 
-      const topServerCountriesRaw = data
+      const topServerCountriesRaw = sortedData
         .filter((entry) => entry.server === serveur)
         .slice(0, 10);
 
