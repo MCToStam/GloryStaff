@@ -36,11 +36,9 @@ module.exports = {
 
     if (staff) {
       const emojiPays =
-        (await getEmojiDrapeau(client, serveur, data.pays.toLowerCase())) ||
-        "🏳️";
+        (await getEmojiDrapeau(client, serveur, data.pays)) || "🏳️";
 
-      const emojiStaff =
-        (await getEmojiTete(client, staff.toLowerCase())) || "🧑";
+      const emojiStaff = (await getEmojiTete(client, staff)) || "🧑";
 
       const informationContainer = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
@@ -50,7 +48,7 @@ module.exports = {
         .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `Les notations du pays <:${emojiPays}> "**${
+            `Les notations du pays ${emojiPays} "**${
               data.pays
             }**" ont été faites par ${emojiStaff}**${staff}**.`,
           ),
