@@ -20,8 +20,7 @@ const path = require("path");
 const config = require("./config");
 const { client } = require("./main");
 require("./util/attentestaff");
-require("./util/rank");
-const os = require("os");
+//require("./util/rank");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
 
