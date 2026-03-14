@@ -37,7 +37,6 @@ const { checkONU } = require("../../../util/alerte/onu");
 const { checkGradeSupport } = require("../../../util/checkGradeSupport");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 const { zipAndUpload } = require("../../../util/module/backupData");
-const connectMongo = require("../../../util/database/index");
 
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
@@ -61,7 +60,6 @@ async function cycleStatus(client, index = 0) {
 }
 
 module.exports = async (client, interaction) => {
-  await connectMongo();
   const botStart = new Date();
   const latence = (botStart.getTime() - botLaunch[0].getTime()) / 1000;
 

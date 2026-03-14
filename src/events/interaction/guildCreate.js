@@ -1,5 +1,6 @@
 const { AuditLogEvent } = require("discord.js");
 const { discordStaff } = require("../../../util/module/discordLink");
+const updateServeurDB = require("../../../util/module/updateServeurDB");
 const config = require("../../../config");
 const {
   ActionRowBuilder,
@@ -11,6 +12,8 @@ const {
 
 module.exports = async (client, guild) => {
   try {
+    await updateServeurDB(client);
+
     const auditLogs = await guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.BotAdd,
