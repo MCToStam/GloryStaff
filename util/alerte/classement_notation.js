@@ -84,7 +84,7 @@ async function classement_notation(client) {
         .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `**<:NationsGlory:1132392873787129856> Top 3 Inter-Serveur :**\n${topCountries}\n\n**<:NG${serveur
+            `**<:nationsglory:1480509359023980626> Top 3 Inter-Serveur :**\n${topCountries}\n\n**<:NG${serveur
               .charAt(0)
               .toUpperCase()}${serveur.slice(1)}:${
               config.emoji[serveur]
