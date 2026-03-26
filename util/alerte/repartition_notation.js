@@ -54,10 +54,13 @@ async function repartition_notation(client) {
         const donnee = configRepartition.donnee[guildId];
         if (!donnee) continue;
 
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) continue;
+
         const channelId = configRepartition.Salon?.valeur?.[guildId];
         if (!channelId) continue;
 
-        const channel = await client.channels.fetch(channelId);
+        const channel = guild.channels.cache.get(channelId).catch(() => null);
         if (!channel) continue;
 
         const roleIds = configRepartition.Role?.valeur?.[guildId] || [];

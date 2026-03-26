@@ -60,7 +60,9 @@ async function jail(client) {
                       ),
                   );
 
-                const channel = await client.channels.fetch(jailEntry.threadId);
+                const channel = await client.channels
+                  .fetch(jailEntry.threadId)
+                  .catch(() => null);
                 if (channel.isThread()) {
                   const jailRoles = jailConfigData.jail?.Role.valeur;
 
@@ -113,9 +115,9 @@ async function jail(client) {
                   );
 
                 try {
-                  const channel = await client.channels.fetch(
-                    jailEntry.threadId,
-                  );
+                  const channel = await client.channels
+                    .fetch(jailEntry.threadId)
+                    .catch(() => null);
                   if (channel.isThread()) {
                     await channel.send({
                       components: [jailContainer],

@@ -129,7 +129,7 @@ async function guerre(client) {
           const channelId = forumConfig.Guerre.Salon?.valeur?.[guildId];
           if (!channelId) continue;
 
-          const channel = guild.channels.cache.get(channelId);
+          const channel = guild.channels.cache.get(channelId).catch(() => null);
           if (!channel) continue;
 
           const roleIds = forumConfig.Guerre.Role?.valeur?.[guildId] || [];

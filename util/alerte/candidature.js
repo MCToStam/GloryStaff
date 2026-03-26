@@ -334,7 +334,9 @@ async function sendCandidatures(client, AllCandidatures) {
             if (!isActive) continue;
             if (!salonsData[guildId]) continue;
 
-            const channel = await client.channels.fetch(salonsData[guildId]);
+            const channel = await client.channels
+              .fetch(salonsData[guildId])
+              .catch(() => null);
 
             const roleMentionArray = rolesData[guildId] || [];
             const roleMention = roleMentionArray.length

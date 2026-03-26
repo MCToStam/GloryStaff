@@ -127,7 +127,7 @@ async function plainte(client) {
           const channelId = plainteConfig.Plainte.Salon.valeur[guildId];
           if (!channelId) continue;
 
-          const channel = guild.channels.cache.get(channelId);
+          const channel = guild.channels.cache.get(channelId).catch(() => null);
           if (!channel) continue;
 
           const roleIds = plainteConfig.Plainte.Role.valeur[guildId] || [];

@@ -122,7 +122,7 @@ async function classement_notation(client) {
         const channelId = classementConfig.Salon?.valeur?.[guildId];
         if (!channelId) continue;
 
-        const channel = guild.channels.cache.get(channelId);
+        const channel = guild.channels.cache.get(channelId).catch(() => null);
         if (!channel) continue;
 
         const roleIds = classementConfig.Role?.valeur?.[guildId] || [];
