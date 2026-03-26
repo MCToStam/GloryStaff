@@ -181,29 +181,12 @@ async function sendCandidatures(client, AllCandidatures) {
           },
         );
 
-        const responsePunisher = await fetch(
-          `https://apiv2.nationsglory.fr/plugins/api/user/all/${candidature.auteur}/get_punisher/1`,
-          {
-            headers: {
-              Authorization: `Bearer ${config.apitoken_backup}`,
-              accept: "application/json",
-            },
-          },
-        );
-
         let doubleData = null;
-        let punisherData = null;
 
         try {
           doubleData = await responseDouble.text();
         } catch (err) {
           doubleData = null;
-        }
-
-        try {
-          punisherData = await responsePunisher.text();
-        } catch (err) {
-          punisherData = null;
         }
 
         let data = null;
@@ -283,10 +266,6 @@ async function sendCandidatures(client, AllCandidatures) {
           );
         }
 
-        if (doubleData || punisherData) {
-          components.push({ type: 14, spacing: SeparatorSpacingSize.Small });
-        }
-
         if (doubleData) {
           const cleanedDouble = doubleData
             .split(/,|\/|;/)
@@ -308,46 +287,11 @@ async function sendCandidatures(client, AllCandidatures) {
           });
         }
 
-        if (punisherData) {
-          const sanctions = punisherData
-            .split("###")
-            .map((s) => s.trim())
-            .filter((s) => s && s.startsWith("&7[&cPunisher&7]"));
-
-          if (sanctions.length > 0) {
-            const lastSanctionRaw = sanctions[0];
-            const match = lastSanctionRaw.match(
-              /&4(\w+)&7.*]&r\s+'(.+?)'\s+by &7([\w\d_]+)&r on &7(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/,
-            );
-
-            if (match) {
-              const [, type, reason, auteur, dateStr] = match;
-
-              const timestamp = Math.floor(
-                new Date(dateStr + "Z").getTime() / 1000,
-              );
-
-              components.push({
-                type: 10,
-                content: `🚫 **Dernière Sanction :** ${type} : ${reason} par ${
-                  (await getEmojiTete(client, auteur)) || "🧑"
-                } ${auteur} <t:${timestamp}:R>`,
-              });
-            }
-          }
-        }
-
         components.push(
           { type: 14, spacing: SeparatorSpacingSize.Small },
           {
             type: 1,
             components: [
-              {
-                type: 2,
-                custom_id: `candidature_punisher-${candidature.auteur}`,
-                label: "💢 Afficher le Punisher",
-                style: ButtonStyle.Primary,
-              },
               {
                 type: 2,
                 custom_id: `candidature_activite-${candidature.auteur}-${serveur}`,

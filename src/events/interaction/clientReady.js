@@ -134,7 +134,7 @@ module.exports = async (client, interaction) => {
   cron.schedule(
     "15 10 * * 1",
     async () => {
-      await recapitulatif_hebdomadaire(client);
+      // await recapitulatif_hebdomadaire(client);
     },
     {
       timezone: "Europe/Paris",
@@ -144,7 +144,7 @@ module.exports = async (client, interaction) => {
   cron.schedule(
     "15 10 1 * *",
     async () => {
-      await recapitulatif_mensuel(client);
+      // await recapitulatif_mensuel(client);
     },
     {
       timezone: "Europe/Paris",

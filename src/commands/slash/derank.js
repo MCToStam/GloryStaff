@@ -85,13 +85,23 @@ module.exports = {
         .setDescription("Le grade de l'utilisateur")
         .setRequired(true)
         .setAutocomplete(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("effectif")
+        .setDescription("Afficher l'effectif (Fonctionnalité pouvant être bug)")
+        .setRequired(true)
+        .addChoices(
+          { name: "Oui", value: "oui" },
+          { name: "Non", value: "non" },
+        ),
     ),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    const { serveur, grade, pseudo } = interaction.parametre;
+    const { serveur, grade, pseudo, effectif } = interaction.parametre;
 
     const utilisateur = interaction.guild.members.cache.get(pseudo);
 
@@ -443,7 +453,7 @@ module.exports = {
       .setFooter({ text: config.footer })
       .setImage(`attachment://affiche-derank.png`);
 
-    if (historique) {
+    if (historique && effectif === "oui") {
       embed.setDescription(historique);
     }
 
