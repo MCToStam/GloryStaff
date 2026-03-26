@@ -205,7 +205,7 @@ async function disband_14h00(client) {
       const channelId = configPillage.Salon.valeur[guildId];
       if (!channelId) continue;
 
-      const channel = guild.channels.cache.get(channelId).catch(() => null);
+      const channel = guild.channels.cache.get(channelId);
       if (!channel) continue;
 
       const roleIds = configPillage.Role.valeur[guildId] || [];
@@ -402,7 +402,7 @@ async function disband_18h15(client) {
       const channelId = config18h.Salon.valeur[guildId];
       if (!channelId) continue;
 
-      const channel = guild.channels.cache.get(channelId).catch(() => null);
+      const channel = guild.channels.cache.get(channelId);
       if (!channel) continue;
 
       const roleIds = config18h.Role.valeur[guildId] || [];

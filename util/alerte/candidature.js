@@ -171,24 +171,6 @@ async function sendCandidatures(client, AllCandidatures) {
           },
         );
 
-        const responseDouble = await fetch(
-          `https://apiv2.nationsglory.fr/plugins/api/user/all/${candidature.auteur}/check_if_unique`,
-          {
-            headers: {
-              Authorization: `Bearer ${config.apitoken_backup}`,
-              accept: "application/json",
-            },
-          },
-        );
-
-        let doubleData = null;
-
-        try {
-          doubleData = await responseDouble.text();
-        } catch (err) {
-          doubleData = null;
-        }
-
         let data = null;
         try {
           data = await response.json();
@@ -264,27 +246,6 @@ async function sendCandidatures(client, AllCandidatures) {
               } :** <t:${lastConnectionTimestamp}:R>`,
             },
           );
-        }
-
-        if (doubleData) {
-          const cleanedDouble = doubleData
-            .split(/,|\/|;/)
-            .map((d) => d.trim())
-            .filter(
-              (d) =>
-                d &&
-                !["null", "undefined", "-", "aucun", "none"].includes(
-                  d.toLowerCase(),
-                ),
-            );
-          components.push({
-            type: 10,
-            content: `👥 **Doubles Comptes :** ${
-              cleanedDouble.length > 0
-                ? cleanedDouble.join(", ")
-                : "Aucun double compte"
-            }`,
-          });
         }
 
         components.push(

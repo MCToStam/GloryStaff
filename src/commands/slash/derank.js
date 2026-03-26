@@ -88,8 +88,10 @@ module.exports = {
     )
     .addStringOption((option) =>
       option
-        .setName("effectif")
-        .setDescription("Afficher l'effectif (Fonctionnalité pouvant être bug)")
+        .setName("afficher_historique")
+        .setDescription(
+          "Afficher l'historique des grades (Fonctionnalité pouvant être bug)",
+        )
         .setRequired(true)
         .addChoices(
           { name: "Oui", value: "oui" },
@@ -101,7 +103,8 @@ module.exports = {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    const { serveur, grade, pseudo, effectif } = interaction.parametre;
+    const { serveur, grade, pseudo, afficher_historique } =
+      interaction.parametre;
 
     const utilisateur = interaction.guild.members.cache.get(pseudo);
 
@@ -453,7 +456,7 @@ module.exports = {
       .setFooter({ text: config.footer })
       .setImage(`attachment://affiche-derank.png`);
 
-    if (historique && effectif === "oui") {
+    if (historique && afficher_historique === "oui") {
       embed.setDescription(historique);
     }
 

@@ -128,7 +128,7 @@ async function sendSanctionMessage(
     const channelId = salon[guildId];
     if (!channelId) continue;
 
-    const channel = guild.channels.cache.get(channelId).catch(() => null);
+    const channel = guild.channels.cache.get(channelId);
     if (!channel) continue;
 
     const roleIds = role[guildId] || [];
