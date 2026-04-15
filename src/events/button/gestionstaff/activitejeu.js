@@ -115,8 +115,7 @@ module.exports = {
       serveur,
       tempsJeu,
       semaineOffset,
-      labels,
-      values,
+      true,
     );
 
     const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);

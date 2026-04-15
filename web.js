@@ -1,5 +1,6 @@
 const express = require("express");
 const { getData, saveData } = require("./util/module/getAndSaveData");
+const { checkGradeSupport } = require("./util/checkGradeSupport");
 const { discordStaff, discordLink } = require("./util/module/discordLink");
 const { AttenteStaff, DoubleLead } = require("./util/container/module");
 const { getEmojiTete } = require("./util/module/emoji");
@@ -20,7 +21,6 @@ const path = require("path");
 const config = require("./config");
 const { client } = require("./main");
 require("./util/attentestaff");
-//require("./util/rank");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
 
@@ -564,6 +564,7 @@ app.post("/staff", async (req, res) => {
     }
 
     updateAllStaffWebhooks();
+    await checkGradeSupport(client);
   } else {
     res.status(400).json({
       error: "Les données envoyées ne sont pas au format attendu.",

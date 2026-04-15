@@ -34,7 +34,6 @@ const {
 const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
 const { checkONU } = require("../../../util/alerte/onu");
-const { checkGradeSupport } = require("../../../util/checkGradeSupport");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 const { zipAndUpload } = require("../../../util/module/backupData");
 
@@ -122,7 +121,6 @@ module.exports = async (client, interaction) => {
       for (const serveur of config.liste_serveur) {
         await sanction(client, serveur);
       }
-      await checkGradeSupport(client);
       await cacheApiGloryBot();
       await updateSanctionsCache();
     },

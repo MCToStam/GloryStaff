@@ -122,8 +122,7 @@ module.exports = {
       serveur,
       tempsJeu,
       semaineOffset,
-      labels,
-      values,
+      true,
     );
 
     const attachment = new AttachmentBuilder(buffer, {

@@ -149,8 +149,7 @@ module.exports = {
       serveur,
       traitementCount,
       semaineOffset,
-      labels,
-      values,
+      false,
     );
 
     const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);

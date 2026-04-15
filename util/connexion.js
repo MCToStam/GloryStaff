@@ -1,7 +1,20 @@
 const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const config = require("../config");
 
-async function generateConnexionGraph(serveur, tempsJeu, semaineOffset) {
+function formatSeconds(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
+async function generateConnexionGraph(
+  serveur,
+  tempsJeu,
+  semaineOffset,
+  isTime,
+) {
   const now = new Date();
   const jours = [
     "Lundi",
@@ -33,7 +46,7 @@ async function generateConnexionGraph(serveur, tempsJeu, semaineOffset) {
     values.push(tempsJeu[dateString] || 0);
   }
 
-  const buffer = await generateGraphImage(serveur, labels, values);
+  const buffer = await generateGraphImage(serveur, labels, values, isTime);
 
   return buffer;
 }
@@ -47,7 +60,7 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
   backgroundColour: "rgb(43, 45, 49)",
 });
 
-async function generateGraphImage(serveur, labels, data) {
+async function generateGraphImage(serveur, labels, data, isTime) {
   const valeur = config.couleur[serveur];
   const color = valeur
     ? `#${valeur.toString(16).padStart(6, "0").toUpperCase()}`
@@ -66,7 +79,6 @@ async function generateGraphImage(serveur, labels, data) {
       labels,
       datasets: [
         {
-          label: "Salaires",
           data,
           borderColor: color,
           backgroundColor: (context) => gradient(context.chart.ctx),
@@ -88,18 +100,6 @@ async function generateGraphImage(serveur, labels, data) {
       responsive: true,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          backgroundColor: "#000000CC",
-          borderColor: color,
-          borderWidth: 1,
-          titleFont: { size: 14, weight: "bold" },
-          bodyFont: { size: 13 },
-          padding: 10,
-          callbacks: {
-            label: (tooltipItem) =>
-              `${tooltipItem.dataset.label}: ${tooltipItem.raw.toLocaleString("fr-FR")} €`,
-          },
-        },
       },
       scales: {
         x: {
@@ -116,7 +116,8 @@ async function generateGraphImage(serveur, labels, data) {
             display: true,
             color: "#FFFFFF99",
             font: { size: 11 },
-            callback: (val) => val.toLocaleString("fr-FR"),
+            callback: (val) =>
+              isTime ? formatSeconds(val) : val.toLocaleString("fr-FR"),
           },
           grid: {
             color: "#FFFFFF08",
