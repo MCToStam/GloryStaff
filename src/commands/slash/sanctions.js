@@ -8,23 +8,128 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { getAbsolutePath } = require("../../../util/module/getAndSaveData");
+const {
+  getData,
+  getAbsolutePath,
+} = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const fs = require("node:fs");
 
+function formatDuration(minutes) {
+  if (!minutes || minutes <= 0) return "0 minute";
+
+  const days = Math.floor(minutes / 1440); // 60*24
+  const hours = Math.floor((minutes % 1440) / 60);
+  const mins = minutes % 60;
+
+  const parts = [];
+
+  if (days > 0) parts.push(`${days} jour${days > 1 ? "s" : ""}`);
+  if (hours > 0) parts.push(`${hours} heure${hours > 1 ? "s" : ""}`);
+  if (mins > 0) parts.push(`${mins} minute${mins > 1 ? "s" : ""}`);
+
+  return parts.join(", ").replace(/, ([^,]*)$/, " et $1");
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("sanctions")
-    .setDescription("Affiche les sanctions et les paliers de toxicité"),
+    .setDescription("Affiche les sanctions et les paliers de toxicité")
+    .addStringOption((option) =>
+      option
+        .setName("sanction")
+        .setDescription("Sanction à détailler")
+        .setRequired(false)
+        .setAutocomplete(true),
+    ),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
-    const { serveur } = interaction.parametre;
+    const { serveur, sanction } = interaction.parametre;
 
-    if (config.liste_serveur_java.includes(serveur)) {
+    if (config.liste_serveur_java.includes(serveur) && sanction) {
+      const sanctionsData = getData("data/sanctionsCache.json");
+      const sanctionData = sanctionsData.sanctions.find(
+        (s) => s.technicalName === sanction,
+      );
+
+      if (!sanctionData) {
+        const container = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((t) =>
+            t.setContent("## ❌ Sanction Introuvable"),
+          )
+          .addSeparatorComponents((s) => s)
+          .addTextDisplayComponents((t) =>
+            t.setContent("La sanction demandé n'a pas pu être trouvée."),
+          );
+
+        let sentMessage;
+
+        if (interaction.isMessageComponent()) {
+          sentMessage = await interaction.update({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+            withResponse: true,
+          });
+        } else {
+          sentMessage = await interaction.reply({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+            withResponse: true,
+          });
+        }
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        const container = new ContainerBuilder()
+          .setAccentColor(config.couleur[serveur])
+          .addTextDisplayComponents((t) =>
+            t.setContent(`## 💢 Sanction : ${sanctionData.name}`),
+          )
+          .addSeparatorComponents((s) => s)
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `**Points de Toxicité :** ${sanctionData.toxicityPoints}\n**Enregistré Punisher :** ${sanctionData.punisher ? "Oui" : "Non"}`,
+            ),
+          )
+          .addSeparatorComponents((s) => s)
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `**Avertissement Préalable :** ${sanctionData.warning ? "Oui" : "Non"}\n**Temps de Mute :** ${formatDuration(sanctionData.muteTimeMinutes)}\n**Temps de Jail :** ${formatDuration(sanctionData.jailTimeMinutes)}\n**Temps de Ban :** ${formatDuration(sanctionData.tempbanTimeMinutes)}`,
+            ),
+          )
+          .addSeparatorComponents((s) => s)
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `**Amende Victime :** ${sanctionData.playerFineDollars.toLocaleString()}$\n**Amende ONU :** ${sanctionData.staffFineDollars.toLocaleString()}$`,
+            ),
+          );
+
+        if (interaction.isMessageComponent()) {
+          return interaction.update({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        } else {
+          return interaction.reply({
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
+      }
+    } else if (config.liste_serveur_java.includes(serveur)) {
       const container = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
         .addTextDisplayComponents((t) =>

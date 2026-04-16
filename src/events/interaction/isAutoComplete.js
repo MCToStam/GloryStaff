@@ -243,6 +243,16 @@ module.exports = async (client, interaction) => {
         console.error("Erreur lors de l'autocomplétion pour grade :", error);
         await interaction.respond([]);
       }
+    } else if (name === "sanction") {
+      const sanctionsData = getData("data/sanctionsCache.json");
+      const sanctions = sanctionsData.sanctions
+        .filter((s) => !value.includes(s.name))
+        .slice(0, 25)
+        .map((s) => ({
+          name: s.name,
+          value: s.technicalName,
+        }));
+      await interaction.respond(sanctions);
     }
   } catch (e) {
     await interaction.respond([]);
