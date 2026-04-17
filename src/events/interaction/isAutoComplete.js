@@ -246,7 +246,7 @@ module.exports = async (client, interaction) => {
     } else if (name === "sanction") {
       const sanctionsData = getData("data/sanctionsCache.json");
       const sanctions = sanctionsData.sanctions
-        .filter((s) => !value.includes(s.name))
+        .filter((s) => s.name.toLowerCase().includes(value.toLowerCase()))
         .slice(0, 25)
         .map((s) => ({
           name: s.name,

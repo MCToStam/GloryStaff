@@ -3,6 +3,7 @@ const log = require("../../util/module/log");
 
 let GloryProjectsConnection;
 let GloryStaffConnection;
+let GloryBotConnection;
 
 async function connectMongo() {
   try {
@@ -12,6 +13,10 @@ async function connectMongo() {
 
     GloryStaffConnection = await mongoose.createConnection(
       process.env.MONGO_URI_GLORYSTAFF,
+    );
+
+    GloryBotConnection = await mongoose.createConnection(
+      process.env.MONGO_URI_GLORYBOT,
     );
 
     log("MongoDB est correctement connecté", "READY", "green");
@@ -24,4 +29,5 @@ module.exports = {
   connectMongo,
   getGloryProjectsConnection: () => GloryProjectsConnection,
   getGloryStaffConnection: () => GloryStaffConnection,
+  getGloryBotConnection: () => GloryBotConnection,
 };

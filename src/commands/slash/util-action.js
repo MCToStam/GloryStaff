@@ -91,7 +91,7 @@ function buildSelectOptions(actions) {
 }
 
 module.exports = {
-  serveur: ["743741992194015314"],
+  serveur: ["743741992194015314", "1132299932418719788"],
   data: new SlashCommandBuilder()
     .setName("util-action")
     .setDescription("Actionner une fonction depuis util"),
