@@ -1,10 +1,10 @@
 {
-  "name": "GloryStaff",
+  "name": "glorystaff",
   "version": "1.0.0",
   "description": "Avec GloryBot, accédez à des informations essentielles pour dominer sur NationsGlory ! Découvrez un panel de commande utiles rien que pour vous !",
   "main": "main.js",
   "scripts": {
-    "start": "node web.js",
+    "start": "node test.js",
     "clean": "npx prettier . --write",
     "format": "node .vscode/clean.js"
   },

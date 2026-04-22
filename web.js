@@ -23,7 +23,7 @@ const { client } = require("./main");
 require("./util/attentestaff");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
-const Absense = require("../../../../util/database/models/Absence");
+const Absense = require("./util/database/models/Absence");
 
 async function updateAllStaffWebhooks() {
   for (const serveur of config.liste_serveur) {
