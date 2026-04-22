@@ -43,7 +43,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
             row.setComponents(
               new ChannelSelectMenuBuilder()
                 .setDisabled(!settings.active[guildId])
-                .setCustomId(`config_salon-${type}-${systemName}`)
+                .setCustomId(`config_salon-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un salon")
                 .setChannelTypes(item.salonAutorise || [])
                 .setDefaultChannels(
@@ -60,7 +60,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
             row.setComponents(
               new RoleSelectMenuBuilder()
                 .setDisabled(!settings.active[guildId])
-                .setCustomId(`config_role-${type}-${systemName}`)
+                .setCustomId(`config_role-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un rôle")
                 .setDefaultRoles(
                   item.valeur[guildId] ? item.valeur[guildId] : [],
@@ -78,7 +78,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
             row.setComponents(
               new StringSelectMenuBuilder()
                 .setDisabled(!settings.active[guildId])
-                .setCustomId(`config_grade-${type}-${systemName}`)
+                .setCustomId(`config_grade-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un grade")
                 .setOptions(
                   [

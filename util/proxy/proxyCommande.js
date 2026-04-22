@@ -32,7 +32,6 @@ async function proxyCommande(client, interaction, config) {
   const permission = commandFile?.config?.permission;
 
   let serveur = interaction.options.getString("serveur")?.toLowerCase();
-  if (!serveur && commandName === "punisher") serveur = "all";
   if (!serveur)
     serveur = await getServerCommand(
       interaction.guild?.id,

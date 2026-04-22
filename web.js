@@ -23,6 +23,7 @@ const { client } = require("./main");
 require("./util/attentestaff");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
+const Absense = require("../../../../util/database/models/Absence");
 
 async function updateAllStaffWebhooks() {
   for (const serveur of config.liste_serveur) {
@@ -59,10 +60,21 @@ async function updateAllStaffWebhooks() {
       return members.length;
     };
 
+    const now = new Date();
+    const absenceData = await Absense.find({
+      serveur,
+      debut: { $lte: now },
+      $or: [{ fin: null }, { fin: { $gt: now } }],
+    });
+
+    const absents = new Set(absenceData.map((a) => a.staff));
+
     const components = [];
 
     for (const grade of GRADES) {
       const membres = staffData[grade] || [];
+      const membresPresents = membres.filter((m) => !absents.has(m));
+      const membresAbsents = membres.filter((m) => absents.has(m));
 
       const membresText =
         membres.length > 0
@@ -96,6 +108,25 @@ async function updateAllStaffWebhooks() {
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(membresText),
         );
+
+      if (membresAbsents.length > 0) {
+        const absentsText =
+          membresAbsents.length > 0
+            ? (
+                await Promise.all(
+                  membresAbsents.map(async (m) => {
+                    return escapeUnderscore(m);
+                  }),
+                )
+              ).join(", ")
+            : "Aucun";
+
+        container
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(`⏰ Absents : ${absentsText}`),
+          );
+      }
 
       if (grade === "Guide") {
         container
@@ -434,16 +465,28 @@ app.post("/staff", async (req, res) => {
         "Guide",
       ];
 
+      const now = new Date();
+
+      const absenceData = await Absense.find({
+        serveur,
+        debut: { $lte: now },
+        $or: [{ fin: null }, { fin: { $gt: now } }],
+      });
+
+      const absents = new Set(absenceData.map((a) => a.staff));
+
       const components = [];
 
       for (const grade of GRADES) {
         const membres = processedData[grade] || [];
+        const membresPresents = membres.filter((m) => !absents.has(m));
+        const membresAbsents = membres.filter((m) => absents.has(m));
 
         const membresText =
           membres.length > 0
             ? (
                 await Promise.all(
-                  membres.map(async (m) => {
+                  membresPresents.map(async (m) => {
                     const emoji = (await getEmojiTete(client, m)) || "🧑";
                     return `${emoji} ${escapeUnderscore(m)}`;
                   }),
@@ -472,6 +515,23 @@ app.post("/staff", async (req, res) => {
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(membresText),
           );
+
+        if (membresAbsents.length > 0) {
+          const absentsText = (
+            await Promise.all(
+              membresAbsents.map(async (m) => {
+                const emoji = (await getEmojiTete(client, m)) || "🧑";
+                return `${emoji} ${escapeUnderscore(m)}`;
+              }),
+            )
+          ).join(", ");
+
+          container
+            .addSeparatorComponents((separator) => separator)
+            .addTextDisplayComponents((textDisplay) =>
+              textDisplay.setContent(`⏰ Absents : ${absentsText}`),
+            );
+        }
 
         if (grade === "Guide") {
           container
@@ -518,7 +578,6 @@ app.post("/staff", async (req, res) => {
 
         try {
           await message.edit({
-            embeds: [],
             components,
             flags: MessageFlags.IsComponentsV2,
           });

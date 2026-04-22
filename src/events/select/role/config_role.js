@@ -8,12 +8,12 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const [_, type, systemName] = interaction.customId.split("-");
+    const [_, type, systemName, key] = interaction.customId.split("-");
 
     const serveur = await getServeur(interaction);
     const configData = getData(`data/${serveur}/config.json`);
     const typeData = configData.find((c) => c.nom === type);
-    typeData.systeme[systemName].Role.valeur[interaction.guild.id] =
+    typeData.systeme[systemName][key].valeur[interaction.guild.id] =
       interaction.values;
     saveData(`data/${serveur}/config.json`, configData);
     const container = await containerSingle(

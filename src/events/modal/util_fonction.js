@@ -66,7 +66,7 @@ module.exports = {
     name: "util_fonction",
   },
 
-  async execute(client, interaction) {
+  async execute(client, interaction, config) {
     const parts = interaction.customId.split(":");
 
     const file = parts[1];
