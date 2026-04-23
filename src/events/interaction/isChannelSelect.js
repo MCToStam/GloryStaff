@@ -1,4 +1,10 @@
-const { SeparatorSpacingSize, MessageFlags } = require("discord.js");
+const {
+  ContainerBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
 const log = require("../../../util/module/log.js");
 const config = require("../../../config.js");
 
@@ -10,25 +16,18 @@ module.exports = async (client, interaction) => {
   if (!channelSelect) return;
 
   if (interaction.user.id !== interaction.message.interaction.user.id) {
-    const permissionContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        {
-          type: 10,
-          content: "## :no_entry_sign: Intéraction Interdite ",
-        },
-        {
-          type: 14,
-          spacing: SeparatorSpacingSize.Large,
-        },
-        {
-          type: 10,
-          content:
-            "Vous n'avez pas la permission d'intéragir avec ce sélectionneur car vous n'êtes pas l'auteur de la commande.",
-        },
-      ],
-    };
+    const permissionContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## 🚫 Intéraction Interdite"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Vous n'avez pas la permission d'intéragir avec ce menu de sélection car vous n'êtes pas l'auteur de la commande.",
+        ),
+      );
+
     return interaction.reply({
       components: [permissionContainer],
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -39,25 +38,27 @@ module.exports = async (client, interaction) => {
   try {
     await channelSelect.execute(client, interaction, config);
   } catch (e) {
-    const errorContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        {
-          type: 10,
-          content: "## :x: Une erreur est survenue",
-        },
-        {
-          type: 14,
-          spacing: SeparatorSpacingSize.Large,
-        },
-        {
-          type: 10,
-          content:
-            "Une erreur est survenue lors de l'exécution de cette intéraction. Si le problème se reproduit, il est important de le signaler sur le [serveur support](https://discord.gg/tFkb9nYSd8).",
-        },
-      ],
-    };
+    const errorContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Erreur"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Une erreur est survenue lors de l'exécution de cette intéraction. Si le problème se reproduit, il est important de le signaler sur le serveur support.",
+        ),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setURL("https://discord.gg/tFkb9nYSd8")
+            .setEmoji("1307452239052279858")
+            .setLabel("Serveur Support")
+            .setStyle(ButtonStyle.Link),
+        ),
+      );
 
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
@@ -76,28 +77,20 @@ module.exports = async (client, interaction) => {
 
     const channel = await client.channels.fetch(config.log_channels.error);
 
-    const errorLogContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        {
-          type: 10,
-          content: "## ❌ Erreur",
-        },
-        {
-          type: 14,
-          spacing: 1,
-        },
-        {
-          type: 10,
-          content: `**🔧 Action Effectuée :** ${interaction.customId}`,
-        },
-        {
-          type: 10,
-          content: `**💢 Erreur :** \`\`\`${e}\`\`\``,
-        },
-      ],
-    };
+    const errorLogContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Erreur"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `**🔧 Action Effectuée :** ${interaction.customId}`,
+        ),
+      )
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(`**💢 Erreur :** \`\`\`${e}\`\`\``),
+      );
 
     await channel.send({
       components: [errorLogContainer],
@@ -118,7 +111,7 @@ module.exports = async (client, interaction) => {
       },
       {
         type: 14,
-        spacing: SeparatorSpacingSize.Small,
+        spacing: 1,
       },
       {
         type: 10,

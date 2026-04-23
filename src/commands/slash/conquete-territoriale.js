@@ -13,6 +13,7 @@ module.exports = {
   guild: true,
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
+    .setContexts(0)
     .setName("conquête-territoriale")
     .setDescription("Valide une conquête territoriale")
     .addStringOption((option) =>

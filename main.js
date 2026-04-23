@@ -18,6 +18,7 @@ const client = new Client({
   intents: new IntentsBitField([
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
   ]),
   partials: [Partials.User, Partials.Channel, Partials.GuildMember],
 });

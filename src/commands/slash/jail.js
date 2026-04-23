@@ -11,6 +11,7 @@ const proxyCommande = require("../../../util/proxy/proxyCommande");
 module.exports = {
   guild: true,
   data: new SlashCommandBuilder()
+    .setContexts(0)
     .setName("jail")
     .setDescription("Effectue un jail")
     .addStringOption((option) =>

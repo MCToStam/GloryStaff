@@ -13,6 +13,7 @@ module.exports = {
   guild: true,
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
+    .setContexts(0)
     .setName("fullbuild")
     .setDescription("Valide un fullbuild")
     .addStringOption((option) =>

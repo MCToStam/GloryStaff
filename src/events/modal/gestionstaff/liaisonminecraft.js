@@ -117,11 +117,16 @@ module.exports = {
       getEmojiTete(client, joueur) || "🧑",
     ]);
 
-    const jailData = getData(`data/${serveur}/config-jail.json`);
-    const routineData = getData(`data/${serveur}/config-routine.json`);
+    const dataFile = getData(`data/${serveur}/config.json`);
+    const configGlobalRoutine = dataFile.find((c) => c.nom === "Routine");
+    const configGlobalJail = dataFile.find((c) => c.nom === "Jail");
+    const configRoutine = configGlobalRoutine.systeme.Routine;
+    const configJail = configGlobalJail.systeme.Jail;
 
-    const roleAutoriseJail = jailData.jail.Grade.valeur;
-    const roleAutoriseRoutine = routineData.routine.Grade.valeur;
+    const guildId = interaction.guild.id;
+
+    const roleAutoriseRoutine = configRoutine.Grade.valeur[guildId];
+    const roleAutoriseJail = configJail.Grade.valeur[guildId];
 
     const gradesHierarchie = [
       "Administrateur",
@@ -132,18 +137,18 @@ module.exports = {
       "Guide",
     ];
 
-    const utilisateurAutoriseJail =
-      jailData?.jail?.active &&
-      roleAutoriseJail &&
-      gradesHierarchie
-        .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)
-        .includes(gradeDuJoueur);
-
     const utilisateurAutoriseRoutine =
-      routineData?.routine?.active &&
+      configRoutine.active[guildId] &&
       roleAutoriseRoutine &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseRoutine) + 1)
+        .includes(gradeDuJoueur);
+
+    const utilisateurAutoriseJail =
+      configJail.active[guildId] &&
+      roleAutoriseJail &&
+      gradesHierarchie
+        .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)
         .includes(gradeDuJoueur);
 
     const optionsMenu = [

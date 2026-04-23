@@ -1,6 +1,9 @@
 const {
   Collection,
-  SeparatorSpacingSize,
+  ContainerBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   MessageFlags,
 } = require("discord.js");
 const config = require("../../../config.js");
@@ -24,48 +27,22 @@ module.exports = async (client, interaction) => {
   if (!slashCmd) return;
 
   if (slashCmd.conf?.disable) {
-    const disabledContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        {
-          type: 10,
-          content: "## :no_entry_sign: Commande Désactivée ",
-        },
-        {
-          type: 14,
-          spacing: SeparatorSpacingSize.Large,
-        },
-        {
-          type: 10,
-          content: "Cette commande est désactivé et donc innaccessible.",
-        },
-      ],
-    };
+    const disabledContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## 🚫 Commande Désactivée"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Cette commande est désactivé et donc innaccessible.",
+        ),
+      );
+
     return interaction.reply({
       components: [disabledContainer],
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       allowedMentions: { parse: [] },
-    });
-  }
-
-  if (slashCmd?.guild && !interaction.guild) {
-    const noGuildContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        { type: 10, content: "## :no_entry_sign: Serveur Requis" },
-        { type: 14, spacing: SeparatorSpacingSize.Large },
-        {
-          type: 10,
-          content:
-            "Cette commande ne peut être envoyée uniquement dans un serveur Discord.",
-        },
-      ],
-    };
-    return interaction.reply({
-      components: [noGuildContainer],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
   }
 
@@ -88,24 +65,18 @@ module.exports = async (client, interaction) => {
 
       if (now < expirationTime) {
         const expiredTimestamp = Math.round(expirationTime / 1000);
-        const cooldownContainer = {
-          type: 17,
-          accent_color: config.colors.error,
-          components: [
-            {
-              type: 10,
-              content: "## :no_entry_sign: Cooldown ",
-            },
-            {
-              type: 14,
-              spacing: SeparatorSpacingSize.Large,
-            },
-            {
-              type: 10,
-              content: `Cette commande est actuellement sous cooldown, tu pourras la réutiliser <t:${expiredTimestamp}:R>.`,
-            },
-          ],
-        };
+        const cooldownContainer = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent("## ⏱️ Cooldown"),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(
+              `Cette commande est actuellement sous cooldown, tu pourras la réutiliser <t:${expiredTimestamp}:R>.`,
+            ),
+          );
+
         return interaction.reply({
           components: [cooldownContainer],
           flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -121,25 +92,27 @@ module.exports = async (client, interaction) => {
   try {
     await slashCmd.execute(client, interaction, config);
   } catch (e) {
-    const errorContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        {
-          type: 10,
-          content: "## :x: Une erreur est survenue",
-        },
-        {
-          type: 14,
-          spacing: SeparatorSpacingSize.Large,
-        },
-        {
-          type: 10,
-          content:
-            "Une erreur est survenue lors de l'exécution de cette intéraction. Si le problème se reproduit, il est important de le signaler sur le [serveur support](https://discord.gg/tFkb9nYSd8).",
-        },
-      ],
-    };
+    const errorContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Erreur"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Une erreur est survenue lors de l'exécution de cette intéraction. Si le problème se reproduit, il est important de le signaler sur le serveur support.",
+        ),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addActionRowComponents(
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setURL("https://discord.gg/tFkb9nYSd8")
+            .setEmoji("1307452239052279858")
+            .setLabel("Serveur Support")
+            .setStyle(ButtonStyle.Link),
+        ),
+      );
 
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
@@ -157,28 +130,20 @@ module.exports = async (client, interaction) => {
 
     const channel = await client.channels.fetch(config.log_channels.error);
 
-    const errorLogContainer = {
-      type: 17,
-      accent_color: config.colors.error,
-      components: [
-        {
-          type: 10,
-          content: "## ❌ Erreur",
-        },
-        {
-          type: 14,
-          spacing: 1,
-        },
-        {
-          type: 10,
-          content: `**🔧 Action Effectuée :** ${interaction.commandName}`,
-        },
-        {
-          type: 10,
-          content: `**💢 Erreur :** \`\`\`${e}\`\`\``,
-        },
-      ],
-    };
+    const errorLogContainer = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Erreur"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `**🔧 Action Effectuée :** ${interaction.commandName}`,
+        ),
+      )
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(`**💢 Erreur :** \`\`\`${e}\`\`\``),
+      );
 
     await channel.send({
       components: [errorLogContainer],
@@ -204,7 +169,7 @@ module.exports = async (client, interaction) => {
       },
       {
         type: 14,
-        spacing: SeparatorSpacingSize.Small,
+        spacing: 1,
       },
       {
         type: 10,

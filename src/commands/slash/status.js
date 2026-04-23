@@ -9,7 +9,6 @@ const { getAbsolutePath } = require("../../../util/module/getAndSaveData");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 
 module.exports = {
-  guild: true,
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setName("status")

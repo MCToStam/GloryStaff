@@ -12,13 +12,12 @@ const { discordLink } = require("../../../util/module/discordLink");
 const Absense = require("../../../util/database/models/Absence");
 
 module.exports = {
-  guild: true,
   config: { permission: "guide" },
 
   data: new SlashCommandBuilder()
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
     .setName("absence")
-    .setDescription("Affiche les absences d’un membre"),
+    .setDescription("Affiche et gère tes absences"),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);

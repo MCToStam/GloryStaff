@@ -2,11 +2,7 @@ const cheerio = require("cheerio");
 const { getEmojiTete } = require("../../util/module/emoji");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const config = require("../../config");
-const {
-  MessageFlags,
-  SeparatorSpacingSize,
-  ButtonStyle,
-} = require("discord.js");
+const { MessageFlags, ButtonStyle } = require("discord.js");
 
 const moisFR = {
   janvier: 0,
@@ -96,7 +92,7 @@ async function getCandidatureContent(url, serveur) {
         if (imgUrl) {
           components.push({
             type: 14,
-            spacing: SeparatorSpacingSize.Small,
+            spacing: 1,
           });
           components.push({
             type: 12,
@@ -183,7 +179,7 @@ async function sendCandidatures(client, AllCandidatures) {
             type: 10,
             content: `## Candidature ${role} - [${candidature.auteur}](https://nationsglory.fr/profile/${candidature.auteur})`,
           },
-          { type: 14, spacing: SeparatorSpacingSize.Small },
+          { type: 14, spacing: 1 },
           {
             type: 10,
             content: `${
@@ -232,7 +228,7 @@ async function sendCandidatures(client, AllCandidatures) {
           const playtimeFormatted = parts.length ? parts.join(" ") : "0s";
 
           components.push(
-            { type: 14, spacing: SeparatorSpacingSize.Small },
+            { type: 14, spacing: 1 },
             {
               type: 10,
               content: `⏱️ **Temps de Jeu ${
@@ -249,7 +245,7 @@ async function sendCandidatures(client, AllCandidatures) {
         }
 
         components.push(
-          { type: 14, spacing: SeparatorSpacingSize.Small },
+          { type: 14, spacing: 1 },
           {
             type: 1,
             components: [
@@ -261,7 +257,7 @@ async function sendCandidatures(client, AllCandidatures) {
               },
             ],
           },
-          { type: 14, spacing: SeparatorSpacingSize.Small },
+          { type: 14, spacing: 1 },
           {
             type: 1,
             components: [

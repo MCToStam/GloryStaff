@@ -77,10 +77,10 @@ async function updateAllStaffWebhooks() {
       const membresAbsents = membres.filter((m) => absents.has(m));
 
       const membresText =
-        membres.length > 0
+        membresPresents.length > 0
           ? (
               await Promise.all(
-                membres.map(async (m) => {
+                membresPresents.map(async (m) => {
                   return escapeUnderscore(m);
                 }),
               )
@@ -124,7 +124,9 @@ async function updateAllStaffWebhooks() {
         container
           .addSeparatorComponents((separator) => separator)
           .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(`⏰ Absents : ${absentsText}`),
+            textDisplay.setContent(
+              `**⏰ Absent${membresAbsents.length > 1 ? "s" : ""} :** ${absentsText}`,
+            ),
           );
       }
 
@@ -136,14 +138,17 @@ async function updateAllStaffWebhooks() {
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Guide.lien)
                 .setLabel("Recrutement Guide")
+                .setEmoji("1289928200800964628")
                 .setStyle(ButtonStyle.Link),
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Modérateur.lien)
                 .setLabel("Recrutement Modérateur")
+                .setEmoji("1289934724294250588")
                 .setStyle(ButtonStyle.Link),
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Builder.lien)
                 .setLabel("Recrutement Builder")
+                .setEmoji("1289935984460304506")
                 .setStyle(ButtonStyle.Link),
             ),
           );
@@ -529,7 +534,9 @@ app.post("/staff", async (req, res) => {
           container
             .addSeparatorComponents((separator) => separator)
             .addTextDisplayComponents((textDisplay) =>
-              textDisplay.setContent(`⏰ Absents : ${absentsText}`),
+              textDisplay.setContent(
+                `**⏰ Absent${membresAbsents.length > 1 ? "s" : ""} :** ${absentsText}`,
+              ),
             );
         }
 
@@ -541,14 +548,17 @@ app.post("/staff", async (req, res) => {
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Guide.lien)
                   .setLabel("Recrutement Guide")
+                  .setEmoji("1289928200800964628")
                   .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Modérateur.lien)
                   .setLabel("Recrutement Modérateur")
+                  .setEmoji("1289934724294250588")
                   .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Builder.lien)
                   .setLabel("Recrutement Builder")
+                  .setEmoji("1289935984460304506")
                   .setStyle(ButtonStyle.Link),
               ),
             );
