@@ -46,6 +46,8 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
                 .setCustomId(`config_salon-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un salon")
                 .setChannelTypes(item.salonAutorise || [])
+                .setMinValues(0)
+                .setMaxValues(1)
                 .setDefaultChannels(
                   item.valeur[guildId] ? [item.valeur[guildId]] : [],
                 ),

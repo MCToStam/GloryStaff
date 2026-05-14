@@ -147,12 +147,12 @@ module.exports = {
           );
 
         if (interaction.isMessageComponent()) {
-          return replyInteraction.update({
+          return interaction.update({
             components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
           });
         } else {
-          return replyInteraction.reply({
+          return interaction.reply({
             components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
           });
@@ -519,6 +519,30 @@ module.exports = {
       });
     }
 
+    for (const guild of interaction.client.guilds.cache.values()) {
+      const member = guild.members.cache.get(pseudo);
+      if (!member) continue;
+
+      try {
+        for (const roleId of rolesCategorie) {
+          if (member.roles.cache.has(roleId)) {
+            await member.roles.remove(roleId).catch(() => {});
+          }
+        }
+
+        for (const roleId of rolesGrade) {
+          if (!member.roles.cache.has(roleId)) {
+            await member.roles.add(roleId).catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.error(
+          `Erreur lors de l'attribution ou le retrait des rôles à ${member.user.tag} sur ${guild.name} :`,
+          err,
+        );
+      }
+    }
+
     const userContainer = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) => t.setContent("## ⬆️ Rank"))
@@ -543,29 +567,5 @@ module.exports = {
         }
       } catch (error) {}
     }, 5_000);
-
-    for (const guild of interaction.client.guilds.cache.values()) {
-      const member = guild.members.cache.get(pseudo);
-      if (!member) continue;
-
-      try {
-        for (const roleId of rolesCategorie) {
-          if (member.roles.cache.has(roleId)) {
-            await member.roles.remove(roleId).catch(() => {});
-          }
-        }
-
-        for (const roleId of rolesGrade) {
-          if (!member.roles.cache.has(roleId)) {
-            await member.roles.add(roleId).catch(() => {});
-          }
-        }
-      } catch (err) {
-        console.error(
-          `Erreur lors de l'attribution ou le retrait des rôles à ${member.user.tag} sur ${guild.name} :`,
-          err,
-        );
-      }
-    }
   },
 };

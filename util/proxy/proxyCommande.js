@@ -15,7 +15,17 @@ async function proxyCommande(client, interaction, config) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9_-]/g, "")
     .toLowerCase();
+
+  const subcommand = interaction.options.getSubcommand(false);
+
   const argsSansServeur = interaction.options.data
+    .flatMap((opt) => {
+      if (opt.type === 1) {
+        return opt.options || [];
+      }
+
+      return [opt];
+    })
     .filter((opt) => opt.name !== "serveur")
     .map((opt) => {
       return {
@@ -27,6 +37,8 @@ async function proxyCommande(client, interaction, config) {
   interaction.parametre = Object.fromEntries(
     argsSansServeur.map((arg) => [arg.name, arg.value]),
   );
+
+  interaction.subcommand = subcommand;
 
   const commandFile = require(`../../src/commands/slash/${commandName}.js`);
   const permission = commandFile?.config?.permission;

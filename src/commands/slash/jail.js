@@ -297,30 +297,28 @@ module.exports = {
         ),
       );
 
-    let sentMessage;
-
     if (interaction.isMessageComponent()) {
-      sentMessage = await interaction.update({
+      const sentMessage = interaction.update({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
-        withResponse: true,
       });
+
+      setTimeout(async () => {
+        try {
+          if (sentMessage.resource) {
+            await sentMessage.resource.message.delete();
+          } else {
+            await sentMessage.delete();
+          }
+        } catch (error) {}
+        return;
+      }, 5_000);
+      return;
     } else {
-      sentMessage = await interaction.reply({
+      return interaction.reply({
         components: [userContainer],
-        flags: MessageFlags.IsComponentsV2,
-        withResponse: true,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
-
-    setTimeout(async () => {
-      try {
-        if (sentMessage.resource) {
-          await sentMessage.resource.message.delete();
-        } else {
-          await sentMessage.delete();
-        }
-      } catch (error) {}
-    }, 5_000);
   },
 };

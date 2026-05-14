@@ -23,6 +23,9 @@ async function classement_notation(client) {
     },
   });
   const data = await response.json();
+
+  if (!data || data.length === 0) return;
+
   for (const serveur of config.liste_serveur) {
     log(
       `🔎 Exécution du classement notations pour le serveur ${serveur}`,
