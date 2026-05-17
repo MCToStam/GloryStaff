@@ -53,19 +53,22 @@ module.exports = {
 
     const question1 = new TextInputBuilder()
       .setCustomId("question1")
-      .setLabel(semaineData.question1.question)
+      .setLabel("Question 1")
+      .setPlaceholder(semaineData.question1.question.slice(0, 100))
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
     const question2 = new TextInputBuilder()
       .setCustomId("question2")
-      .setLabel(semaineData.question2.question)
+      .setLabel("Question 2")
+      .setPlaceholder(semaineData.question2.question.slice(0, 100))
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
     const question3 = new TextInputBuilder()
       .setCustomId("question3")
-      .setLabel(semaineData.question3.question)
+      .setLabel("Question 3")
+      .setPlaceholder(semaineData.question3.question.slice(0, 100))
       .setStyle(TextInputStyle.Short)
       .setRequired(true);
 
