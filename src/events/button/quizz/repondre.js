@@ -12,6 +12,7 @@ const { getServeur } = require("../../../../util/module/getServeur");
 module.exports = {
   data: {
     name: "quizz_repondre",
+    all: true,
   },
 
   async execute(client, interaction, config) {

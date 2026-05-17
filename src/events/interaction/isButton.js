@@ -19,7 +19,7 @@ module.exports = async (client, interaction) => {
     : interaction.message;
 
   const authorId = originalMessage.interaction?.user?.id;
-  if (authorId && interaction.user.id !== authorId) {
+  if (authorId && interaction.user.id !== authorId && !btn.all) {
     const permissionContainer = new ContainerBuilder()
       .setAccentColor(config.colors.error)
       .addTextDisplayComponents((textDisplay) =>
