@@ -4,6 +4,7 @@ const {
   getAbsolutePath,
 } = require("../../util/module/getAndSaveData");
 const { getEmojiTete } = require("../../util/module/emoji");
+const Absence = require("../../util/database/models/Absence");
 const {
   ActionRowBuilder,
   ButtonBuilder,
@@ -14,6 +15,56 @@ const {
   TextDisplayBuilder,
   MessageFlags,
 } = require("discord.js");
+
+async function genererNouvelleRepartition(donnee, serveur) {
+  const now = new Date();
+
+  const saturday = new Date(now);
+  saturday.setDate(now.getDate() + ((6 - now.getDay() + 7) % 7));
+  saturday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(saturday);
+  sunday.setDate(saturday.getDate() + 1);
+  sunday.setHours(23, 59, 59, 999);
+
+  const absences = await Absence.find({
+    serveur,
+    debut: { $lte: sunday },
+    fin: { $gte: saturday },
+  });
+
+  const staffsAbsents = new Set(absences.map((a) => a.staff.toLowerCase()));
+
+  const staffsPresents = Object.entries(donnee).filter(
+    ([staff]) => !staffsAbsents.has(staff.toLowerCase()),
+  );
+
+  if (staffsPresents.length === 0) return {};
+
+  const lastRange = Object.values(donnee)[Object.values(donnee).length - 1];
+
+  const maxNotation = parseInt(lastRange.split(" à ")[1], 10);
+
+  const totalStaffs = staffsPresents.length;
+
+  const baseSize = Math.floor(maxNotation / totalStaffs);
+  const remainder = maxNotation % totalStaffs;
+
+  let current = 1;
+
+  const nouvelleRepartition = {};
+
+  staffsPresents.forEach(([staff], index) => {
+    const extra = index < remainder ? 1 : 0;
+    const end = current + baseSize + extra - 1;
+
+    nouvelleRepartition[staff] = `${current} à ${end}`;
+
+    current = end + 1;
+  });
+
+  return nouvelleRepartition;
+}
 
 async function repartition_notation(client) {
   const now = new Date();
@@ -51,8 +102,14 @@ async function repartition_notation(client) {
       )) {
         if (!isActive) continue;
 
-        const donnee = configRepartition.donnee[guildId];
-        if (!donnee) continue;
+        const donneeOriginale = configRepartition.donnee[guildId];
+        if (!donneeOriginale) continue;
+
+        const donnee = await genererNouvelleRepartition(
+          donneeOriginale,
+          server,
+        );
+        if (!Object.keys(donnee).length) continue;
 
         const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
@@ -68,16 +125,14 @@ async function repartition_notation(client) {
 
         const numberKeysValues = (
           await Promise.all(
-            Object.entries(configRepartition.donnee[guildId]).map(
-              async ([key, value]) => {
-                const emoji = (await getEmojiTete(client, key)) || "🧑";
-                const emojiText = emoji.id
-                  ? `<:${emoji.name}:${emoji.id}>`
-                  : emoji.name;
+            Object.entries(donnee).map(async ([key, value]) => {
+              const emoji = (await getEmojiTete(client, key)) || "🧑";
+              const emojiText = emoji.id
+                ? `<:${emoji.name}:${emoji.id}>`
+                : emoji.name;
 
-                return `${emojiText} ${key.replace(/_/g, "\\_")} : ${value}`;
-              },
-            ),
+              return `${emojiText} **${key.replace(/_/g, "\\_")} :** ${value}`;
+            }),
           )
         ).join("\n");
 
@@ -85,7 +140,7 @@ async function repartition_notation(client) {
           .setAccentColor(config.couleur[server])
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `## Annonce des Notations - Semaine du ${jour}/${mois}`,
+              `## 🏆 Annonce des Notations - Semaine du ${jour}/${mois}`,
             ),
           )
           .addSeparatorComponents((separator) => separator)

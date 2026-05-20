@@ -12,6 +12,9 @@ const {
   classement_notation,
 } = require("../../../util/alerte/classement_notation");
 const {
+  decalage_notations,
+} = require("../../../util/alerte/decalage_notations");
+const {
   disband_14h00,
   disband_17h59,
   disband_18h15,
@@ -79,6 +82,18 @@ module.exports = async (client, interaction) => {
     "0 10 * * 1",
     async () => {
       await classement_notation(client);
+      await decalage_notations();
+    },
+    {
+      timezone: "Europe/Paris",
+    },
+  );
+
+  cron.schedule(
+    "0 10 1 * *",
+    async () => {
+      await classement_notation(client);
+      await decalage_notations();
     },
     {
       timezone: "Europe/Paris",
