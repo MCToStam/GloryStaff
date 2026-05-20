@@ -16,6 +16,7 @@ const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 const generateGraphImage = async (dataParSemaine) => {
   const width = 800;
   const height = 400;
+
   const chartJSNodeCanvas = new ChartJSNodeCanvas({
     width,
     height,
@@ -33,11 +34,9 @@ const generateGraphImage = async (dataParSemaine) => {
     },
   });
 
-  const labels = dataParSemaine.map((entry) => entry.semaine);
-  const argentData = dataParSemaine.map((entry) => entry.argentNotation);
-  const moyenneConnexionData = dataParSemaine.map(
-    (entry) => entry.moyenneConnexion,
-  );
+  const labels = dataParSemaine.map((e) => e.semaine);
+  const argentData = dataParSemaine.map((e) => e.argentNotation);
+  const moyenneConnexionData = dataParSemaine.map((e) => e.moyenneConnexion);
 
   const configuration = {
     type: "line",
@@ -83,7 +82,6 @@ const generateGraphImage = async (dataParSemaine) => {
         },
       },
     },
-    plugins: ["customCanvasBackgroundColor"],
   };
 
   return await chartJSNodeCanvas.renderToBuffer(configuration);
@@ -94,6 +92,7 @@ function formatClassement(classement, serveur, key) {
 
   const top3 = classementTrie.slice(0, 3).map((entry, index) => {
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";
+
     const serverName =
       entry.serveur === serveur
         ? `**${entry.serveur.charAt(0).toUpperCase()}${entry.serveur
@@ -102,18 +101,22 @@ function formatClassement(classement, serveur, key) {
         : `${entry.serveur.charAt(0).toUpperCase()}${entry.serveur
             .slice(1)
             .toLowerCase()}`;
+
     const value =
       key === "argentNotation"
         ? `${entry[key].toLocaleString()}$`
         : entry[key].toFixed(0);
+
     return `${medal} ${serverName} (${value})`;
   });
 
   const serverEntry = classementTrie.find((entry) => entry.serveur === serveur);
+
   let serverRank = "";
 
   if (serverEntry && !classementTrie.slice(0, 3).includes(serverEntry)) {
     const rank = classementTrie.indexOf(serverEntry) + 1;
+
     serverRank = `#${rank} **${serveur.charAt(0).toUpperCase()}${serveur
       .slice(1)
       .toLowerCase()}** (${
@@ -133,9 +136,11 @@ const prepareServerRankings = async () => {
 
   const now = new Date();
   const previousMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
   const previousMonthName = previousMonthDate
     .toLocaleString("fr-FR", { month: "long" })
     .toLowerCase();
+
   const previousYear = previousMonthDate.getFullYear();
 
   const monthlyStats = {};
@@ -147,11 +152,14 @@ const prepareServerRankings = async () => {
 
     const fileMonth = match[1];
     const fileYear = parseInt(match[2], 10);
+
     if (fileMonth !== previousMonthName || fileYear !== previousYear) continue;
 
     const weeklyData = getData(`data/classement/semaine/${file}`);
+
     for (const entry of weeklyData) {
       const srv = entry.serveur;
+
       if (!monthlyStats[srv]) {
         monthlyStats[srv] = {
           serveur: srv,
@@ -161,9 +169,7 @@ const prepareServerRankings = async () => {
         };
       }
 
-      if (!weeklyStats[srv]) {
-        weeklyStats[srv] = [];
-      }
+      if (!weeklyStats[srv]) weeklyStats[srv] = [];
 
       monthlyStats[srv].argentNotation += entry.argentNotation || 0;
       monthlyStats[srv].moyenneConnexion += entry.moyenneConnexion || 0;
@@ -185,24 +191,20 @@ const prepareServerRankings = async () => {
   }));
 
   rankings.sort((a, b) => b.argentNotation - a.argentNotation);
-  rankings.forEach((entry, index) => {
-    entry.classementNotation = index + 1;
-  });
+  rankings.forEach((e, i) => (e.classementNotation = i + 1));
 
   rankings.sort((a, b) => b.moyenneConnexion - a.moyenneConnexion);
-  rankings.forEach((entry, index) => {
-    entry.classementConnection = index + 1;
-  });
+  rankings.forEach((e, i) => (e.classementConnection = i + 1));
 
   const existingFiles = getFiles("data/classement/mois")
     .filter(
-      (file) =>
-        file.startsWith("classement-") &&
-        file.endsWith(`-${previousMonthName}-${previousYear}.json`),
+      (f) =>
+        f.startsWith("classement-") &&
+        f.endsWith(`-${previousMonthName}-${previousYear}.json`),
     )
-    .map((file) => {
-      const match = file.match(/classement-(\d+)-/);
-      return match ? parseInt(match[1], 10) : null;
+    .map((f) => {
+      const m = f.match(/classement-(\d+)-/);
+      return m ? parseInt(m[1], 10) : null;
     })
     .filter(Number.isInteger)
     .sort((a, b) => a - b);
@@ -214,7 +216,9 @@ const prepareServerRankings = async () => {
     `data/classement/mois/classement-${nextFileNumber}-${previousMonthName}-${previousYear}.json`,
     rankings,
   );
+
   console.log(`Classements mensuels enregistrés avec succès !`);
+
   return {
     id: nextFileNumber,
     mois: previousMonthName,
@@ -225,127 +229,130 @@ const prepareServerRankings = async () => {
 
 async function recapitulatif_mensuel(client) {
   console.log("Exécution de la tâche récapitulatif mensuel...");
+
   const { id, mois, annee, weeklyStats } = await prepareServerRankings();
+
   for (const serveur of config.liste_serveur) {
-    const serverConfig = getData(`data/${serveur}/config-recap.json`);
+    const configGlobale = getData(`data/${serveur}/config.json`);
 
-    if (
-      serverConfig["Récapitulatif Mensuel"].active &&
-      serverConfig["Récapitulatif Mensuel"].Salon.valeur
-    ) {
-      const channel = await client.channels
-        .fetch(serverConfig["Récapitulatif Mensuel"].Salon.valeur)
-        .catch(() => null);
+    const recapConfig = configGlobale.find(
+      (c) => c.nom === "Récapitulatif Mensuel",
+    );
 
-      if (channel) {
-        const classementData = getData(
-          `data/classement/mois/classement-${id}-${mois}-${annee}.json`,
-        );
+    if (!recapConfig) continue;
 
-        const classementArgentFormatted = formatClassement(
-          classementData,
-          serveur,
-          "argentNotation",
-        );
-        const classementMoyenneFormatted = formatClassement(
-          classementData,
-          serveur,
-          "moyenneConnexion",
-        );
+    const system = recapConfig.systeme?.["Récapitulatif Mensuel"];
+    if (!system) continue;
 
-        const serverData = classementData.find(
-          (entry) => entry.serveur === serveur,
-        );
+    if (!Object.values(system.active || {}).some((v) => v === true)) continue;
 
-        const argentNotation = serverData ? serverData.argentNotation : 0;
-        const moyenneNotation = serverData ? serverData.moyenneNotation : 0;
-        const moyenne = serverData ? serverData.moyenneConnexion : 0;
+    if (!system.Salon?.valeur) continue;
 
-        const moisFormatted = mois.charAt(0).toUpperCase() + mois.slice(1);
+    const channel = await client.channels
+      .fetch(system.Salon.valeur)
+      .catch(() => null);
 
-        const imageBuffer = await generateGraphImage(weeklyStats[serveur]);
+    if (!channel) continue;
 
-        const attachment = new AttachmentBuilder(imageBuffer, {
-          name: "graphique.png",
-        });
-        const embed = new EmbedBuilder()
-          .setTitle(`Récapitulatif Mensuel - ${moisFormatted}`)
-          .setThumbnail(
-            `${config.glorybot_url}/api/banniere?serveur=${serveur}`,
-          )
-          .addFields([
-            {
-              name: "Classement des notations :",
-              value: classementArgentFormatted,
-              inline: true,
-            },
-            {
-              name: "Classement des moyennes :",
-              value: classementMoyenneFormatted,
-              inline: true,
-            },
-            {
-              name: "Argent total distribué aux notations :",
-              value: `${argentNotation.toLocaleString()}$`,
-              inline: false,
-            },
-            {
-              name: "Moyenne d'argent distribué aux notations :",
-              value: `${moyenneNotation.toLocaleString()}$`,
-              inline: false,
-            },
-            {
-              name: "Moyenne des joueurs connectés :",
-              value: `${moyenne.toFixed(0)}`,
-              inline: true,
-            },
-          ])
-          .setColor(config.couleur[serveur])
-          .setFooter({ text: config.footer })
-          .setImage("attachment://graphique.png");
+    const classementData = getData(
+      `data/classement/mois/classement-${id}-${mois}-${annee}.json`,
+    );
 
-        const actionRow = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`classement_mensuel-notation-${id}`)
-            .setLabel("Classement détaillées : Notations")
-            .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder()
-            .setCustomId(`classement_mensuel-connexion-${id}`)
-            .setLabel("Classement détaillées : Connexion")
-            .setStyle(ButtonStyle.Primary),
-        );
+    const classementArgentFormatted = formatClassement(
+      classementData,
+      serveur,
+      "argentNotation",
+    );
 
-        const options = {
-          embeds: [embed],
-          files: [attachment],
-          components: [actionRow],
-        };
+    const classementMoyenneFormatted = formatClassement(
+      classementData,
+      serveur,
+      "moyenneConnexion",
+    );
 
-        const roles = serverConfig["Récapitulatif Mensuel"].Role.valeur;
+    const serverData = classementData.find((e) => e.serveur === serveur);
 
-        if (Array.isArray(roles) && roles.length > 0) {
-          options.content = roles.map((roleId) => `<@&${roleId}>`).join(" ");
-        }
+    const argentNotation = serverData?.argentNotation || 0;
+    const moyenneNotation = serverData?.moyenneNotation || 0;
+    const moyenne = serverData?.moyenneConnexion || 0;
 
-        const sentMessage = await channel.send(options);
-        console.log("✅ Récapitulatif mensuel envoyé pour le serveur", serveur);
-        if (channel.type === "GUILD_NEWS") {
-          try {
-            await sentMessage.crosspost();
-            console.log(
-              `📣 Message publié dans le salon d’annonce pour ${serveur}`,
-            );
-          } catch (err) {
-            console.warn(
-              `⚠️ Impossible de publier le message dans le salon d’annonce : ${err.message}`,
-            );
-          }
-        }
+    const moisFormatted = mois.charAt(0).toUpperCase() + mois.slice(1);
+
+    const imageBuffer = await generateGraphImage(weeklyStats[serveur]);
+
+    const attachment = new AttachmentBuilder(imageBuffer, {
+      name: "graphique.png",
+    });
+
+    const embed = new EmbedBuilder()
+      .setTitle(`Récapitulatif Mensuel - ${moisFormatted}`)
+      .setThumbnail(`${config.glorybot_url}/api/banniere?serveur=${serveur}`)
+      .addFields(
+        {
+          name: "Classement des notations :",
+          value: classementArgentFormatted,
+          inline: true,
+        },
+        {
+          name: "Classement des moyennes :",
+          value: classementMoyenneFormatted,
+          inline: true,
+        },
+        {
+          name: "Argent total distribué aux notations :",
+          value: `${argentNotation.toLocaleString()}$`,
+          inline: false,
+        },
+        {
+          name: "Moyenne d'argent distribué aux notations :",
+          value: `${moyenneNotation.toLocaleString()}$`,
+          inline: false,
+        },
+        {
+          name: "Moyenne des joueurs connectés :",
+          value: `${moyenne.toFixed(0)}`,
+          inline: true,
+        },
+      )
+      .setColor(config.couleur[serveur])
+      .setFooter({ text: config.footer })
+      .setImage("attachment://graphique.png");
+
+    const actionRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`classement_mensuel-notation-${id}`)
+        .setLabel("Classement détaillées : Notations")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`classement_mensuel-connexion-${id}`)
+        .setLabel("Classement détaillées : Connexion")
+        .setStyle(ButtonStyle.Primary),
+    );
+
+    const options = {
+      embeds: [embed],
+      files: [attachment],
+      components: [actionRow],
+    };
+
+    const guildId = Object.keys(system.active || {})[0];
+    const roles = system.Role?.valeur?.[guildId] || [];
+
+    if (roles.length) {
+      options.content = roles.map((r) => `<@&${r}>`).join(" ");
+    }
+
+    const sentMessage = await channel.send(options);
+
+    console.log("📊 Récapitulatif mensuel envoyé pour le serveur", serveur);
+
+    if (channel.type === "GUILD_NEWS") {
+      try {
+        await sentMessage.crosspost();
+        console.log(`📣 Crosspost OK ${serveur}`);
+      } catch (err) {
+        console.warn(`⚠️ Crosspost fail : ${err.message}`);
       }
-    } else {
-      console.log(
-        `Récap mensuel désactivé ou pas de salon configuré pour le serveur ${serveur}`,
-      );
     }
   }
 }

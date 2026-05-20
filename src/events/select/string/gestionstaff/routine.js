@@ -8,7 +8,7 @@ module.exports = {
   async execute(client, interaction, config) {
     const container = new ContainerBuilder()
       .setAccentColor(config.colors.error)
-      .addTextDisplayComponents((t) => t.setContent("## Erreur"))
+      .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>
         t.setContent(

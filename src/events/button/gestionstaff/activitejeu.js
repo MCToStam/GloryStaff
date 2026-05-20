@@ -27,7 +27,7 @@ module.exports = {
     if (!staffData) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) => t.setContent("## Erreur"))
+        .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
@@ -200,6 +200,15 @@ module.exports = {
         value: "gestionstaff_routine",
         default: false,
         emoji: "1441734905980649695",
+      });
+    }
+
+    if (serveur === "cyan") {
+      optionsMenu.push({
+        label: "Quizz",
+        value: "gestionstaff_quizz",
+        default: false,
+        emoji: "❓",
       });
     }
 
