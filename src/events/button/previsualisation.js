@@ -8,14 +8,14 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const module = interaction.customId.split("-")[1].replace(/\s+/g, "");
+    const [_, categorie, systeme] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
     let components;
 
     if (
-      moduleContainers[module] &&
-      typeof moduleContainers[module] === "function"
+      moduleContainers[systeme] &&
+      typeof moduleContainers[systeme] === "function"
     ) {
       const attentionContainer =
         new ContainerBuilder().addTextDisplayComponents((textDisplay) =>
@@ -24,7 +24,7 @@ module.exports = {
           ),
         );
 
-      const container = await moduleContainers[module](client, serveur);
+      const container = await moduleContainers[systeme](client, serveur);
 
       components = [attentionContainer, ...container];
     } else {

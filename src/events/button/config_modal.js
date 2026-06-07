@@ -6,6 +6,8 @@ const {
 } = require("discord.js");
 const { getData } = require("../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../util/module/getServeur");
+const CONFIG_STATIC = require("../../../util/config");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -16,8 +18,14 @@ module.exports = {
     const [_, type, systemName, key] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
-    const configData = getData(`data/${serveur}/config.json`);
-    const typeData = configData.find((c) => c.nom === type);
+    const typeData = CONFIG_STATIC.find((c) => c.nom === type);
+
+    const configDoc = await Configuration.findOne({
+      serveur,
+      categorie: type,
+      systeme: systemName,
+      guildId: interaction.guild.id,
+    });
 
     const data = typeData.systeme[systemName][key];
 
@@ -36,7 +44,7 @@ module.exports = {
             .setPlaceholder(q.placeholder || "")
             .setRequired(q.obligatoire)
             .setMaxLength(q.maxCara || 100)
-            .setValue(q.valeur[interaction.guild.id] || ""),
+            .setValue(configDoc.data.get(`${key}_${index}`) || ""),
         );
 
       modal.addLabelComponents(input);

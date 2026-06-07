@@ -1,4 +1,3 @@
-const { getData } = require("../../util/module/getAndSaveData");
 const log = require("../../util/module/log.js");
 const { getEmojiDrapeau } = require("../../util/module/emoji");
 const {
@@ -8,64 +7,66 @@ const {
   ButtonStyle,
   TextDisplayBuilder,
   MessageFlags,
+  ChannelType,
 } = require("discord.js");
+const Configuration = require("../../util/database/models/Configuration");
 const config = require("../../config");
 
 async function classement_notation(client) {
   const weekRes = await fetch(`${config.glorybot_url}/api/notationWeek`);
   const weekJson = await weekRes.json();
   const week = weekJson.semaine;
+
   const response = await fetch(`${config.glorybot_url}/api/notations/${week}`, {
-    method: "GET",
     headers: {
       Authorization: `Bearer ${config.glorybot_token}`,
-      "Content-Type": "application/json",
     },
   });
-  const data = await response.json();
 
-  if (!data || data.length === 0) return;
+  const data = await response.json();
+  if (!data?.length) return;
+
+  const sortedData = [...data].sort((a, b) => b.bourse - a.bourse);
+
+  const topCountries = sortedData
+    .slice(0, 3)
+    .map(
+      (entry) =>
+        `<:NG${entry.server.charAt(0).toUpperCase()}${entry.server.slice(1)}:${config.emoji[entry.server]}> ${
+          entry.pays
+        }・${entry.bourse}$`,
+    )
+    .join("\n");
 
   for (const serveur of config.liste_serveur) {
-    log(
-      `🔎 Exécution du classement notations pour le serveur ${serveur}`,
-      "LOG",
-      "gray",
-    );
+    log(`🔎 Classement notations | ${serveur}`, "LOG", "gray");
 
-    const dataConfig = getData(`data/${serveur}/config.json`);
-    const configData = dataConfig.find((c) => c.nom === "Notations");
-    const classementConfig = configData.systeme.Classement;
+    const configs = await Configuration.find({
+      serveur,
+      categorie: "Notations",
+      systeme: "Classement",
+    });
 
-    if (
-      !Object.values(classementConfig.active || {}).some(
-        (value) => value === true,
-      )
-    )
-      continue;
+    for (const classementConfig of configs) {
+      if (!classementConfig.active) continue;
 
-    try {
-      const sortedData = [...data].sort((a, b) => b.bourse - a.bourse);
+      const guild = client.guilds.cache.get(classementConfig.guildId);
+      if (!guild) continue;
 
-      const topCountries = sortedData
-        .slice(0, 3)
-        .map(
-          (entry, index) =>
-            `<:NG${entry.server.charAt(0).toUpperCase()}${entry.server.slice(
-              1,
-            )}:${config.emoji[entry.server]}> ${entry.pays.replace(
-              /([a-z])([A-Z])/g,
-              "$1 $2",
-            )}・${entry.bourse}$`,
-        )
-        .join("\n");
+      const channelId = classementConfig.data.get("Salon");
+      if (!channelId) continue;
 
-      const emojis = {};
+      const channel = guild.channels.cache.get(channelId);
+      if (!channel) continue;
+
+      const roleIds = classementConfig.data.get("Role") || [];
+      const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
       const topServerCountriesRaw = sortedData
         .filter((entry) => entry.server === serveur)
         .slice(0, 10);
 
+      const emojis = {};
       for (const entry of topServerCountriesRaw) {
         const pays = entry.pays.toLowerCase();
         emojis[pays] = (await getEmojiDrapeau(client, serveur, pays)) || "🏳️";
@@ -73,40 +74,36 @@ async function classement_notation(client) {
 
       const topServerCountries = topServerCountriesRaw
         .map((entry) => {
-          const paysNom = entry.pays.replace(/([a-z])([A-Z])/g, "$1 $2");
           const emoji = emojis[entry.pays.toLowerCase()] || "🏳️";
-          return `${emoji} ${paysNom}・${entry.bourse}$`;
+
+          return `${emoji} ${entry.pays}・${entry.bourse}$`;
         })
         .join("\n");
 
-      const classementContainer = new ContainerBuilder()
+      const container = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## 🏆 Classement des Notations"),
+        .addTextDisplayComponents((t) =>
+          t.setContent("## 🏆 Classement des Notations"),
         )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            `**<:nationsglory:1480509359023980626> Top 3 Inter-Serveur :**\n${topCountries}\n\n**<:NG${serveur
-              .charAt(0)
-              .toUpperCase()}${serveur.slice(1)}:${
-              config.emoji[serveur]
-            }> Top 10 ${serveur.charAt(0).toUpperCase()}${serveur.slice(
-              1,
-            )} :**\n${topServerCountries}`,
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `**Top 3 Inter-Serveur :**\n${topCountries}\n\n**Top 10 ${serveur} :**\n${topServerCountries}`,
           ),
         )
-        .addSeparatorComponents((separator) => separator)
+        .addSeparatorComponents((s) => s)
         .addActionRowComponents(
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("notation_help")
-              .setLabel("Informations Supplémentaires")
+              .setLabel("Informations")
               .setStyle(ButtonStyle.Success),
+
             new ButtonBuilder()
               .setCustomId(`notation_op-${week}`)
               .setLabel("Qui note mon pays ?")
               .setStyle(ButtonStyle.Primary),
+
             new ButtonBuilder()
               .setLabel("Page des Notations")
               .setURL(`https://nationsglory.fr/notations/${serveur}/${week}`)
@@ -114,53 +111,32 @@ async function classement_notation(client) {
           ),
         );
 
-      for (const [guildId, isActive] of Object.entries(
-        classementConfig.active,
-      )) {
-        if (!isActive) continue;
+      const components = [];
 
-        const guild = client.guilds.cache.get(guildId);
-        if (!guild) continue;
-
-        const channelId = classementConfig.Salon?.valeur?.[guildId];
-        if (!channelId) continue;
-
-        const channel = guild.channels.cache.get(channelId);
-        if (!channel) continue;
-
-        const roleIds = classementConfig.Role?.valeur?.[guildId] || [];
-        const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
-
-        const components = [];
-
-        if (roleMentions.length > 0) {
-          components.push(new TextDisplayBuilder().setContent(roleMentions));
-        }
-
-        components.push(classementContainer);
-
-        try {
-          const sentMessage = await channel.send({
-            components,
-            flags: MessageFlags.IsComponentsV2,
-          });
-
-          if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
-
-          log(
-            `✅ Classement notations envoyé | serveur ${serveur} | guild ${guildId}`,
-            "LOG",
-            "gray",
-          );
-        } catch (err) {
-          console.error(
-            `❌ Erreur envoi classement | serveur ${serveur} | guild ${guildId}`,
-            err,
-          );
-        }
+      if (roleMentions.length > 0) {
+        components.push(new TextDisplayBuilder().setContent(roleMentions));
       }
-    } catch (err) {
-      console.error("Erreur lors de la requête API:", err);
+
+      components.push(container);
+
+      try {
+        const sentMessage = await channel.send({
+          components,
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+        if (channel.type === ChannelType.GuildNews) {
+          await sentMessage.crosspost().catch(() => {});
+        }
+
+        log(
+          `✅ Classement envoyé | ${serveur} | ${classementConfig.guildId}`,
+          "LOG",
+          "gray",
+        );
+      } catch (err) {
+        console.error(`❌ Erreur envoi classement | ${serveur}`, err);
+      }
     }
   }
 }

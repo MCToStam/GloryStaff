@@ -44,7 +44,7 @@ module.exports = {
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `**⏰ Délais des notations :**\nLes notations sont effectués par les ${config.emojigrade["Super-Modérateur"]} super-modérateurs et les ${config.emojigrade["Administrateur"]} administrateurs durant le week-end. Que votre pays soit noté le samedi ou le dimanche, vous recevrez votre bourse le lundi midi.`,
+          `**⏰ Délais des notations :**\nLes notations sont effectués par les ${config.emojigrade["Super-Modérateur"]} super modérateurs et les ${config.emojigrade["Administrateur"]} administrateurs durant le week-end. Que votre pays soit noté le samedi ou le dimanche, vous recevrez votre bourse le lundi midi.`,
         ),
       )
       .addSeparatorComponents((separator) => separator)

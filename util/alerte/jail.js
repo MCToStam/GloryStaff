@@ -6,19 +6,15 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
+const Configuration = require("../../util/database/models/Configuration");
 
 async function jail(client) {
   for (const server of config.liste_serveur) {
-    const configGlobale = getData(`data/${server}/config.json`);
-
-    const jailConfig = configGlobale.find((c) => c.nom === "Jail");
-    if (!jailConfig) continue;
-
-    const jailSystem = jailConfig.systeme?.Jail;
-    if (!jailSystem) continue;
-
-    if (!Object.values(jailSystem.active || {}).some((v) => v === true))
-      continue;
+    const jailConfig = await Configuration.find({
+      serveur: server,
+      categorie: "Jail",
+      systeme: "Jail",
+    });
 
     const jailData = getData(`data/${server}/jail.json`);
 
@@ -73,8 +69,7 @@ async function jail(client) {
               .catch(() => null);
 
             if (channel?.isThread()) {
-              const jailRoles =
-                jailSystem.Role?.valeur?.[jailEntry.guildId || server] || [];
+              const jailRoles = jailConfig.data.get("Role") || [];
 
               if (jailRoles.length) {
                 const roleMentions = jailRoles

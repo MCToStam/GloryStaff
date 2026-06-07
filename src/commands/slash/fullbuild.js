@@ -3,11 +3,12 @@ const {
   ContainerBuilder,
   MessageFlags,
   TextDisplayBuilder,
+  ChannelType,
 } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
 const { discordLink } = require("../../../util/module/discordLink");
 const { FullBuild } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   guild: true,
@@ -37,13 +38,14 @@ module.exports = {
   async proxy(client, interaction, config) {
     const { serveur, paysa, paysb } = interaction.parametre;
 
-    const dataFile = getData(`data/${serveur}/config.json`);
-    const configData = dataFile.find((c) => c.nom === "Expansion Territoriale");
-    const configExpansion = configData.systeme["Full Build"];
+    const configExpansion = await Configuration.findOne({
+      serveur,
+      guildId: interaction.guild.id,
+      categorie: "Expansion Territoriale",
+      systeme: "Full Build",
+    });
 
-    const guildId = interaction.guild.id;
-
-    if (!configExpansion.active[guildId]) {
+    if (!configExpansion.active) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
@@ -64,7 +66,7 @@ module.exports = {
       });
     }
 
-    if (!configExpansion.Salon.valeur[guildId]) {
+    if (!configExpansion.data.get("Salon")) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
@@ -98,12 +100,13 @@ module.exports = {
     const container = await FullBuild(client, serveur, pseudo, paysa, paysb);
 
     const salon = await client.channels.fetch(
-      configExpansion.Salon.valeur[guildId],
+      configExpansion.data.get("Salon"),
     );
 
     let message;
-    if (configExpansion.Role.valeur[guildId].length > 0) {
-      const roleMentions = configExpansion.Role.valeur[guildId]
+    if (configExpansion.data.get("Role").length > 0) {
+      const roleMentions = configExpansion.data
+        .get("Role")
         .map((roleId) => `<@&${roleId}>`)
         .join(", ");
 
@@ -147,6 +150,6 @@ module.exports = {
       } catch (error) {}
     }, 5_000);
 
-    if (salon.type === "GUILD_NEWS") await message.crosspost();
+    if (salon.type === ChannelType.GuildNews) await message.crosspost();
   },
 };

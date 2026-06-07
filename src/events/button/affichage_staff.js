@@ -1,6 +1,15 @@
-const { ContainerBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
-const { getData, saveData } = require("../../../util/module/getAndSaveData");
+const {
+  ContainerBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  MessageFlags,
+} = require("discord.js");
 const { getServeur } = require("../../../util/module/getServeur");
+const { getEmojiTete } = require("../../../util/module/emoji");
+const Configuration = require("../../../util/database/models/Configuration");
+const Absense = require("../../../util/database/models/Absence");
+const CONFIG_STATIC = require("../../../util/config");
 
 module.exports = {
   data: {
@@ -9,25 +18,23 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const serveur = await getServeur(interaction);
-    const configGlobale = getData(`data/${serveur}/config.json`);
-    const configStaff = configGlobale.find((c) => c.nom === "Staff");
-    const configAffiche = configStaff.systeme["Affichage Staff"];
-    const guildId = interaction.guild.id;
 
-    if (
-      !configAffiche.active[guildId] ||
-      !configAffiche.Salon.valeur[guildId]
-    ) {
+    const configStaff = await Configuration.findOne({
+      serveur,
+      guildId: interaction.guild.id,
+      categorie: "Staff",
+      systeme: "Affichage Staff",
+    });
+
+    if (!configStaff?.active) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(`## ❌ Configuration Manquante`),
+        .addTextDisplayComponents((t) =>
+          t.setContent("## ❌ Configuration Manquante"),
         )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            "Le système est désactivé ou aucun salon n'a été configuré.",
-          ),
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent("Le système est désactivé ou mal configuré."),
         );
 
       return interaction.reply({
@@ -36,112 +43,130 @@ module.exports = {
       });
     }
 
-    const staffServeur = getData(`data/${serveur}/staff-serveur.json`);
+    const staffServeur = require(`../../../data/${serveur}/staff-serveur.json`);
 
-    const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
-
-    const effectifRole = (role) => {
-      const members = staffServeur[role].filter((name) => name.trim() !== "");
-      return members.length;
+    const processedData = {
+      Administrateur: staffServeur["Administrateur"] || [],
+      "Super-Modérateur": staffServeur["Super-Modérateur"] || [],
+      "Modérateur Plus": staffServeur["Modérateur Plus"] || [],
+      Modérateur: staffServeur["Modérateur"] || [],
+      "Modérateur Test": staffServeur["Modérateur Test"] || [],
+      Guide: staffServeur["Guide"] || [],
     };
 
-    const description = `
-                                    **${
-                                      config.emojigrade["Administrateur"]
-                                    } Administrateurs (${effectifRole(
-                                      "Administrateur",
-                                    )}) :**\n${
-                                      staffServeur["Administrateur"].join(
-                                        ", ",
-                                      ) || "Aucun"
-                                    }
-                                    \n**${
-                                      config.emojigrade["Super-Modérateur"]
-                                    } Super Modérateurs (${effectifRole(
-                                      "Super-Modérateur",
-                                    )}) :**\n${escapeUnderscore(
-                                      staffServeur["Super-Modérateur"].join(
-                                        ", ",
-                                      ) || "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Modérateur Plus"]
-                                    } Modérateurs Plus (${effectifRole(
-                                      "Modérateur Plus",
-                                    )}) :**\n${escapeUnderscore(
-                                      staffServeur["Modérateur Plus"].join(
-                                        ", ",
-                                      ) || "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Modérateur"]
-                                    } Modérateurs (${effectifRole(
-                                      "Modérateur",
-                                    )}) :**\n${escapeUnderscore(
-                                      staffServeur["Modérateur"].join(", ") ||
-                                        "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Modérateur Test"]
-                                    } Modérateurs Tests (${effectifRole(
-                                      "Modérateur Test",
-                                    )}) :**\n${escapeUnderscore(
-                                      staffServeur["Modérateur Test"].join(
-                                        ", ",
-                                      ) || "Aucun",
-                                    )}
-                                    \n**${
-                                      config.emojigrade["Guide"]
-                                    } Guides (${effectifRole(
-                                      "Guide",
-                                    )}) :**\n${escapeUnderscore(
-                                      staffServeur["Guide"].join(", ") ||
-                                        "Aucun",
-                                    )}
-                                    \n\n*Dernière mise à jour : <t:${staffServeur.timestamp}:R>*
-                                `;
+    const GRADES = [
+      "Administrateur",
+      "Super-Modérateur",
+      "Modérateur Plus",
+      "Modérateur",
+      "Modérateur Test",
+      "Guide",
+    ];
 
-    const staffEmbed = new EmbedBuilder()
-      .setAuthor({
-        name: `Staff du serveur ${
-          serveur.charAt(0).toUpperCase() + serveur.slice(1)
-        }`,
-        url: `https://nationsglory.fr/server/${serveur}/staff`,
-      })
-      .setThumbnail(`${config.glorybot_url}/api/banniere?serveur=${serveur}`)
-      .setColor(config.couleur[serveur])
-      .setDescription(description)
-      .setFooter({ text: config.footer });
+    const escapeUnderscore = (text = "") => text.replace(/_/g, "\\_");
 
-    const channel = await client.channels.fetch(
-      configAffiche.Salon.valeur[guildId],
-    );
+    const effectifRole = (role) =>
+      (processedData[role] || []).filter((n) => n?.trim()).length;
 
-    const message = await channel.send({
-      embeds: [staffEmbed],
-      flags: MessageFlags.Ephemeral,
+    const now = new Date();
+
+    const absenceData = await Absense.find({
+      serveur,
+      debut: { $lte: now },
+      $or: [{ fin: null }, { fin: { $gt: now } }],
     });
 
-    configAffiche.Message[guildId] = message.id;
+    const absents = new Set(absenceData.map((a) => a.staff));
 
-    saveData(`data/${serveur}/config.json`, configGlobale);
+    const components = [];
 
-    const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
+    const configCandidature = CONFIG_STATIC.find(
+      (c) => c.nom === "Candidature",
+    );
 
-    const container = new ContainerBuilder()
-      .setAccentColor(config.colors.success)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(`## ✅ Message Envoyé`),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `Le message d'effectif a correctement été envoyé ici : ${messageLink}`,
-        ),
-      );
+    for (const grade of GRADES) {
+      const membres = processedData[grade] || [];
+
+      const membresPresents = membres.filter((m) => !absents.has(m));
+      const membresAbsents = membres.filter((m) => absents.has(m));
+
+      const membresText =
+        membresPresents.length > 0
+          ? (
+              await Promise.all(
+                membresPresents.map(async (m) => {
+                  const emoji = (await getEmojiTete(client, m)) || "🧑";
+                  return `${emoji} ${escapeUnderscore(m)}`;
+                }),
+              )
+            ).join(", ")
+          : "Aucun";
+
+      const color = config.grade?.[grade]
+        ? parseInt(config.grade[grade].replace("#", ""), 16)
+        : null;
+
+      const nbEffectif = effectifRole(grade);
+
+      let nomGrade = grade + (nbEffectif > 1 ? "s" : "");
+      if (grade === "Modérateur Plus" && nbEffectif > 1)
+        nomGrade = "Modérateurs Plus";
+
+      const container = new ContainerBuilder()
+        .setAccentColor(color || config.colors.success)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `### ${config.emojigrade?.[grade] || ""} ${nomGrade} (${nbEffectif}) :`,
+          ),
+        )
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) => t.setContent(membresText));
+
+      if (membresAbsents.length > 0) {
+        const absentsText = (
+          await Promise.all(
+            membresAbsents.map(async (m) => {
+              const emoji = (await getEmojiTete(client, m)) || "🧑";
+              return `${emoji} ${escapeUnderscore(m)}`;
+            }),
+          )
+        ).join(", ");
+
+        container
+          .addSeparatorComponents((s) => s)
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `**⏰ Absent${membresAbsents.length > 1 ? "s" : ""} :** ${absentsText}`,
+            ),
+          );
+      }
+
+      if (grade === "Guide") {
+        container.addSeparatorComponents((s) => s);
+
+        container.addActionRowComponents(
+          new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setURL(configCandidature.systeme.Guide.lien[serveur])
+              .setLabel("Recrutement Guide")
+              .setStyle(ButtonStyle.Link),
+            new ButtonBuilder()
+              .setURL(configCandidature.systeme.Modérateur.lien[serveur])
+              .setLabel("Recrutement Modérateur")
+              .setStyle(ButtonStyle.Link),
+            new ButtonBuilder()
+              .setURL(configCandidature.systeme.Builder.lien[serveur])
+              .setLabel("Recrutement Builder")
+              .setStyle(ButtonStyle.Link),
+          ),
+        );
+      }
+
+      components.push(container);
+    }
 
     return interaction.reply({
-      components: [container],
+      components,
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
   },

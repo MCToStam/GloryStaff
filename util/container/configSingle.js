@@ -8,11 +8,22 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const config = require("../../config");
+const Configuration = require("../../util/database/models/Configuration");
 
 async function containerSingle(guildId, serveur, systemName, configData, type) {
   const settings = configData.systeme[systemName];
 
-  const status = settings.active[guildId]
+  const doc = await Configuration.findOne({
+    serveur,
+    categorie: type,
+    systeme: systemName,
+    guildId,
+  });
+
+  const active = doc?.active ?? false;
+  const getData = (key) => doc?.data?.get(key) ?? null;
+
+  const status = active
     ? "<:actif:1318501209803325491>"
     : "<:inactif:1318501225141895188>";
 
@@ -20,9 +31,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
     .setAccentColor(config.couleur[serveur])
     .addTextDisplayComponents((t) =>
       t.setContent(
-        `## ${
-          settings.emoji ? `${settings.emoji} ` : ""
-        }Configuration - ${systemName}`,
+        `## ${settings.emoji ? `${settings.emoji} ` : ""}Configuration - ${systemName}`,
       ),
     )
     .addSeparatorComponents((s) => s)
@@ -42,15 +51,13 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
           .addActionRowComponents((row) =>
             row.setComponents(
               new ChannelSelectMenuBuilder()
-                .setDisabled(!settings.active[guildId])
+                .setDisabled(!active)
                 .setCustomId(`config_salon-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un salon")
                 .setChannelTypes(item.salonAutorise || [])
                 .setMinValues(0)
                 .setMaxValues(1)
-                .setDefaultChannels(
-                  item.valeur[guildId] ? [item.valeur[guildId]] : [],
-                ),
+                .setDefaultChannels(getData(key) ? [getData(key)] : []),
             ),
           );
         break;
@@ -61,12 +68,10 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
           .addActionRowComponents((row) =>
             row.setComponents(
               new RoleSelectMenuBuilder()
-                .setDisabled(!settings.active[guildId])
+                .setDisabled(!active)
                 .setCustomId(`config_role-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un rôle")
-                .setDefaultRoles(
-                  item.valeur[guildId] ? item.valeur[guildId] : [],
-                )
+                .setDefaultRoles(getData(key) ?? [])
                 .setMinValues(0)
                 .setMaxValues(25),
             ),
@@ -79,7 +84,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
           .addActionRowComponents((row) =>
             row.setComponents(
               new StringSelectMenuBuilder()
-                .setDisabled(!settings.active[guildId])
+                .setDisabled(!active)
                 .setCustomId(`config_grade-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un grade")
                 .setOptions(
@@ -93,7 +98,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
                   ].map((g) => ({
                     label: g,
                     value: `config_grade-${g}`,
-                    default: item.valeur[guildId] === g,
+                    default: getData(key) === g,
                   })),
                 ),
             ),
@@ -106,7 +111,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
             .setCustomId(item.customId)
             .setLabel(key)
             .setStyle(ButtonStyle[item.style] ?? ButtonStyle.Secondary)
-            .setDisabled(item.disabled === true && settings.active[guildId]),
+            .setDisabled(item.disabled === true && active),
         );
         break;
 
@@ -116,7 +121,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
           .addActionRowComponents((row) =>
             row.setComponents(
               new StringSelectMenuBuilder()
-                .setDisabled(!settings.active[guildId])
+                .setDisabled(!active)
                 .setCustomId(`config_select-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit une option")
                 .setOptions(
@@ -124,7 +129,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
                     ([label, customValue]) => ({
                       label,
                       value: `config_select-${customValue}`,
-                      default: item.valeur[guildId] === customValue,
+                      default: getData(key) === customValue,
                     }),
                   ),
                 ),
@@ -132,14 +137,16 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
           );
         break;
 
-      case "modal":
+      case "modal": {
         let textContent = `\n\n**${key} :**`;
+        const modalValeur = getData(key); // tableau de réponses ou null
 
         if (item.questions && Array.isArray(item.questions)) {
-          item.questions.forEach((q) => {
-            textContent += `\n- ${q.texte}\n*${
-              q.valeur[guildId] || "Aucune valeur donnée"
-            }*`;
+          item.questions.forEach((q, index) => {
+            const reponse = Array.isArray(modalValeur)
+              ? (modalValeur[index] ?? null)
+              : null;
+            textContent += `\n- ${q.texte}\n*${reponse || "Aucune valeur donnée"}*`;
           });
         }
 
@@ -153,10 +160,11 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
                 .setCustomId(`config_modal-${type}-${systemName}-${key}`)
                 .setLabel(item.label)
                 .setStyle(ButtonStyle.Primary)
-                .setDisabled(!settings.active[guildId]),
+                .setDisabled(!active),
             ),
         );
         break;
+      }
     }
   }
 
@@ -184,16 +192,12 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
           .setStyle(ButtonStyle.Secondary),
         new ButtonBuilder()
           .setCustomId(`config_toggle-${systemName}-${type}`)
-          .setLabel(
-            settings.active[guildId]
-              ? "Désactiver le module"
-              : "Activer le module",
-          )
-          .setStyle(
-            settings.active[guildId] ? ButtonStyle.Danger : ButtonStyle.Success,
-          ),
+          .setLabel(active ? "Désactiver le module" : "Activer le module")
+          .setStyle(active ? ButtonStyle.Danger : ButtonStyle.Success),
         new ButtonBuilder()
-          .setCustomId(`informations_supplementaires-${systemName}`)
+          .setCustomId(
+            `informations_supplementaires-${configData.nom}-${systemName}`,
+          )
           .setLabel("❓ Informations Supplémentaires")
           .setStyle(ButtonStyle.Secondary),
       ),

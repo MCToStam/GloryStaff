@@ -7,6 +7,7 @@ const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const { Jail } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   guild: true,
@@ -132,13 +133,14 @@ module.exports = {
 
     const vraiCriminel = foundUser.username;
 
-    const dataFile = getData(`data/${serveur}/config.json`);
-    const configData = dataFile.find((c) => c.nom === "Jail");
-    const configJail = configData.systeme["Jail"];
+    const configJail = await Configuration.findOne({
+      serveur,
+      guildId: interaction.guild.id,
+      categorie: "Jail",
+      systeme: "Jail",
+    });
 
-    const guildId = interaction.guild.id;
-
-    if (!configJail.active[guildId]) {
+    if (!configJail.active) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((textDisplay) =>
@@ -166,10 +168,7 @@ module.exports = {
       }
     }
 
-    if (
-      !configJail.Salon.valeur[guildId] ||
-      !configJail.Grade.valeur[guildId]
-    ) {
+    if (!configJail.data.get("Salon") || !configJail.data.get("Grade")) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((textDisplay) =>
@@ -199,7 +198,7 @@ module.exports = {
       }
     }
 
-    const roleAutorise = configJail.Grade.valeur[guildId];
+    const roleAutorise = configJail.data.get("Grade");
 
     const gradeAutorise = {
       Administrateur: "administrateur",
@@ -224,7 +223,7 @@ module.exports = {
     }
 
     const salon = await interaction.client.channels.fetch(
-      configJail.Salon.valeur[guildId],
+      configJail.data.get("Salon"),
     );
 
     const jailContainer = await Jail(

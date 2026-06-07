@@ -7,6 +7,7 @@ const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../util/module/getServeur");
 const { getEmojiTete } = require("../../../util/module/emoji");
 const { guild } = require("../../commands/slash/fullbuild");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -27,17 +28,20 @@ module.exports = {
 
     const serveur = await getServeur(interaction);
 
-    const dataFile = getData(`data/${serveur}/config.json`);
-    const configData = dataFile.find((c) => c.nom === "Routine");
-    const configRoutine = configData.systeme.Routine;
+    const configRoutine = await Configuration.findOne({
+      serveur,
+      guildId: interaction.guild.id,
+      categorie: "Routine",
+      systeme: "Routine",
+    });
 
     const guildId = interaction.guild.id;
 
-    if (configRoutine.active[guildId] && configRoutine.Salon.valeur[guildId]) {
+    if (configRoutine.active && configRoutine.data.get("Salon")) {
       const salon = await interaction.client.channels.fetch(
-        configRoutine.Salon.valeur[guildId],
+        configRoutine.data.get("Salon"),
       );
-      const roleMention = configRoutine.Role.valeur[guildId];
+      const roleMention = configRoutine.data.get("Role");
 
       let infractionsText = description.replace(
         /\*\*Début de la routine :\*\* <t:\d+:R>\n/,

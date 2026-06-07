@@ -75,4 +75,27 @@ module.exports = async (client, interaction) => {
       allowedMentions: { parse: [] },
     });
   }
+
+  const channel = await client.channels.fetch(config.log_channels.command);
+
+  const logContainer = new ContainerBuilder()
+    .setAccentColor(config.colors.success)
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent("## 📗 Log"),
+    )
+    .addSeparatorComponents((separator) => separator)
+    .addTextDisplayComponents((textDisplay) =>
+      textDisplay.setContent(
+        `**👷 Utilisateur :** ${
+          interaction.user.globalName?.replace(/_/g, "\\_") ||
+          interaction.user.username?.replace(/_/g, "\\_")
+        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${interaction.commandName}`,
+      ),
+    );
+
+  await channel.send({
+    components: [logContainer],
+    flags: MessageFlags.IsComponentsV2,
+    allowedMentions: { parse: [] },
+  });
 };

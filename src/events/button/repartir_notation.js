@@ -5,9 +5,10 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
-const { getData, saveData } = require("../../../util/module/getAndSaveData");
+const { getData } = require("../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../util/module/getServeur");
 const { getEmojiTete } = require("../../../util/module/emoji");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -76,9 +77,21 @@ async function modeAutomatique(client, interaction, config, serveur) {
 
   staffList.sort(() => Math.random() - 0.5);
 
-  const configNotationPath = `data/${serveur}/config.json`;
-  const configGlobale = getData(configNotationPath);
-  const configNotation = configGlobale.find((c) => c.nom === "Notations");
+  const configRepartition =
+    (await Configuration.findOne({
+      serveur,
+      categorie: "Notations",
+      systeme: "Répartition",
+      guildId: interaction.guild.id,
+    })) ||
+    new Configuration({
+      serveur,
+      categorie: "Notations",
+      systeme: "Répartition",
+      guildId: interaction.guild.id,
+      active: false,
+      data: {},
+    });
 
   let numbers = [];
 
@@ -110,9 +123,8 @@ async function modeAutomatique(client, interaction, config, serveur) {
     indexPointer += size;
   });
 
-  configNotation.systeme["Répartition"].donnee[interaction.guild.id] =
-    repartition;
-  saveData(configNotationPath, configGlobale);
+  configRepartition.data.set("donnee", repartition);
+  await configRepartition.save();
 
   const embedDescription = await Promise.all(
     Object.entries(repartition).map(async ([staff, range]) => {
@@ -289,16 +301,24 @@ async function modeManuel(client, interaction, config, serveur, subId) {
 
     const nextIndex = index + 1;
     if (nextIndex >= number) {
-      const configNotationPath = `data/${serveur}/config.json`;
-      const configGlobale = getData(configNotationPath);
-      const configNotation = configGlobale.find((c) => c.nom === "Notations");
+      const configRepartition =
+        (await Configuration.findOne({
+          serveur,
+          categorie: "Notations",
+          systeme: "Répartition",
+          guildId: interaction.guild.id,
+        })) ||
+        new Configuration({
+          serveur,
+          categorie: "Notations",
+          systeme: "Répartition",
+          guildId: interaction.guild.id,
+          active: false,
+          data: {},
+        });
 
-      configNotation.systeme["Répartition"].donnee[interaction.guild.id] = {};
-      for (const [s, range] of cache.entries()) {
-        configNotation.systeme["Répartition"].donnee[interaction.guild.id][s] =
-          range;
-      }
-      saveData(configNotationPath, configGlobale);
+      configRepartition.data.set("donnee", Object.fromEntries(cache.entries()));
+      await configRepartition.save();
       manualCache.delete(batchId);
       manualCache.delete(serveur);
 

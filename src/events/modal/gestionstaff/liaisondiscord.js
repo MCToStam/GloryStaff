@@ -8,6 +8,7 @@ const { getEmojiTete } = require("../../../../util/module/emoji");
 const { getData } = require("../../../../util/module/getAndSaveData");
 const { discordLink } = require("../../../../util/module/discordLink");
 const { getServeur } = require("../../../../util/module/getServeur");
+const Configuration = require("../../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -118,16 +119,23 @@ module.exports = {
       getEmojiTete(client, joueur) || "🧑",
     ]);
 
-    const dataFile = getData(`data/${serveur}/config.json`);
-    const configGlobalRoutine = dataFile.find((c) => c.nom === "Routine");
-    const configGlobalJail = dataFile.find((c) => c.nom === "Jail");
-    const configRoutine = configGlobalRoutine.systeme.Routine;
-    const configJail = configGlobalJail.systeme.Jail;
+    const [configRoutine, configJail] = await Promise.all([
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Routine",
+        systeme: "Routine",
+      }),
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Jail",
+        systeme: "Jail",
+      }),
+    ]);
 
-    const guildId = interaction.guild.id;
-
-    const roleAutoriseRoutine = configRoutine.Grade.valeur[guildId];
-    const roleAutoriseJail = configJail.Grade.valeur[guildId];
+    const roleAutoriseRoutine = configRoutine.data.get("Grade");
+    const roleAutoriseJail = configJail.data.get("Grade");
 
     const gradesHierarchie = [
       "Administrateur",
@@ -139,14 +147,14 @@ module.exports = {
     ];
 
     const utilisateurAutoriseRoutine =
-      configRoutine.active[guildId] &&
+      configRoutine.active &&
       roleAutoriseRoutine &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseRoutine) + 1)
         .includes(gradeDuJoueur);
 
     const utilisateurAutoriseJail =
-      configJail.active[guildId] &&
+      configJail.active &&
       roleAutoriseJail &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)

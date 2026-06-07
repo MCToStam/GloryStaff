@@ -12,6 +12,7 @@ const {
   discordStaff,
 } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   config: { permission: "guide" },
@@ -45,7 +46,35 @@ module.exports = {
       const linkData = (await discordLink(false))?.data;
       const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
 
-      let fullStaffSection = "";
+      const container = new ContainerBuilder()
+        .setAccentColor(config.couleur[serveur])
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `## Liste des Staff - ${
+              serveur.charAt(0).toUpperCase() + serveur.slice(1)
+            }`,
+          ),
+        )
+        .addSeparatorComponents((s) => s);
+
+      const gradeMap = {
+        Administrateur: { plural: "Administrateurs", normal: "Administrateur" },
+        "Super-Modérateur": {
+          plural: "Super Modérateurs",
+          normal: "Super Modérateur",
+        },
+        "Modérateur Plus": {
+          plural: "Modérateurs Plus",
+          normal: "Modérateur Plus",
+        },
+        Modérateur: { plural: "Modérateurs", normal: "Modérateur" },
+        "Modérateur Test": {
+          plural: "Modérateur Tests",
+          normal: "Modérateur Test",
+        },
+        Guide: { plural: "Guides", normal: "Guide" },
+      };
+
       for (const [grade, members] of Object.entries(fullStaffData)) {
         if (members.length > 0) {
           const emoji = config.emojigrade[grade] || "";
@@ -60,58 +89,52 @@ module.exports = {
                 : escapedName;
             })
             .join(", ");
-          fullStaffSection += `**${emoji} ${grade} :** ${memberNames}\n`;
+
+          container
+            .addTextDisplayComponents((t) =>
+              t.setContent(
+                `**${emoji} ${members.length > 1 ? gradeMap[grade].plural : gradeMap[grade].normal} (${members.length}):**`,
+              ),
+            )
+            .addTextDisplayComponents((t) =>
+              t.setContent(memberNames || "Aucun staff ne possède ce grade"),
+            )
+            .addSeparatorComponents((s) => s);
         }
       }
-      fullStaffSection =
-        fullStaffSection ||
-        "Aucune donnée trouvée dans le fichier staff-serveur.json.";
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `## Liste des Staff - ${
-              serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            }`,
-          ),
-        )
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) => t.setContent(fullStaffSection))
-        .addSeparatorComponents((s) => s)
-        .addActionRowComponents((row) =>
-          row.setComponents(
-            new StringSelectMenuBuilder()
-              .setCustomId(`globalstaff`)
-              .setPlaceholder("Choisit une option")
-              .setOptions([
-                {
-                  label: "Liste des Staffs",
-                  value: "globalstaff_liste",
-                  default: true,
-                  emoji: "1441495206229835979",
-                },
-                {
-                  label: "Activité en Jeu",
-                  value: "globalstaff_activitejeu",
-                  default: false,
-                  emoji: "1441495207932596234",
-                },
-                {
-                  label: "Activité Vocal sur Discord",
-                  value: "globalstaff_activitediscord",
-                  default: false,
-                  emoji: "1441495208951808203",
-                },
-                {
-                  label: "Traitement des Attentes Staffs",
-                  value: "globalstaff_traitement",
-                  default: false,
-                  emoji: "1441495210206036141",
-                },
-              ]),
-          ),
-        );
+      container.addActionRowComponents((row) =>
+        row.setComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`globalstaff`)
+            .setPlaceholder("Choisit une option")
+            .setOptions([
+              {
+                label: "Liste des Staffs",
+                value: "globalstaff_liste",
+                default: true,
+                emoji: "1441495206229835979",
+              },
+              {
+                label: "Activité en Jeu",
+                value: "globalstaff_activitejeu",
+                default: false,
+                emoji: "1441495207932596234",
+              },
+              {
+                label: "Activité Vocal sur Discord",
+                value: "globalstaff_activitediscord",
+                default: false,
+                emoji: "1441495208951808203",
+              },
+              {
+                label: "Traitement des Attentes Staffs",
+                value: "globalstaff_traitement",
+                default: false,
+                emoji: "1441495210206036141",
+              },
+            ]),
+        ),
+      );
 
       if (interaction.isMessageComponent()) {
         return interaction.update({
@@ -227,16 +250,23 @@ module.exports = {
         getEmojiTete(client, staff) || "🧑",
       ]);
 
-      const dataFile = getData(`data/${serveur}/config.json`);
-      const configGlobalRoutine = dataFile.find((c) => c.nom === "Routine");
-      const configGlobalJail = dataFile.find((c) => c.nom === "Jail");
-      const configRoutine = configGlobalRoutine.systeme.Routine;
-      const configJail = configGlobalJail.systeme.Jail;
+      const [configRoutine, configJail] = await Promise.all([
+        Configuration.findOne({
+          serveur,
+          guildId: interaction.guild.id,
+          categorie: "Routine",
+          systeme: "Routine",
+        }),
+        Configuration.findOne({
+          serveur,
+          guildId: interaction.guild.id,
+          categorie: "Jail",
+          systeme: "Jail",
+        }),
+      ]);
 
-      const guildId = interaction.guild.id;
-
-      const roleAutoriseRoutine = configRoutine.Grade.valeur[guildId];
-      const roleAutoriseJail = configJail.Grade.valeur[guildId];
+      const roleAutoriseRoutine = configRoutine.data.get("Grade");
+      const roleAutoriseJail = configJail.data.get("Grade");
 
       const gradesHierarchie = [
         "Administrateur",
@@ -248,14 +278,14 @@ module.exports = {
       ];
 
       const utilisateurAutoriseRoutine =
-        configRoutine.active[guildId] &&
+        configRoutine.active &&
         roleAutoriseRoutine &&
         gradesHierarchie
           .slice(0, gradesHierarchie.indexOf(roleAutoriseRoutine) + 1)
           .includes(gradeDuJoueur);
 
       const utilisateurAutoriseJail =
-        configJail.active[guildId] &&
+        configJail.active &&
         roleAutoriseJail &&
         gradesHierarchie
           .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)

@@ -5,8 +5,8 @@ const {
   ButtonStyle,
   ContainerBuilder,
 } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../util/module/getServeur");
+const CONFIG_STATIC = require("../../../util/config");
 
 module.exports = {
   data: {
@@ -14,24 +14,23 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const module = interaction.customId.split("-")[1];
+    const [_, categorie, systeme] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
-    const configData = getData(`data/${serveur}/config.json`);
-    const systemeData = configData.find((c) => c.systeme?.[module]);
-    const systeme = systemeData.systeme[module];
+    const categorieData = CONFIG_STATIC.find((c) => c.nom === categorie);
+    const systemeData = categorieData.systeme[systeme];
 
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `## ${config.emoji_formate[serveur]} Information Supplémentaire - ${module}`,
+          `## ${config.emoji_formate[serveur]} Information Supplémentaire - ${systeme}`,
         ),
       )
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          systeme.details ||
+          systemeData.details ||
             "Aucune information supplémentaire n'est disponible pour ce module.",
         ),
       )
@@ -39,7 +38,7 @@ module.exports = {
       .addActionRowComponents(
         new ActionRowBuilder().addComponents(
           new ButtonBuilder()
-            .setCustomId(`previsualisation-${module}`)
+            .setCustomId(`previsualisation-${categorie}-${systeme}`)
             .setLabel("🔎 Afficher la Prévisualisation")
             .setStyle(ButtonStyle.Primary),
         ),

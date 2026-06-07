@@ -1,7 +1,7 @@
 const {
   MessageFlags,
+  ContainerBuilder,
   SlashCommandBuilder,
-  SeparatorSpacingSize,
 } = require("discord.js");
 
 module.exports = {
@@ -107,15 +107,15 @@ module.exports = {
           .replace("{{CANAL}}", "canal")
           .replace("{{CANAL_NAME}}", "global");
 
-        const goodContainer = {
-          type: 17,
-          accent_color: config.colors.success,
-          components: [
-            { type: 10, content: `## :white_check_mark: Succès` },
-            { type: 14, spacing: SeparatorSpacingSize.Large },
-            { type: 10, content: msg },
-          ],
-        };
+        const goodContainer = new ContainerBuilder()
+          .setAccentColor(config.colors.success)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent("## ✅ Succès"),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(msg),
+          );
 
         return interaction.editReply({
           components: [goodContainer],
@@ -129,18 +129,16 @@ module.exports = {
             const msg = deployMsg
               .replace("{{CANAL}}", "serveur")
               .replace("{{CANAL_NAME}}", guild.name);
-            const goodContainer = {
-              type: 17,
-              accent_color: config.colors.success,
-              components: [
-                {
-                  type: 10,
-                  content: `## :white_check_mark: Succès`,
-                },
-                { type: 14, spacing: SeparatorSpacingSize.Large },
-                { type: 10, content: msg },
-              ],
-            };
+
+            const goodContainer = new ContainerBuilder()
+              .setAccentColor(config.colors.success)
+              .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent("## ✅ Succès"),
+              )
+              .addSeparatorComponents((separator) => separator)
+              .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent(msg),
+              );
 
             return interaction.editReply({
               components: [goodContainer],
@@ -158,18 +156,16 @@ module.exports = {
             const msg = removeMsg
               .replace("{{CANAL}}", "canal")
               .replace("{{CANAL_NAME}}", "global");
-            const goodContainer = {
-              type: 17,
-              accent_color: config.colors.success,
-              components: [
-                {
-                  type: 10,
-                  content: `## :white_check_mark: Succès`,
-                },
-                { type: 14, spacing: SeparatorSpacingSize.Large },
-                { type: 10, content: msg },
-              ],
-            };
+
+            const goodContainer = new ContainerBuilder()
+              .setAccentColor(config.colors.success)
+              .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent("## ✅ Succès"),
+              )
+              .addSeparatorComponents((separator) => separator)
+              .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent(msg),
+              );
 
             return interaction.editReply({
               components: [goodContainer],
@@ -185,18 +181,16 @@ module.exports = {
             const msg = removeMsg
               .replace("{{CANAL}}", "serveur")
               .replace("{{CANAL_NAME}}", guild.name);
-            const goodContainer = {
-              type: 17,
-              accent_color: config.colors.success,
-              components: [
-                {
-                  type: 10,
-                  content: `## :white_check_mark: Succès`,
-                },
-                { type: 14, spacing: SeparatorSpacingSize.Large },
-                { type: 10, content: msg },
-              ],
-            };
+
+            const goodContainer = new ContainerBuilder()
+              .setAccentColor(config.colors.success)
+              .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent("## ✅ Succès"),
+              )
+              .addSeparatorComponents((separator) => separator)
+              .addTextDisplayComponents((textDisplay) =>
+                textDisplay.setContent(msg),
+              );
 
             return interaction.editReply({
               components: [goodContainer],
@@ -212,18 +206,15 @@ module.exports = {
       const command = slashCmds.get(name);
 
       if (!command) {
-        const erreurContainer = {
-          type: 17,
-          accent_color: config.colors.errord,
-          components: [
-            {
-              type: 10,
-              content: `## :x: Erreur`,
-            },
-            { type: 14, spacing: SeparatorSpacingSize.Large },
-            { type: 10, content: `La commande "${name}" n'existe pas.` },
-          ],
-        };
+        const erreurContainer = new ContainerBuilder()
+          .setAccentColor(config.colors.error)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent("## ❌ Erreur"),
+          )
+          .addSeparatorComponents((separator) => separator)
+          .addTextDisplayComponents((textDisplay) =>
+            textDisplay.setContent(`La commande "${name}" n'existe pas.`),
+          );
 
         return interaction.editReply({
           components: [erreurContainer],
@@ -241,20 +232,15 @@ module.exports = {
       const props = require(`${folder}${data}.js`);
       await collection.set(data, props);
 
-      let msg = `La commande \`${data}\` a été rechargée !`;
-
-      const goodContainer = {
-        type: 17,
-        accent_color: config.colors.success,
-        components: [
-          {
-            type: 10,
-            content: `## :white_check_mark: Succès`,
-          },
-          { type: 14, spacing: SeparatorSpacingSize.Large },
-          { type: 10, content: msg },
-        ],
-      };
+      const goodContainer = new ContainerBuilder()
+        .setAccentColor(config.colors.success)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ✅ Succès"),
+        )
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(`La commande \`${data}\` a été rechargée !`),
+        );
 
       return interaction.editReply({
         components: [goodContainer],

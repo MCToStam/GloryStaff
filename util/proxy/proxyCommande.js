@@ -86,6 +86,7 @@ async function proxyCommande(client, interaction, config) {
         value: `selectServeur-${srv}`,
         emoji: config.emoji[srv],
       }));
+    console.log(options);
 
     const encodedArgs = argsSansServeur
       .map((arg) => `${arg.name}=${arg.value}`)

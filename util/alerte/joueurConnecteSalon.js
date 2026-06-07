@@ -1,47 +1,47 @@
 const config = require("../../config");
 const getServerPlayer = require("../module/getServerPlayer");
-const { getData } = require("../module/getAndSaveData");
+const Configuration = require("../database/models/Configuration");
 
 async function joueurConnecteSalon(client) {
   for (const serveur of config.liste_serveur) {
-    const dataConfig = getData(`data/${serveur}/config.json`);
-    const configData = dataConfig.find(
-      (c) => c.nom === "Joueur(s) Connecté(s)",
-    );
+    try {
+      const data = await getServerPlayer(serveur);
+      const nbJoueur = data.nombre;
 
-    const jcConfig = configData.systeme["Joueur(s) Connecté(s)"];
+      const configs = await Configuration.find({
+        serveur,
+        categorie: "Joueur(s) Connecté(s)",
+        systeme: "Joueur(s) Connecté(s)",
+      });
 
-    if (!Object.values(jcConfig.active || {}).some((value) => value === true))
-      continue;
+      for (const jcConfig of configs) {
+        if (!jcConfig.active) continue;
 
-    const data = await getServerPlayer(serveur);
-    const nbJoueur = data.nombre;
+        const guild = client.guilds.cache.get(jcConfig.guildId);
+        if (!guild) continue;
 
-    for (const [guildId, isActive] of Object.entries(jcConfig.active || {})) {
-      if (!isActive) continue;
+        const channelId = jcConfig.data.get("Salon");
+        if (!channelId) continue;
 
-      const guild = client.guilds.cache.get(guildId);
-      if (!guild) continue;
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) continue;
 
-      const channelId = jcConfig.Salon?.valeur?.[guildId];
-      if (!channelId) continue;
+        try {
+          const texteTemplate = jcConfig.data.get("Texte Affiché");
+          if (!texteTemplate) continue;
 
-      const channel = guild.channels.cache.get(channelId);
-      if (!channel) continue;
+          const texte = texteTemplate.replace("{nombre}", String(nbJoueur));
 
-      try {
-        const texteTemplate =
-          jcConfig["Texte Affiché"]?.questions?.[0]?.valeur?.[guildId];
-        if (!texteTemplate) continue;
-        const texte = texteTemplate.replace("{nombre}", String(nbJoueur));
-
-        await channel.setName(texte);
-      } catch (err) {
-        console.error(
-          `❌ Erreur salon joueur connecté | serveur ${serveur} | guild ${guildId}`,
-          err,
-        );
+          await channel.setName(texte);
+        } catch (err) {
+          console.error(
+            `❌ Erreur salon joueur connecté | serveur ${serveur} | guild ${jcConfig.guildId}`,
+            err,
+          );
+        }
       }
+    } catch (err) {
+      console.error(`❌ Erreur serveur joueur connecté | ${serveur}`, err);
     }
   }
 }

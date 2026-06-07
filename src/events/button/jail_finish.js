@@ -3,6 +3,7 @@ const { getEmojiTete } = require("../../../util/module/emoji");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const { getServeur } = require("../../../util/module/getServeur");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -17,11 +18,14 @@ module.exports = {
         (key) => config.couleur[key] === embedColor,
       ) || (await getServeur(interaction));
 
-    const dataFile = getData(`data/${serveur}/config.json`);
-    const configData = dataFile.find((c) => c.nom === "Jail");
-    const configJail = configData.systeme["Jail"];
+    const configJail = await Configuration.findOne({
+      serveur,
+      guildId: interaction.guild.id,
+      categorie: "Jail",
+      systeme: "Jail",
+    });
 
-    const roleAutorise = configJail.Grade.valeur[interaction.guild.id];
+    const roleAutorise = configJail.data.get("Grade");
 
     const gradeAutorise = {
       Administrateur: "administrateur",

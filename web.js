@@ -15,6 +15,7 @@ const {
   MessageFlags,
   TextDisplayBuilder,
   ContainerBuilder,
+  ChannelType,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -24,6 +25,7 @@ require("./util/attentestaff");
 const util = require("util");
 const readFile = util.promisify(fs.readFile);
 const Absense = require("./util/database/models/Absence");
+const CONFIG_STATIC = require("./util/config");
 
 async function updateAllStaffWebhooks() {
   for (const serveur of config.liste_serveur) {
@@ -51,7 +53,9 @@ async function updateAllStaffWebhooks() {
     };
 
     const dataFile = getData(`data/${serveur}/config.json`);
-    const configCandidature = dataFile.find((c) => c.nom === "Candidature");
+    const configCandidature = CONFIG_STATIC.find(
+      (c) => c.nom === "Candidature",
+    );
 
     const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
 
@@ -136,17 +140,17 @@ async function updateAllStaffWebhooks() {
           .addActionRowComponents(
             new ActionRowBuilder().addComponents(
               new ButtonBuilder()
-                .setURL(configCandidature.systeme.Guide.lien)
+                .setURL(configCandidature.systeme.Guide.lien[serveur])
                 .setLabel("Recrutement Guide")
                 .setEmoji("1289928200800964628")
                 .setStyle(ButtonStyle.Link),
               new ButtonBuilder()
-                .setURL(configCandidature.systeme.Modérateur.lien)
+                .setURL(configCandidature.systeme.Modérateur.lien[serveur])
                 .setLabel("Recrutement Modérateur")
                 .setEmoji("1289934724294250588")
                 .setStyle(ButtonStyle.Link),
               new ButtonBuilder()
-                .setURL(configCandidature.systeme.Builder.lien)
+                .setURL(configCandidature.systeme.Builder.lien[serveur])
                 .setLabel("Recrutement Builder")
                 .setEmoji("1289935984460304506")
                 .setStyle(ButtonStyle.Link),
@@ -831,7 +835,7 @@ app.post("/update-leaders", async (req, res) => {
                   flags: MessageFlags.IsComponentsV2,
                 });
 
-                if (channel.type === "GUILD_NEWS") {
+                if (channel.type === ChannelType.GuildNews) {
                   await sentMessage.crosspost();
                 }
 
@@ -1315,7 +1319,7 @@ app.post("/api/attenteStaff", async (req, res) => {
         flags: MessageFlags.IsComponentsV2,
       });
 
-      if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+      if (channel.type === ChannelType.GuildNews) await sentMessage.crosspost();
 
       log(
         `✅ Message attente staff | serveur ${serveur} | guild ${guildId}`,

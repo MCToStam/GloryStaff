@@ -1,4 +1,3 @@
-const { getData } = require("../../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../../util/module/getServeur");
 const {
   containerSingle,
@@ -7,6 +6,7 @@ const {
   containerMultiple,
 } = require("../../../../../util/container/configMultiple");
 const allConfig = require("../../../../../util/container/allConfig");
+const CONFIG_STATIC = require("../../../../../util/config");
 
 module.exports = {
   data: {
@@ -18,9 +18,9 @@ module.exports = {
       interaction.values[0].split("-");
 
     const serveur = await getServeur(interaction);
+
     if (typeInteraction === "second") {
-      const configData = getData(`data/${serveur}/config.json`);
-      const typeData = configData.find((c) => c.nom === type);
+      const typeData = CONFIG_STATIC.find((c) => c.nom === type);
       const container = await containerSingle(
         interaction.guild.id,
         serveur,
@@ -33,8 +33,7 @@ module.exports = {
         components: [container],
       });
     } else if (typeInteraction === "main") {
-      const configData = getData(`data/${serveur}/config.json`);
-      const typeData = configData.find((c) => c.nom === type);
+      const typeData = CONFIG_STATIC.find((c) => c.nom === type);
       const keys = Object.keys(typeData.systeme);
 
       if (keys.length === 1) {

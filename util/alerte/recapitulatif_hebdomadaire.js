@@ -11,6 +11,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   AttachmentBuilder,
+  ChannelType,
 } = require("discord.js");
 
 function formatClassement(classement, serveur, key) {
@@ -391,7 +392,7 @@ async function recapitulatif_hebdomadaire(client) {
       serveur,
     );
 
-    if (channel.type === "GUILD_NEWS") {
+    if (channel.type === ChannelType.GuildNews) {
       try {
         await sentMessage.crosspost();
         console.log(`📣 Message publié pour ${serveur}`);

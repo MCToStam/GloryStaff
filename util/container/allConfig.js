@@ -4,8 +4,8 @@ const {
   ActionRowBuilder,
 } = require("discord.js");
 const config = require("../../config");
-const { getData } = require("../../util/module/getAndSaveData");
 const { discordStaff } = require("../../util/module/discordLink");
+const CONFIG_STATIC = require("../../util/config");
 
 function parseEmoji(emoji) {
   if (!emoji) return null;
@@ -21,12 +21,11 @@ function parseEmoji(emoji) {
 }
 
 async function allConfig(serveur, userId) {
-  const configData = getData(`data/${serveur}/config.json`);
   let description = "";
   const options = [];
   const permissionCache = {};
 
-  for (const systeme of configData) {
+  for (const systeme of CONFIG_STATIC) {
     if (systeme.permission) {
       if (!permissionCache[systeme.permission]) {
         const { servers } = await discordStaff(

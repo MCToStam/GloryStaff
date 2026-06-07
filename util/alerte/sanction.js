@@ -2,7 +2,7 @@ const config = require("../../config");
 const log = require("../../util/module/log.js");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { SanctionStaff } = require("../../util/container/module");
-const { MessageFlags, TextDisplayBuilder } = require("discord.js");
+const { MessageFlags, TextDisplayBuilder, ChannelType } = require("discord.js");
 
 function sameSanction(a, b) {
   return (
@@ -147,7 +147,7 @@ async function sendSanctionMessage(
         flags: MessageFlags.IsComponentsV2,
       });
 
-      if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+      if (channel.type === ChannelType.GuildNews) await sentMessage.crosspost();
 
       log(
         `✅ Message nouvelle sanction envoyé | serveur ${serveur} | guild ${guildId}`,

@@ -4,6 +4,7 @@ const {
   MessageFlags,
   AttachmentBuilder,
   TextDisplayBuilder,
+  ChannelType,
 } = require("discord.js");
 const { getAbsolutePath } = require("../../../util/module/getAndSaveData");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
@@ -93,7 +94,8 @@ module.exports = {
         t.setContent(`Le message de status a été envoyé ici : ${messageLink}`),
       );
 
-    if (channel.type === "GUILD_NEWS") await messageMaintenance.crosspost();
+    if (channel.type === ChannelType.GuildNews)
+      await messageMaintenance.crosspost();
 
     let sentMessage;
 

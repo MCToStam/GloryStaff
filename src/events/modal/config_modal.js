@@ -1,27 +1,50 @@
-const { getData, saveData } = require("../../../util/module/getAndSaveData");
+const Configuration = require("../../../util/database/models/Configuration");
 const { getServeur } = require("../../../util/module/getServeur");
 const { containerSingle } = require("../../../util/container/configSingle");
+const CONFIG_STATIC = require("../../../util/config");
 
 module.exports = {
   data: {
     name: "config_modal",
   },
 
-  async execute(client, interaction, config) {
+  async execute(client, interaction) {
     const [_, type, systemName, key] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
-    const configData = getData(`data/${serveur}/config.json`);
-    const typeData = configData.find((c) => c.nom === type);
-    const data = typeData.systeme[systemName][key];
+    const doc =
+      (await Configuration.findOne({
+        serveur,
+        categorie: type,
+        systeme: systemName,
+        guildId: interaction.guild.id,
+      })) ||
+      new Configuration({
+        serveur,
+        categorie: type,
+        systeme: systemName,
+        guildId: interaction.guild.id,
+        active: false,
+        data: {},
+      });
 
-    data.questions.forEach((q, index) => {
-      const value = interaction.fields.getTextInputValue(`question_${index}`);
-      q.valeur[interaction.guild.id] = value;
+    const currentData = doc.data || {};
+
+    const values = interaction.fields.fields;
+
+    const updatedValues = [];
+
+    values.forEach((field, index) => {
+      const value = interaction.fields.getTextInputValue(field.customId);
+      updatedValues.push(value);
+      currentData[`${key}_${index}`] = value;
     });
 
-    saveData(`data/${serveur}/config.json`, configData);
+    doc.data = currentData;
 
+    await doc.save();
+
+    const typeData = CONFIG_STATIC.find((c) => c.nom === type);
     const container = await containerSingle(
       interaction.guild.id,
       serveur,

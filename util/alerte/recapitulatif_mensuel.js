@@ -10,6 +10,7 @@ const {
   ButtonBuilder,
   ButtonStyle,
   AttachmentBuilder,
+  ChannelType,
 } = require("discord.js");
 const { ChartJSNodeCanvas } = require("chartjs-node-canvas");
 
@@ -346,7 +347,7 @@ async function recapitulatif_mensuel(client) {
 
     console.log("📊 Récapitulatif mensuel envoyé pour le serveur", serveur);
 
-    if (channel.type === "GUILD_NEWS") {
+    if (channel.type === ChannelType) {
       try {
         await sentMessage.crosspost();
         console.log(`📣 Crosspost OK ${serveur}`);

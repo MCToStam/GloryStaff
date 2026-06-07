@@ -3,13 +3,14 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const { Routine } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
   guild: true,
+
   data: new SlashCommandBuilder()
     .setContexts(0)
     .setName("routine")
@@ -18,79 +19,64 @@ module.exports = {
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
   },
+
   async proxy(client, interaction, config) {
     const { serveur } = interaction.parametre;
-
-    const dataFile = getData(`data/${serveur}/config.json`);
-    const configData = dataFile.find((c) => c.nom === "Routine");
-    const configRoutine = configData.systeme.Routine;
-
     const guildId = interaction.guild.id;
 
-    if (!configRoutine.active[guildId]) {
+    const configRoutine = await Configuration.findOne({
+      serveur,
+      guildId,
+      categorie: "Routine",
+      systeme: "Routine",
+    });
+
+    if (!configRoutine || !configRoutine.active) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## ❌ Système Désactivé"),
+        .addTextDisplayComponents((t) =>
+          t.setContent("## ❌ Système Désactivé"),
         )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
             `Le système de Routine est désactivé sur le serveur ${
               config.emoji_formate[serveur]
-            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
+            } ${serveur}.`,
           ),
         );
 
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      }
+      return interaction.reply({
+        components: [errorContainer],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
     }
 
-    if (
-      !configRoutine.Salon.valeur[guildId] ||
-      !configRoutine.Grade.valeur[guildId]
-    ) {
+    const salonId = configRoutine.data.get("Salon");
+    const grade = configRoutine.data.get("Grade");
+
+    if (!salonId || !grade) {
       const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## ❌ Configuration Invalide"),
+        .addTextDisplayComponents((t) =>
+          t.setContent("## ❌ Configuration Invalide"),
         )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            `Le système de Routine n'est pas correctement configuré sur le serveur ${
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `Le système de Routine n'est pas correctement configuré sur ${
               config.emoji_formate[serveur]
-            } ${
-              serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            } pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
+            } ${serveur}.`,
           ),
         );
 
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      }
+      return interaction.reply({
+        components: [errorContainer],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
     }
 
-    const roleAutorise = configRoutine.Grade.valeur[guildId];
-
-    const gradeAutorise = {
+    const gradeAutoriseMap = {
       Administrateur: "administrateur",
       "Super-Modérateur": "super_moderateur",
       "Modérateur Plus": "moderateur_plus",
@@ -99,10 +85,12 @@ module.exports = {
       Guide: "guide",
     };
 
+    const roleAutorise = gradeAutoriseMap[grade];
+
     const { pseudonym, container } = await discordStaff(
       interaction.user.id,
       serveur,
-      gradeAutorise[roleAutorise],
+      roleAutorise,
     );
 
     if (container) {
@@ -119,11 +107,11 @@ module.exports = {
         components: routineContainer,
         flags: MessageFlags.IsComponentsV2,
       });
-    } else {
-      return interaction.reply({
-        components: routineContainer,
-        flags: MessageFlags.IsComponentsV2,
-      });
     }
+
+    return interaction.reply({
+      components: routineContainer,
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

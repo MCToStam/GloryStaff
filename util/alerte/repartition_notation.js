@@ -4,6 +4,7 @@ const {
   getAbsolutePath,
 } = require("../../util/module/getAndSaveData");
 const { getEmojiTete } = require("../../util/module/emoji");
+const Configuration = require("../../util/database/models/Configuration");
 const Absence = require("../../util/database/models/Absence");
 const {
   ActionRowBuilder,
@@ -14,6 +15,7 @@ const {
   MediaGalleryBuilder,
   TextDisplayBuilder,
   MessageFlags,
+  ChannelType,
 } = require("discord.js");
 
 async function genererNouvelleRepartition(donnee, serveur) {
@@ -86,23 +88,16 @@ async function repartition_notation(client) {
     });
 
     try {
-      const configGlobale = getData(`data/${server}/config.json`);
-      const configNotation = configGlobale.find((c) => c.nom === "Notations");
-      const configRepartition = configNotation.systeme.Répartition;
+      const configurations = await Configuration.find({
+        serveur: server,
+        categorie: "Notations",
+        systeme: "Répartition",
+      });
 
-      if (
-        !Object.values(configRepartition.active || {}).some(
-          (value) => value === true,
-        )
-      )
-        continue;
+      for (const configRepartition of configurations) {
+        if (!configRepartition.active) continue;
 
-      for (const [guildId, isActive] of Object.entries(
-        configRepartition.active || {},
-      )) {
-        if (!isActive) continue;
-
-        const donneeOriginale = configRepartition.donnee[guildId];
+        const donneeOriginale = configRepartition.data.get("donnee");
         if (!donneeOriginale) continue;
 
         const donnee = await genererNouvelleRepartition(
@@ -111,16 +106,18 @@ async function repartition_notation(client) {
         );
         if (!Object.keys(donnee).length) continue;
 
+        const guildId = configRepartition.guildId;
+
         const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
 
-        const channelId = configRepartition.Salon?.valeur?.[guildId];
+        const channelId = configRepartition.data.get("Salon");
         if (!channelId) continue;
 
         const channel = guild.channels.cache.get(channelId);
         if (!channel) continue;
 
-        const roleIds = configRepartition.Role?.valeur?.[guildId] || [];
+        const roleIds = configRepartition.data.get("Role") || [];
         const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
         const numberKeysValues = (
@@ -178,7 +175,7 @@ async function repartition_notation(client) {
             flags: MessageFlags.IsComponentsV2,
           });
 
-          if (channel.type === "GUILD_NEWS")
+          if (channel.type === ChannelType.GuildNews)
             await sent.crosspost().catch(() => {});
 
           console.log(

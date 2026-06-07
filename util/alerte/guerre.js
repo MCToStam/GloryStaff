@@ -4,7 +4,7 @@ const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { Guerre, Guerrenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
-const { MessageFlags, TextDisplayBuilder } = require("discord.js");
+const { MessageFlags, TextDisplayBuilder, ChannelType } = require("discord.js");
 
 const moisMapping = {
   janvier: "01",
@@ -152,7 +152,7 @@ async function guerre(client) {
                 flags: MessageFlags.IsComponentsV2,
               });
 
-              if (channel.type === "GUILD_NEWS")
+              if (channel.type === ChannelType.GuildNews)
                 await sent.crosspost().catch(() => {});
 
               log(

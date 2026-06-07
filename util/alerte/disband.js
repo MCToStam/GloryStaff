@@ -11,7 +11,9 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  ChannelType,
 } = require("discord.js");
+const Configuration = require("../../util/database/models/Configuration");
 
 async function fetchAndParseCountriesHTML(serveur) {
   try {
@@ -44,14 +46,11 @@ async function fetchAndParseCountriesHTML(serveur) {
 
 async function disband_14h00(client) {
   for (const serveur of config.liste_serveur) {
-    const configGlobale = getData(`data/${serveur}/config.json`);
-    const configDisband = configGlobale.find((c) => c.nom === "Disband");
-    const configPillage = configDisband.systeme["Pays Pillable ( 14h )"];
-
-    if (
-      !Object.values(configPillage.active || {}).some((value) => value === true)
-    )
-      continue;
+    const configurations = await Configuration.find({
+      serveur,
+      categorie: "Disband",
+      systeme: "Pays Pillable ( 14h )",
+    });
 
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
@@ -193,22 +192,24 @@ async function disband_14h00(client) {
         ),
       );
 
-    for (const [guildId, isActive] of Object.entries(configPillage.active)) {
-      if (!isActive) continue;
+    for (const configDisband of configurations) {
+      if (!configDisband.active) continue;
+
+      const guildId = configDisband.guildId;
 
       const guild = client.guilds.cache.get(guildId);
       if (!guild) continue;
 
       const previsualisation =
-        configPillage.Prévisualisation.valeur[guildId] || "Oui";
+        configDisband.data.get("Prévisualisation") || "Oui";
 
-      const channelId = configPillage.Salon.valeur[guildId];
+      const channelId = configDisband.data.get("Salon");
       if (!channelId) continue;
 
       const channel = guild.channels.cache.get(channelId);
       if (!channel) continue;
 
-      const roleIds = configPillage.Role.valeur[guildId] || [];
+      const roleIds = configDisband.data.get("Role") || [];
       const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
       let components = [
@@ -226,7 +227,8 @@ async function disband_14h00(client) {
           flags: MessageFlags.IsComponentsV2,
         });
 
-        if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+        if (channel.type === ChannelType.GuildNews)
+          await sentMessage.crosspost();
 
         log(
           `✅ Message disband pillage | serveur ${serveur} | guild ${guildId}`,
@@ -272,12 +274,11 @@ async function disband_18h15(client) {
   if (!savedCountries) savedCountries = {};
 
   for (const serveur of config.liste_serveur) {
-    const configGlobale = getData(`data/${serveur}/config.json`);
-    const configDisband = configGlobale.find((c) => c.nom === "Disband");
-    const config18h = configDisband.systeme["Pays Disband ( 18h15 )"];
-
-    if (!Object.values(config18h.active || {}).some((value) => value === true))
-      continue;
+    const configurations = await Configuration.find({
+      serveur,
+      categorie: "Disband",
+      systeme: "Pays Disband ( 18h15 )",
+    });
 
     const responseJson = await fetch(
       `https://apiv2.nationsglory.fr/mods/country_list/${serveur}`,
@@ -393,19 +394,21 @@ async function disband_18h15(client) {
         ),
       );
 
-    for (const [guildId, isActive] of Object.entries(config18h.active)) {
-      if (!isActive) continue;
+    for (const configDisband of configurations) {
+      if (!configDisband.active) continue;
+
+      const guildId = configDisband.guildId;
 
       const guild = client.guilds.cache.get(guildId);
       if (!guild) continue;
 
-      const channelId = config18h.Salon.valeur[guildId];
+      const channelId = configDisband.data.get("Salon");
       if (!channelId) continue;
 
       const channel = guild.channels.cache.get(channelId);
       if (!channel) continue;
 
-      const roleIds = config18h.Role.valeur[guildId] || [];
+      const roleIds = configDisband.data.get("Role") || [];
       const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
       let components = [container];
@@ -421,7 +424,8 @@ async function disband_18h15(client) {
           flags: MessageFlags.IsComponentsV2,
         });
 
-        if (channel.type === "GUILD_NEWS") await sentMessage.crosspost();
+        if (channel.type === ChannelType.GuildNews)
+          await sentMessage.crosspost();
 
         log(
           `✅ Message disband 18h15 | serveur ${serveur} | guild ${guildId}`,
