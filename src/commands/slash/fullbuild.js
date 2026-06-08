@@ -97,7 +97,13 @@ module.exports = {
 
     const pseudo = await discordLink(interaction.user.id);
 
-    const container = await FullBuild(client, serveur, pseudo, paysa, paysb);
+    const { components } = await FullBuild(
+      client,
+      serveur,
+      pseudo,
+      paysa,
+      paysb,
+    );
 
     const salon = await client.channels.fetch(
       configExpansion.data.get("Salon"),
@@ -112,12 +118,12 @@ module.exports = {
 
       const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
       message = await salon.send({
-        components: [roleTextDisplay, ...container],
+        components: [roleTextDisplay, ...components],
         flags: MessageFlags.IsComponentsV2,
       });
     } else {
       message = await salon.send({
-        components: container,
+        components,
         flags: MessageFlags.IsComponentsV2,
       });
     }

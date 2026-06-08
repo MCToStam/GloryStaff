@@ -1,4 +1,4 @@
-const log = require("../../../util/module/log.js");
+const log = require("../../../util/module/log");
 const {
   ContainerBuilder,
   ActionRowBuilder,

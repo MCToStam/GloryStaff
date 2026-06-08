@@ -11,7 +11,7 @@ const {
 } = require("discord.js");
 const { readdirSync, statSync } = require("fs");
 const pathModule = require("path");
-const log = require("./util/module/log.js");
+const log = require("./util/module/log");
 const { connectMongo } = require("./util/database/index");
 const botLaunch = [];
 const client = new Client({

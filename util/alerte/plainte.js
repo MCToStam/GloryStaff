@@ -1,10 +1,12 @@
 const config = require("../../config");
-const log = require("../../util/module/log.js");
+const log = require("../../util/module/log");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { Plainte, Plaintenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
 const { MessageFlags, TextDisplayBuilder, ChannelType } = require("discord.js");
+const CONFIG_STATIC = require("../../util/config");
+const Configuration = require("../../util/database/models/Configuration");
 
 const moisMapping = {
   janvier: "01",
@@ -54,15 +56,22 @@ function convertirEnTimestamp(dateStr) {
 async function plainte(client) {
   for (const server of config.liste_serveur) {
     try {
-      const allConfig = getData(`data/${server}/config.json`);
-      const configData = allConfig.find((c) => c.nom === "Forum");
-      const plainteConfig = configData.systeme;
-      if (!plainteConfig.Plainte.Forum) continue;
+      const configPlainte = await Configuration.find({
+        serveur: server,
+        categorie: "Forum",
+        systeme: "Plainte",
+      });
+
+      const forumConfig = CONFIG_STATIC.find((c) => c.nom === "Forum");
+      if (!forumConfig.systeme.Plainte.lien[server]) continue;
+
       await new Promise((res) => setTimeout(res, 5000));
 
       let complaints = [];
       try {
-        const data = await (await fetch(plainteConfig.Plainte.Forum)).text();
+        const data = await (
+          await fetch(forumConfig.systeme.Plainte.lien[server])
+        ).text();
         const $ = cheerio.load(data);
 
         complaints = $("tr")
@@ -116,31 +125,29 @@ async function plainte(client) {
       if (nouvellesPlaintes.length) {
         let rolePingDone = {};
 
-        for (const [guildId, isActive] of Object.entries(
-          plainteConfig.Plainte.active,
-        )) {
-          if (!isActive) continue;
+        for (const configuration of configPlainte) {
+          if (!configuration.active) continue;
 
+          const guildId = configuration.guildId;
           const guild = client.guilds.cache.get(guildId);
           if (!guild) continue;
 
-          const channelId = plainteConfig.Plainte.Salon.valeur[guildId];
+          const channelId = configuration.data.get("Salon");
           if (!channelId) continue;
 
           const channel = guild.channels.cache.get(channelId);
           if (!channel) continue;
 
-          const roleIds = plainteConfig.Plainte.Role.valeur[guildId] || [];
+          const roleIds = configuration.data.get("Role") || [];
           const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
           for (const plainte of nouvellesPlaintes) {
-            const container = await Plainte(client, server, plainte);
+            let { components } = await Plainte(client, server, plainte);
 
-            let components = container;
             if (roleMentions && !rolePingDone[guildId])
               components = [
                 new TextDisplayBuilder().setContent(roleMentions),
-                ...container,
+                ...components,
               ];
 
             let sentMessage;
@@ -178,29 +185,30 @@ async function plainte(client) {
 
       plaintesExistantes.push(...nouvellesPlaintes);
 
-      const plainteNonTraiteeConfig = plainteConfig["Plainte non traitée"];
+      const configPlainteNonTraitee = await Configuration.find({
+        serveur: server,
+        categorie: "Forum",
+        systeme: "Plainte non traitée",
+      });
 
-      for (const [guildId, isActive] of Object.entries(
-        plainteNonTraiteeConfig.active,
-      )) {
-        if (!isActive) continue;
+      for (const configuration of configPlainteNonTraitee) {
+        if (!configuration.active) continue;
 
+        const guildId = configuration.guildId;
         const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
 
-        const channelId = plainteNonTraiteeConfig.Salon?.valeur?.[guildId];
+        const channelId = configuration.data.get("Salon");
         if (!channelId) continue;
 
         const channel = guild.channels.cache.get(channelId);
         if (!channel) continue;
 
-        const delaiJour = Number(
-          plainteNonTraiteeConfig.Temps?.valeur?.[guildId],
-        );
-        if (!delaiJour) continue;
-
-        const roleIds = plainteNonTraiteeConfig.Role?.valeur?.[guildId] || [];
+        const roleIds = configuration.data.get("Role") || [];
         const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+        const delaiJour = Number(configuration.data.get("Temps"));
+        if (!delaiJour) continue;
 
         const timestampLimite = Math.floor(
           DateTime.now().minus({ days: delaiJour }).toSeconds(),
@@ -211,18 +219,17 @@ async function plainte(client) {
         for (const plainte of plaintesExistantes.filter(
           (p) => p.date < timestampLimite && !p?.alerteEnvoyee?.[guildId],
         )) {
-          const container = await Plaintenontraitée(
+          const { components } = await Plaintenontraitée(
             client,
             server,
             plainte,
             delaiJour,
           );
 
-          let components = container;
           if (roleMentions && !rolePingDone[guildId])
             components = [
               new TextDisplayBuilder().setContent(roleMentions),
-              ...container,
+              ...components,
             ];
 
           let sent;

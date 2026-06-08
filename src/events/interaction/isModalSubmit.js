@@ -5,7 +5,7 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
-const log = require("../../../util/module/log.js");
+const log = require("../../../util/module/log");
 const config = require("../../../config.js");
 
 module.exports = async (client, interaction) => {

@@ -1,5 +1,6 @@
 const config = require("../../config");
 const { getEmojiTete, getEmojiDrapeau } = require("../../util/module/emoji");
+const { getAbsolutePath } = require("../../util/module/getAndSaveData");
 const { discordLink } = require("../../util/module/discordLink");
 const {
   ActionRowBuilder,
@@ -7,7 +8,37 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
   ContainerBuilder,
+  MediaGalleryBuilder,
+  AttachmentBuilder,
 } = require("discord.js");
+const CONFIG_STATIC = require("../../util/config");
+
+function parseHeureONU(dateStr) {
+  const joursMap = {
+    Dimanche: 0,
+    Lundi: 1,
+    Mardi: 2,
+    Mercredi: 3,
+    Jeudi: 4,
+    Vendredi: 5,
+    Samedi: 6,
+  };
+
+  const [jourStr, heureStrPart] = dateStr.split(" ");
+  const [heureStr, minuteStr] = heureStrPart.split("h");
+
+  const heure = Number(heureStr);
+  const minute = Number(minuteStr);
+
+  return {
+    jour: joursMap[jourStr],
+    heure,
+    minute,
+    heureStr: heureStr.padStart(2, "0"),
+    minuteStr: minuteStr.padStart(2, "0"),
+    jourStr,
+  };
+}
 
 function formatDuree(duree) {
   if (!duree) return "";
@@ -56,7 +87,7 @@ async function Guerre(client, serveur, guerre) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
@@ -93,7 +124,7 @@ async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function Plainte(client, serveur, plainte) {
@@ -127,7 +158,7 @@ async function Plainte(client, serveur, plainte) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
@@ -164,7 +195,7 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function AttenteStaff(client, serveur, joueur, id, salon) {
@@ -195,7 +226,7 @@ async function AttenteStaff(client, serveur, joueur, id, salon) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
@@ -249,7 +280,7 @@ async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function Routine(client, serveur, pseudonym) {
@@ -332,7 +363,7 @@ async function Routine(client, serveur, pseudonym) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
@@ -358,7 +389,7 @@ async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function FullBuild(client, serveur, pseudo, paysa, paysb) {
@@ -382,7 +413,7 @@ async function FullBuild(client, serveur, pseudo, paysa, paysb) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
 async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
@@ -438,68 +469,177 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
 
   const components = [container];
 
-  return components;
+  return { components, files: [] };
 }
 
-async function DoubleLead(client, serveur, leaderPseudos, servers) {
-  if (!leaderPseudos) leaderPseudos = ["Zyfera", "ZyfLeRat"];
-  if (!servers)
-    servers = [
-      {
-        server: "white",
-        compte: "Zyfera",
-        role: "leader",
-        country: "Madagascar",
-      },
-      {
-        server: "white",
-        compte: "ZyfLeRat",
-        role: "officer",
-        country: "Perou",
-      },
-    ];
-
-  let message;
-
-  if (leaderPseudos.length === 1) {
-    const emoji = (await getEmojiTete(client, leaderPseudos[0])) || "🧑";
-    message = `Le joueur ${emoji} **${leaderPseudos[0]}** possède différents pays :\n`;
-  } else if (leaderPseudos.length === 2) {
-    const [p1, p2] = leaderPseudos;
-    const [e1, e2] = await Promise.all([
-      getEmojiTete(client, p1) || "🧑",
-      getEmojiTete(client, p2) || "🧑",
-    ]);
-    message = `Les joueurs ${e1} **${p1}** et ${e2} **${p2}** possèdent différents pays :\n`;
-  } else {
-    const last = leaderPseudos.pop();
-    const emojis = await Promise.all(
-      leaderPseudos.map((p) => getEmojiTete(client, p)) || "🧑",
-    );
-    const lastEmoji = (await getEmojiTete(client, last)) || "🧑";
-    message = `Les joueurs ${leaderPseudos
-      .map((p, i) => `${emojis[i]} **${p}**`)
-      .join(", ")} et ${lastEmoji} **${last}** possèdent différents pays :\n`;
-  }
-
-  for (const { compte, server, country } of servers) {
-    const emojiCompte = (await getEmojiTete(client, compte)) || "🧑";
-    message += `<:NG${
-      server.charAt(0).toUpperCase() + server.slice(1)
-    }:${config.emoji[server.toLowerCase()]}> **${
-      server.charAt(0).toUpperCase() + server.slice(1)
-    }** : ${country} (${emojiCompte} ${compte})\n`;
-  }
+async function Alerte(client, serveur) {
+  const dataONU = CONFIG_STATIC.find((c) => c.nom === "ONU").systeme.Alerte;
+  const { jour, heure, minute, heureStr, minuteStr, jourStr } = parseHeureONU(
+    dataONU.Heure[serveur],
+  );
 
   const container = new ContainerBuilder()
     .setAccentColor(config.couleur[serveur])
-    .addTextDisplayComponents((t) => t.setContent(`## 🏴 Double Lead`))
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## 🌐 ONU ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+      ),
+    )
     .addSeparatorComponents((s) => s)
-    .addTextDisplayComponents((t) => t.setContent(message));
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `L’**ONU** est une **réunion hebdomadaire** entre le staff et les joueurs ! Ce rendez-vous permet de faire des rappels, annoncer les nouveautés, les rank ainsi que de faire des pubs, des demandes de missiles, d’autonuke et de poser toutes les questions qui vous titillent. Afin de participer à l'ONU, il vous suffit de rejoindre le **[Discord Global](https://discord.gg/nationsglory)** de NationsGlory et rejoindre le salon <#${
+          dataONU["Salon NationsGlory"][serveur]
+        }>.\n\nVoici les différentes **règlementations** :\n- Les assauts sont interdit\n- Le PvP est désactivé sauf dans les arènes et les warzones\n- Les warzones ne distribuent pas de récompenses\n- La présence des chefs est fortement recommandée\n\nCette réunion a lieu tous les **${jourStr.toLowerCase()}s** à **${heureStr}h${minuteStr}**.`,
+      ),
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
+        mediaGalleryItem.setURL("attachment://onu.png"),
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("onu_help")
+          .setLabel("Je n'arrive pas à accéder au salon")
+          .setStyle(ButtonStyle.Primary),
+      ),
+    );
+
+  const imagePath = getAbsolutePath(`data/${serveur}/onu.png`);
+
+  const attachment = new AttachmentBuilder(imagePath, {
+    name: "onu.png",
+  });
 
   const components = [container];
 
-  return components;
+  return { components, files: [attachment] };
+}
+
+async function Rappel1(client, serveur, temps) {
+  if (!temps) temps = "30";
+  const dataONU = CONFIG_STATIC.find((c) => c.nom === "ONU").systeme.Alerte;
+  const { jour, heure, minute, heureStr, minuteStr, jourStr } = parseHeureONU(
+    dataONU.Heure[serveur],
+  );
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## 📅 Rappel ONU ${
+          serveur.charAt(0).toUpperCase() + serveur.slice(1)
+        }`,
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `C'est bientôt l'ONU ! Pour rappel, cette réunion est prévue **ajourd'hui** à **${heureStr}h${minuteStr}**, donc dans exactement **${temps} ${
+          Number(temps) > 1 ? "minutes" : "minute"
+        }**. Ne manquez pas l'occasion de participer à ce regroupement !`,
+      ),
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
+        mediaGalleryItem.setURL("attachment://rappel_onu.png"),
+      ),
+    );
+
+  const imagePath = getAbsolutePath(`data/${serveur}/rappel_onu.png`);
+
+  const attachment = new AttachmentBuilder(imagePath, {
+    name: "rappel_onu.png",
+  });
+
+  const components = [container];
+
+  return { components, files: [attachment] };
+}
+
+async function Rappel2(client, serveur, temps) {
+  if (!temps) temps = "30";
+  const dataONU = CONFIG_STATIC.find((c) => c.nom === "ONU").systeme.Alerte;
+  const { jour, heure, minute, heureStr, minuteStr, jourStr } = parseHeureONU(
+    dataONU.Heure[serveur],
+  );
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## 📅 Rappel ONU ${
+          serveur.charAt(0).toUpperCase() + serveur.slice(1)
+        }`,
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `C'est bientôt l'ONU ! Pour rappel, cette réunion est prévue **ajourd'hui** à **${heureStr}h${minuteStr}**, donc dans exactement **${temps} ${
+          Number(temps) > 1 ? "minutes" : "minute"
+        }**. Ne manquez pas l'occasion de participer à ce regroupement !`,
+      ),
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
+        mediaGalleryItem.setURL("attachment://rappel_onu.png"),
+      ),
+    );
+
+  const imagePath = getAbsolutePath(`data/${serveur}/rappel_onu.png`);
+
+  const attachment = new AttachmentBuilder(imagePath, {
+    name: "rappel_onu.png",
+  });
+
+  const components = [container];
+
+  return { components, files: [attachment] };
+}
+
+async function Rappel3(client, serveur, temps) {
+  if (!temps) temps = "30";
+  const dataONU = CONFIG_STATIC.find((c) => c.nom === "ONU").systeme.Alerte;
+  const { jour, heure, minute, heureStr, minuteStr, jourStr } = parseHeureONU(
+    dataONU.Heure[serveur],
+  );
+
+  const container = new ContainerBuilder()
+    .setAccentColor(config.couleur[serveur])
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## 📅 Rappel ONU ${
+          serveur.charAt(0).toUpperCase() + serveur.slice(1)
+        }`,
+      ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `C'est bientôt l'ONU ! Pour rappel, cette réunion est prévue **ajourd'hui** à **${heureStr}h${minuteStr}**, donc dans exactement **${temps} ${
+          Number(temps) > 1 ? "minutes" : "minute"
+        }**. Ne manquez pas l'occasion de participer à ce regroupement !`,
+      ),
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
+        mediaGalleryItem.setURL("attachment://rappel_onu.png"),
+      ),
+    );
+
+  const imagePath = getAbsolutePath(`data/${serveur}/rappel_onu.png`);
+
+  const attachment = new AttachmentBuilder(imagePath, {
+    name: "rappel_onu.png",
+  });
+
+  const components = [container];
+
+  return { components, files: [attachment] };
 }
 
 module.exports = {
@@ -513,5 +653,8 @@ module.exports = {
   ConquêteTerritoriale,
   FullBuild,
   SanctionStaff,
-  DoubleLead,
+  Alerte,
+  Rappel1,
+  Rappel2,
+  Rappel3,
 };

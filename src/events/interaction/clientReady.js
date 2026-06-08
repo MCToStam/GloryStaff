@@ -38,7 +38,6 @@ const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
 const { checkONU } = require("../../../util/alerte/onu");
 const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
-const { zipAndUpload } = require("../../../util/module/backupData");
 
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
@@ -82,7 +81,7 @@ module.exports = async (client, interaction) => {
     "0 10 * * 1",
     async () => {
       await classement_notation(client);
-      await decalage_notations();
+      await decalage_notations("semaine");
     },
     {
       timezone: "Europe/Paris",
@@ -92,7 +91,7 @@ module.exports = async (client, interaction) => {
   cron.schedule(
     "0 10 1 * *",
     async () => {
-      await decalage_notations();
+      await decalage_notations("mois");
     },
     {
       timezone: "Europe/Paris",
@@ -207,11 +206,10 @@ module.exports = async (client, interaction) => {
 
   cron.schedule("0 0 * * *", async () => {
     await updateLogo(client);
-    await zipAndUpload();
   });
 
-  cron.schedule("* * * * 0,6", async () => {
-    // await checkONU(client);
+  cron.schedule("* * * * 0,6,1", async () => {
+    await checkONU(client);
   });
 
   process.on("unhandledRejection", (reason, p) => {

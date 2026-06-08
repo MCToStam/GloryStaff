@@ -1,5 +1,5 @@
 const config = require("../../config");
-const log = require("../../util/module/log.js");
+const log = require("../../util/module/log");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { SanctionStaff } = require("../../util/container/module");
 const { MessageFlags, TextDisplayBuilder, ChannelType } = require("discord.js");
@@ -112,7 +112,7 @@ async function sendSanctionMessage(
 ) {
   if (!Object.values(active || {}).some((value) => value === true)) return;
 
-  const container = await SanctionStaff(
+  let { components } = await SanctionStaff(
     client,
     serveur,
     pseudonyme,
@@ -134,11 +134,10 @@ async function sendSanctionMessage(
     const roleIds = role[guildId] || [];
     const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
-    let components = container;
     if (roleMentions.length > 0)
       components = [
         new TextDisplayBuilder().setContent(roleMentions),
-        ...container,
+        ...components,
       ];
 
     try {

@@ -51,6 +51,12 @@ module.exports = {
         linkedDiscordIdData[id].toLowerCase() === joueur.toLowerCase(),
     );
 
+    const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
+    const gradeDuJoueur =
+      Object.entries(fullStaffData).find(
+        ([, members]) => Array.isArray(members) && members.includes(joueur),
+      )?.[0] || "Inconnu";
+
     const [configRoutine, configJail] = await Promise.all([
       Configuration.findOne({
         serveur,
@@ -66,8 +72,8 @@ module.exports = {
       }),
     ]);
 
-    const roleAutoriseRoutine = configRoutine.data.get("Grade");
-    const roleAutoriseJail = configJail.data.get("Grade");
+    const roleAutoriseRoutine = configRoutine?.data.get("Grade");
+    const roleAutoriseJail = configJail?.data.get("Grade");
 
     const gradesHierarchie = [
       "Administrateur",
@@ -79,18 +85,18 @@ module.exports = {
     ];
 
     const utilisateurAutoriseRoutine =
-      configRoutine.active &&
+      configRoutine?.active &&
       roleAutoriseRoutine &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseRoutine) + 1)
-        .includes(getData(`data/${serveur}/staff/${joueur}.json`)?.Grade);
+        .includes(gradeDuJoueur);
 
     const utilisateurAutoriseJail =
-      configJail.active &&
+      configJail?.active &&
       roleAutoriseJail &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)
-        .includes(getData(`data/${serveur}/staff/${joueur}.json`)?.Grade);
+        .includes(gradeDuJoueur);
 
     const optionsMenu = [
       {

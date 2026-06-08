@@ -1,6 +1,7 @@
-const { getData, getImage } = require("./module/getAndSaveData");
+const { getImage } = require("../util/module/getAndSaveData");
 const config = require("../config");
-const ServeurDiscord = require("./database/models/ServeurDiscord");
+const ServeurDiscord = require("../util/database/models/ServeurDiscord");
+const Configuration = require("../util/database/models/Configuration");
 
 async function updateLogo(client) {
   const token = process.env.DISCORD_TOKEN;
@@ -11,30 +12,20 @@ async function updateLogo(client) {
   const guildServers = new Map();
 
   for (const serveur of config.liste_serveur) {
-    try {
-      const configData = getData(`data/${serveur}/config.json`);
-      if (!Array.isArray(configData)) continue;
+    const configs = await Configuration.find({
+      serveur,
+    });
 
-      for (const module of configData) {
-        if (!module.systeme) continue;
+    if (!configs.length) continue;
 
-        for (const systemeKey in module.systeme) {
-          const active = module.systeme[systemeKey]?.active;
-          if (!active || typeof active !== "object") continue;
+    for (const cfg of configs) {
+      if (!cfg.active) continue;
 
-          for (const guildId of Object.keys(active)) {
-            if (!guildId) continue;
-
-            if (!guildServers.has(guildId)) {
-              guildServers.set(guildId, new Set());
-            }
-
-            guildServers.get(guildId).add(serveur);
-          }
-        }
+      if (!guildServers.has(cfg.guildId)) {
+        guildServers.set(cfg.guildId, new Set());
       }
-    } catch (err) {
-      console.error(`Erreur lecture config ${serveur}:`, err);
+
+      guildServers.get(cfg.guildId).add(serveur);
     }
   }
 
@@ -84,9 +75,7 @@ async function updateLogo(client) {
     }
   }
 
-  const allGuilds = await client.guilds.fetch();
-
-  for (const [guildId] of allGuilds) {
+  for (const guildId of client.guilds.cache.keys()) {
     const serveurs = guildServers.get(guildId);
 
     const mustRemove =

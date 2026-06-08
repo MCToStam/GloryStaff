@@ -1,5 +1,5 @@
 const config = require("../../config");
-const log = require("../../util/module/log.js");
+const log = require("../../util/module/log");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { getEmojiDrapeau, getEmojiTete } = require("../../util/module/emoji");
 const { DateTime } = require("luxon");

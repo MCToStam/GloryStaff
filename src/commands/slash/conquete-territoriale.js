@@ -97,7 +97,7 @@ module.exports = {
 
     const pseudo = await discordLink(interaction.user.id);
 
-    const container = await ConquêteTerritoriale(
+    const { components } = await ConquêteTerritoriale(
       client,
       serveur,
       pseudo,
@@ -118,12 +118,12 @@ module.exports = {
 
       const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
       message = await salon.send({
-        components: [roleTextDisplay, ...container],
+        components: [roleTextDisplay, ...components],
         flags: MessageFlags.IsComponentsV2,
       });
     } else {
       message = await salon.send({
-        components: container,
+        components,
         flags: MessageFlags.IsComponentsV2,
       });
     }

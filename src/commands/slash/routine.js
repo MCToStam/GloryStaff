@@ -100,17 +100,17 @@ module.exports = {
       });
     }
 
-    const routineContainer = await Routine(client, serveur, pseudonym);
+    const { components } = await Routine(client, serveur, pseudonym);
 
     if (interaction.isMessageComponent()) {
       return interaction.update({
-        components: routineContainer,
+        components,
         flags: MessageFlags.IsComponentsV2,
       });
     }
 
     return interaction.reply({
-      components: routineContainer,
+      components,
       flags: MessageFlags.IsComponentsV2,
     });
   },

@@ -134,8 +134,8 @@ module.exports = {
       }),
     ]);
 
-    const roleAutoriseRoutine = configRoutine.data.get("Grade");
-    const roleAutoriseJail = configJail.data.get("Grade");
+    const roleAutoriseRoutine = configRoutine?.data.get("Grade");
+    const roleAutoriseJail = configJail?.data.get("Grade");
 
     const gradesHierarchie = [
       "Administrateur",
@@ -147,14 +147,14 @@ module.exports = {
     ];
 
     const utilisateurAutoriseRoutine =
-      configRoutine.active &&
+      configRoutine?.active &&
       roleAutoriseRoutine &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseRoutine) + 1)
         .includes(gradeDuJoueur);
 
     const utilisateurAutoriseJail =
-      configJail.active &&
+      configJail?.active &&
       roleAutoriseJail &&
       gradesHierarchie
         .slice(0, gradesHierarchie.indexOf(roleAutoriseJail) + 1)

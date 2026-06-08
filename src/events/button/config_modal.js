@@ -39,12 +39,12 @@ module.exports = {
         .setDescription(q.description || "")
         .setTextInputComponent(
           new TextInputBuilder()
-            .setCustomId(`question_${index}`)
+            .setCustomId(String(index))
             .setStyle(TextInputStyle[q.style])
             .setPlaceholder(q.placeholder || "")
             .setRequired(q.obligatoire)
             .setMaxLength(q.maxCara || 100)
-            .setValue(configDoc.data.get(`${key}_${index}`) || ""),
+            .setValue(configDoc.data.get(key)[index] || ""),
         );
 
       modal.addLabelComponents(input);

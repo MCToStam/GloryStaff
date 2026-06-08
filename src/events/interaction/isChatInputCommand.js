@@ -7,7 +7,7 @@ const {
   MessageFlags,
 } = require("discord.js");
 const config = require("../../../config.js");
-const log = require("../../../util/module/log.js");
+const log = require("../../../util/module/log");
 
 function formatOptions(options) {
   return options

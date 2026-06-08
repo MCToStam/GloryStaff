@@ -27,7 +27,7 @@ async function joueurConnecteSalon(client) {
         if (!channel) continue;
 
         try {
-          const texteTemplate = jcConfig.data.get("Texte Affiché");
+          const texteTemplate = jcConfig.data.get("Texte Affiché")[0];
           if (!texteTemplate) continue;
 
           const texte = texteTemplate.replace("{nombre}", String(nbJoueur));

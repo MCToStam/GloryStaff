@@ -226,7 +226,7 @@ module.exports = {
       configJail.data.get("Salon"),
     );
 
-    const jailContainer = await Jail(
+    const { components } = await Jail(
       client,
       serveur,
       vraiCriminel,
@@ -235,7 +235,7 @@ module.exports = {
     );
 
     const message = await salon.send({
-      components: jailContainer,
+      components,
       flags: MessageFlags.IsComponentsV2,
     });
 

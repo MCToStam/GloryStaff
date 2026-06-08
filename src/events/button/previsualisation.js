@@ -10,12 +10,13 @@ module.exports = {
   async execute(client, interaction, config) {
     const [_, categorie, systeme] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
-
-    let components;
+    const systemeValue = systeme
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "");
 
     if (
-      moduleContainers[systeme] &&
-      typeof moduleContainers[systeme] === "function"
+      moduleContainers[systemeValue] &&
+      typeof moduleContainers[systemeValue] === "function"
     ) {
       const attentionContainer =
         new ContainerBuilder().addTextDisplayComponents((textDisplay) =>
@@ -24,9 +25,17 @@ module.exports = {
           ),
         );
 
-      const container = await moduleContainers[systeme](client, serveur);
+      const { components, files } = await moduleContainers[systemeValue](
+        client,
+        serveur,
+      );
 
-      components = [attentionContainer, ...container];
+      return interaction.reply({
+        components: [attentionContainer, ...components],
+        files,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] },
+      });
     } else {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
@@ -40,13 +49,11 @@ module.exports = {
           ),
         );
 
-      components = [container];
+      return interaction.reply({
+        components: [container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] },
+      });
     }
-
-    return interaction.reply({
-      components,
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      allowedMentions: { parse: [] },
-    });
   },
 };

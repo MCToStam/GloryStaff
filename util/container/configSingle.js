@@ -139,7 +139,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
 
       case "modal": {
         let textContent = `\n\n**${key} :**`;
-        const modalValeur = getData(key); // tableau de réponses ou null
+        const modalValeur = getData(key);
 
         if (item.questions && Array.isArray(item.questions)) {
           item.questions.forEach((q, index) => {

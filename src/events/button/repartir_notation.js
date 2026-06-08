@@ -57,11 +57,7 @@ module.exports = {
     }
 
     if (subId.startsWith("notation_module-manual")) {
-      try {
-        return await modeManuel(client, interaction, config, serveur, subId);
-      } catch (e) {
-        console.log(e);
-      }
+      return await modeManuel(client, interaction, config, serveur, subId);
     }
   },
 };
@@ -136,11 +132,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
   const container = new ContainerBuilder()
     .setAccentColor(config.colors.success)
     .addTextDisplayComponents((t) =>
-      t.setContent(
-        `## 🎲 Répartition Automatique - ${
-          serveur.charAt(0).toUpperCase() + serveur.slice(1)
-        }`,
-      ),
+      t.setContent("## 🎲 Répartition Automatique"),
     )
     .addSeparatorComponents((separator) => separator)
     .addTextDisplayComponents((t) => t.setContent(embedDescription.join("\n")));
@@ -334,7 +326,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       const doneContainer = new ContainerBuilder()
         .setAccentColor(config.colors.success)
         .addTextDisplayComponents((t) =>
-          t.setContent("## ✅ Répartition manuelle terminée et enregistrée !"),
+          t.setContent("## 🤚 Répartition Manuelle"),
         )
         .addSeparatorComponents((separator) => separator)
         .addTextDisplayComponents((t) => t.setContent(repartitionText));

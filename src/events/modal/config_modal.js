@@ -28,20 +28,22 @@ module.exports = {
         data: {},
       });
 
-    const currentData = doc.data || {};
-
     const values = interaction.fields.fields;
 
-    const updatedValues = [];
+    if (!doc.data.has(key)) doc.data.set(key, []);
 
     values.forEach((field, index) => {
       const value = interaction.fields.getTextInputValue(field.customId);
-      updatedValues.push(value);
-      currentData[`${key}_${index}`] = value;
+      const array = doc.data.get(key);
+
+      if (array[index] !== undefined) {
+        array[index] = value;
+      } else {
+        array.push(value);
+      }
     });
 
-    doc.data = currentData;
-
+    doc.markModified("data");
     await doc.save();
 
     const typeData = CONFIG_STATIC.find((c) => c.nom === type);

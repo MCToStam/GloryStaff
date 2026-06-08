@@ -1,5 +1,5 @@
 const { discordStaff } = require("../../../util/module/discordLink");
-const log = require("../../../util/module/log.js");
+const log = require("../../../util/module/log");
 const canSendMP = require("../../../util/module/canSendMP");
 const { ContainerBuilder, MessageFlags } = require("discord.js");
 const config = require("../../../config");

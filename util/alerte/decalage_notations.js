@@ -1,3 +1,4 @@
+const log = require("../../util/module/log");
 const config = require("../../config");
 const Configuration = require("../../util/database/models/Configuration");
 
@@ -8,8 +9,9 @@ function rotateArray(arr, shift = 1) {
   return [...arr.slice(-realShift), ...arr.slice(0, -realShift)];
 }
 
-async function decalage_notations() {
+async function decalage_notations(typeRotation) {
   for (const serveur of config.liste_serveur) {
+    if (serveur !== "blue") continue;
     try {
       const staffData = require("../../util/module/getAndSaveData").getData(
         `data/${serveur}/staff-serveur.json`,
@@ -38,6 +40,7 @@ async function decalage_notations() {
 
         const mode = decalageConfig;
         if (!mode || mode === "jamais") continue;
+        if (mode !== typeRotation) continue;
 
         const currentRepartition = repartitionConfig.data.get("donnee");
         if (!currentRepartition || !Object.keys(currentRepartition).length)
@@ -82,8 +85,10 @@ async function decalage_notations() {
         repartitionConfig.data.set("donnee", newRepartition);
         await repartitionConfig.save();
 
-        console.log(
+        log(
           `✅ Rotation des notations effectuée | ${serveur} | ${guildId} | mode=${mode}`,
+          "LOG",
+          "gray",
         );
       }
     } catch (err) {

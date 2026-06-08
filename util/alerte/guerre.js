@@ -1,10 +1,12 @@
 const config = require("../../config");
-const log = require("../../util/module/log.js");
+const log = require("../../util/module/log");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { Guerre, Guerrenontraitée } = require("../../util/container/module");
 const cheerio = require("cheerio");
 const { DateTime } = require("luxon");
 const { MessageFlags, TextDisplayBuilder, ChannelType } = require("discord.js");
+const CONFIG_STATIC = require("../../util/config");
+const Configuration = require("../../util/database/models/Configuration");
 
 const moisMapping = {
   janvier: "01",
@@ -54,16 +56,22 @@ function convertirEnTimestamp(dateStr) {
 async function guerre(client) {
   for (const server of config.liste_serveur) {
     try {
-      const allConfig = getData(`data/${server}/config.json`);
-      const configData = allConfig.find((c) => c.nom === "Forum");
-      const forumConfig = configData.systeme;
-      if (!forumConfig.Guerre.Forum) continue;
+      const configGuerre = await Configuration.find({
+        serveur: server,
+        categorie: "Forum",
+        systeme: "Guerre",
+      });
+
+      const forumConfig = CONFIG_STATIC.find((c) => c.nom === "Forum");
+      if (!forumConfig.systeme.Guerre.lien[server]) continue;
 
       await new Promise((res) => setTimeout(res, 5000));
 
       let complaints = [];
       try {
-        const data = await (await fetch(forumConfig.Guerre.Forum)).text();
+        const data = await (
+          await fetch(forumConfig.systeme.Guerre.lien[server])
+        ).text();
         const $ = cheerio.load(data);
 
         complaints = $("tr")
@@ -118,31 +126,29 @@ async function guerre(client) {
       if (nouvellesGuerres.length) {
         let rolePingDone = {};
 
-        for (const [guildId, isActive] of Object.entries(
-          forumConfig.Guerre.active,
-        )) {
-          if (!isActive) continue;
+        for (const configuration of configGuerre) {
+          if (!configuration.active) continue;
 
+          const guildId = configuration.guildId;
           const guild = client.guilds.cache.get(guildId);
           if (!guild) continue;
 
-          const channelId = forumConfig.Guerre.Salon?.valeur?.[guildId];
+          const channelId = configuration.data.get("Salon");
           if (!channelId) continue;
 
           const channel = guild.channels.cache.get(channelId);
           if (!channel) continue;
 
-          const roleIds = forumConfig.Guerre.Role?.valeur?.[guildId] || [];
+          const roleIds = configuration.data.get("Role") || [];
           const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
           for (const guerre of nouvellesGuerres) {
-            const container = await Guerre(client, server, guerre);
+            let { components } = await Guerre(client, server, guerre);
 
-            let components = container;
             if (roleMentions && !rolePingDone[guildId])
               components = [
                 new TextDisplayBuilder().setContent(roleMentions),
-                ...container,
+                ...components,
               ];
 
             let sent;
@@ -179,29 +185,30 @@ async function guerre(client) {
 
       guerresExistantes.push(...nouvellesGuerres);
 
-      const guerreNonTraiteeConfig = forumConfig["Guerre non traitée"];
+      const configGuerreNonTraitee = await Configuration.find({
+        serveur: server,
+        categorie: "Forum",
+        systeme: "Guerre non traitée",
+      });
 
-      for (const [guildId, isActive] of Object.entries(
-        guerreNonTraiteeConfig.active,
-      )) {
-        if (!isActive) continue;
+      for (const configuration of configGuerreNonTraitee) {
+        if (!configuration.active) continue;
 
+        const guildId = configuration.guildId;
         const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
 
-        const channelId = guerreNonTraiteeConfig.Salon?.valeur?.[guildId];
+        const channelId = configuration.data.get("Salon");
         if (!channelId) continue;
 
         const channel = guild.channels.cache.get(channelId);
         if (!channel) continue;
 
-        const delaiJour = Number(
-          guerreNonTraiteeConfig.Temps?.valeur?.[guildId],
-        );
-        if (!delaiJour) continue;
-
-        const roleIds = guerreNonTraiteeConfig.Role?.valeur?.[guildId] || [];
+        const roleIds = configuration.data.get("Role") || [];
         const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
+
+        const delaiJour = Number(configuration.data.get("Temps"));
+        if (!delaiJour) continue;
 
         const timestampLimite = Math.floor(
           DateTime.now().minus({ days: delaiJour }).toSeconds(),
@@ -212,18 +219,17 @@ async function guerre(client) {
         for (const guerre of guerresExistantes.filter(
           (g) => g.date < timestampLimite && !g?.alerteEnvoyee?.[guildId],
         )) {
-          const container = await Guerrenontraitée(
+          let { components } = await Guerrenontraitée(
             client,
             server,
             guerre,
             delaiJour,
           );
 
-          let components = container;
           if (roleMentions && !rolePingDone)
             components = [
               new TextDisplayBuilder().setContent(roleMentions),
-              ...container,
+              ...components,
             ];
 
           try {

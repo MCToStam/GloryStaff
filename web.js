@@ -2,9 +2,9 @@ const express = require("express");
 const { getData, saveData } = require("./util/module/getAndSaveData");
 const { checkGradeSupport } = require("./util/checkGradeSupport");
 const { discordStaff, discordLink } = require("./util/module/discordLink");
-const { AttenteStaff, DoubleLead } = require("./util/container/module");
+const { AttenteStaff } = require("./util/container/module");
 const { getEmojiTete } = require("./util/module/emoji");
-const log = require("./util/module/log.js");
+const log = require("./util/module/log");
 const bodyParser = require("body-parser");
 const {
   EmbedBuilder,
@@ -26,6 +26,7 @@ const util = require("util");
 const readFile = util.promisify(fs.readFile);
 const Absense = require("./util/database/models/Absence");
 const CONFIG_STATIC = require("./util/config");
+const Configuration = require("./util/database/models/Configuration");
 
 async function updateAllStaffWebhooks() {
   for (const serveur of config.liste_serveur) {
@@ -52,7 +53,6 @@ async function updateAllStaffWebhooks() {
       Guide: "<:guide:1289928200800964628>",
     };
 
-    const dataFile = getData(`data/${serveur}/config.json`);
     const configCandidature = CONFIG_STATIC.find(
       (c) => c.nom === "Candidature",
     );
@@ -443,18 +443,15 @@ app.post("/staff", async (req, res) => {
       );
       log(`✅ Données sauvegardées pour le serveur ${serveur}`, "LOG", "gray");
 
-      const dataFile = getData(`data/${serveur}/config.json`);
-      const configStaff = dataFile.find((c) => c.nom === "Staff");
-      const configAffichage = configStaff.systeme["Affichage Staff"];
+      const configAffichage = await Configuration.find({
+        serveur,
+        categorie: "Staff",
+        systeme: "Affichage Staff",
+      });
 
-      if (
-        !Object.values(configAffichage.active || {}).some(
-          (value) => value === true,
-        )
-      )
-        continue;
-
-      const configCandidature = dataFile.find((c) => c.nom === "Candidature");
+      const configCandidature = CONFIG_STATIC.find(
+        (c) => c.nom === "Candidature",
+      );
 
       const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
 
@@ -550,17 +547,17 @@ app.post("/staff", async (req, res) => {
             .addActionRowComponents(
               new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
-                  .setURL(configCandidature.systeme.Guide.lien)
+                  .setURL(configCandidature.systeme.Guide.lien[serveur])
                   .setLabel("Recrutement Guide")
                   .setEmoji("1289928200800964628")
                   .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
-                  .setURL(configCandidature.systeme.Modérateur.lien)
+                  .setURL(configCandidature.systeme.Modérateur.lien[serveur])
                   .setLabel("Recrutement Modérateur")
                   .setEmoji("1289934724294250588")
                   .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
-                  .setURL(configCandidature.systeme.Builder.lien)
+                  .setURL(configCandidature.systeme.Builder.lien[serveur])
                   .setLabel("Recrutement Builder")
                   .setEmoji("1289935984460304506")
                   .setStyle(ButtonStyle.Link),
@@ -571,22 +568,21 @@ app.post("/staff", async (req, res) => {
         components.push(container);
       }
 
-      for (const [guildId, isActive] of Object.entries(
-        configAffichage.active,
-      )) {
-        if (!isActive) continue;
+      for (const configuration of configAffichage) {
+        if (!configuration.active) continue;
 
+        const guildId = configuration.guildId;
         const guild = client.guilds.cache.get(guildId);
         if (!guild) continue;
 
-        const channelId = configAffichage.Salon.valeur[guildId];
+        const channelId = configuration.data.get("Salon");
         if (!channelId) continue;
 
         const channel = guild.channels.cache.get(channelId);
         if (!channel) continue;
 
         const message = await channel.messages
-          .fetch(configAffichage.Message[guildId])
+          .fetch(configuration.data.get("Message"))
           .catch(() => null);
         if (!message) continue;
 
@@ -710,166 +706,6 @@ app.get("/historique", (req, res) => {
         .status(500)
         .json({ message: "Erreur de l'API, veuillez contacter ToStam." });
     }
-  });
-});
-
-app.post("/update-leaders", async (req, res) => {
-  res.json({ message: "File updated successfully" });
-
-  const filePath = path.join(__dirname, "data", "doublelead.json");
-  const newData = req.body;
-
-  fs.readFile(filePath, "utf8", (err, data) => {
-    let existingData = [];
-
-    if (!err) {
-      try {
-        existingData = JSON.parse(data);
-      } catch (parseErr) {
-        return res.status(500).json({ error: "Error parsing file" });
-      }
-    }
-
-    const newDataMap = new Map(newData.map((entry) => [entry.leader, entry]));
-
-    const updatedData = existingData
-      .map((entry) => {
-        if (newDataMap.has(entry.leader)) {
-          const newEntry = newDataMap.get(entry.leader);
-          newEntry.servers = newEntry.servers;
-          newEntry.alerteServeur = entry.alerteServeur || [];
-          return newEntry;
-        }
-        return null;
-      })
-      .filter((entry) => entry !== null);
-
-    newData.forEach((entry) => {
-      if (!entry.alerteServeur) {
-        entry.alerteServeur = [];
-      }
-      if (!existingData.some((e) => e.leader === entry.leader)) {
-        updatedData.push(entry);
-      }
-    });
-
-    const multiServerLeaders = updatedData
-      .filter(
-        (entry) => Array.isArray(entry.servers) && entry.servers.length > 1,
-      )
-      .map((entry) => ({
-        leader: entry.leader,
-        servers: entry.servers,
-      }));
-
-    fs.writeFile(
-      filePath,
-      JSON.stringify(updatedData, null, 2),
-      "utf8",
-      async (writeErr) => {
-        if (writeErr) {
-          return res.status(500).json({ error: "Error writing file" });
-        }
-
-        for (const { leader, servers } of multiServerLeaders) {
-          const updatedEntry = updatedData.find(
-            (entry) => entry.leader === leader,
-          );
-
-          const eligibleServersMap = new Map();
-          for (const { server } of servers) {
-            const normalizedServer = server.toLowerCase();
-            if (eligibleServersMap.has(normalizedServer)) continue;
-
-            const dataFile = getData(`data/${server}/config.json`);
-            const configData = dataFile.find((c) => c.nom === "Double Lead");
-            const serverConfig = configData.systeme["Double Lead"];
-            if (!updatedEntry.alerteServeur.find((a) => a.server === server)) {
-              eligibleServersMap.set(normalizedServer, serverConfig);
-            }
-          }
-
-          if (eligibleServersMap.size === 0) continue;
-
-          const leaderPseudos = [...new Set(servers.map((s) => s.compte))];
-
-          for (const [server, serverConfig] of eligibleServersMap.entries()) {
-            const container = await DoubleLead(
-              client,
-              server,
-              leaderPseudos,
-              servers,
-            );
-
-            for (const [guildId, isActive] of Object.entries(
-              serverConfig.active,
-            )) {
-              if (!isActive) continue;
-
-              const guild = client.guilds.cache.get(guildId);
-              if (!guild) continue;
-
-              const channelId = serverConfig.Salon.valeur[guildId];
-              if (!channelId) continue;
-
-              const channel = guild.channels.cache.get(channelId);
-              if (!channel) continue;
-
-              if (updatedEntry.alerteServeur.find((a) => a.server === server))
-                continue;
-
-              const roleIds = serverConfig.Role.valeur[guildId] || [];
-              const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
-
-              let components = container;
-              if (roleMentions.length > 0) {
-                components = [
-                  new TextDisplayBuilder().setContent(roleMentions),
-                  ...container,
-                ];
-              }
-
-              try {
-                const sentMessage = await channel.send({
-                  components,
-                  flags: MessageFlags.IsComponentsV2,
-                });
-
-                if (channel.type === ChannelType.GuildNews) {
-                  await sentMessage.crosspost();
-                }
-
-                log(
-                  `✅ Message double lead envoyé | serveur ${server} | guild ${guildId}`,
-                  "LOG",
-                  "gray",
-                );
-
-                updatedEntry.alerteServeur.push({ server, guildId });
-              } catch (err) {
-                console.error(
-                  `❌ Erreur envoi double lead | serveur ${server} | guild ${guildId}`,
-                  err,
-                );
-              }
-            }
-          }
-        }
-
-        fs.writeFile(
-          filePath,
-          JSON.stringify(updatedData, null, 2),
-          "utf8",
-          (finalWriteErr) => {
-            if (finalWriteErr) {
-              return res
-                .status(500)
-                .json({ error: "Error updating alert data" });
-            }
-          },
-        );
-      },
-    );
   });
 });
 
@@ -1285,32 +1121,34 @@ app.post("/api/attenteStaff", async (req, res) => {
       .json({ error: "Champs manquants dans le corps de la requête." });
   }
 
-  const configData = getData(`data/${serveur}/config.json`);
-  const configAttenteStaff = configData.find((c) => c.nom === "Attente Staff");
-  const module = configAttenteStaff.systeme["Attente Staff"];
+  const configAttenteStaff = await Configuration.find({
+    serveur,
+    categorie: "Attente Staff",
+    systeme: "Attente Staff",
+  });
 
-  const container = await AttenteStaff(client, serveur, joueur, id, salon);
+  let { components } = await AttenteStaff(client, serveur, joueur, id, salon);
 
-  for (const [guildId, isActive] of Object.entries(module.active)) {
-    if (!isActive) continue;
+  for (const configuration of configAttenteStaff) {
+    if (!configuration.active) continue;
 
+    const guildId = configuration.guildId;
     const guild = client.guilds.cache.get(guildId);
     if (!guild) continue;
 
-    const channelId = module.Salon.valeur[guildId];
+    const channelId = configuration.data.get("Salon");
     if (!channelId) continue;
 
     const channel = guild.channels.cache.get(channelId);
     if (!channel) continue;
 
-    const roleIds = module.Role.valeur[guildId] || [];
+    const roleIds = configuration.data.get("Role") || [];
     const roleMentions = roleIds.map((id) => `<@&${id}>`).join(" ");
 
-    let components = container;
     if (roleMentions.length > 0)
       components = [
         new TextDisplayBuilder().setContent(roleMentions),
-        ...container,
+        ...components,
       ];
 
     try {

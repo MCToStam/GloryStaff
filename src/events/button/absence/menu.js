@@ -17,7 +17,6 @@ module.exports = {
   async execute(client, interaction, config) {
     const serveur = await getServeur(interaction);
     const [, userId, id] = interaction.customId.split("-");
-    console.log(userId, id);
 
     const pseudo = await discordLink(userId);
     const absenceData = await Absense.findOne({

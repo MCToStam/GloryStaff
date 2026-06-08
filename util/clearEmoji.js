@@ -1,4 +1,4 @@
-const log = require("../util/module/log.js");
+const log = require("../util/module/log");
 
 async function clearEmoji(client) {
   if (!client.application) await client.application.fetch();

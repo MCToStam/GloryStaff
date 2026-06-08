@@ -185,25 +185,6 @@ const CONFIG_STATIC = [
     },
   },
   {
-    nom: "Double Lead",
-    emoji: "<:doublelead:1458459662851637554>",
-    permission: "super_moderateur",
-    systeme: {
-      "Double Lead": {
-        emoji: "<:doublelead:1458459662851637554>",
-        details:
-          'Ce système permet d\'être alerté lorsque de nouvelles personnes sont détectées en tant que "Double Lead" sur votre serveur.',
-        Salon: {
-          type: "channel",
-          salonAutorise: [0, 5, 10, 11, 12],
-        },
-        Role: {
-          type: "role",
-        },
-      },
-    },
-  },
-  {
     nom: "Expansion Territoriale",
     emoji: "<:expantionterritoriale:1458459664768303268>",
     permission: "super_moderateur",
@@ -243,7 +224,7 @@ const CONFIG_STATIC = [
         emoji: "<:plainte:1458742662160191498>",
         details:
           "Ce système permet d'être alerté lorsqu'une nouvelle plainte est postée sur le forum avec le tag \"En Attente\".",
-        Forum: {
+        lien: {
           alpha: "https://nationsglory.fr/forums/category/plaintes.277",
           black: "https://nationsglory.fr/forums/category/plaintes.190",
           blue: "https://nationsglory.fr/forums/category/plaintes.984",
@@ -273,7 +254,7 @@ const CONFIG_STATIC = [
         emoji: "<:guerre:1458742664265732272>",
         details:
           "Ce système permet d'être alerté lorsqu'une nouvelle guerre est postée sur le forum avec le tag \"En Attente\".",
-        Forum: {
+        lien: {
           alpha:
             "https://nationsglory.fr/forums/category/declarations-de-guerre.682",
           black:
@@ -314,7 +295,7 @@ const CONFIG_STATIC = [
         emoji: "<:plaintenontraitee:1458742665842655354>",
         details:
           "Ce système permet d'être alerté lorsqu'une plainte avec le tag \"En Attente\" n'a pas été modifiée depuis un nombre de jour configurable.",
-        Forum: {
+        lien: {
           alpha: "https://nationsglory.fr/forums/category/plaintes.277",
           black: "https://nationsglory.fr/forums/category/plaintes.190",
           blue: "https://nationsglory.fr/forums/category/plaintes.984",
@@ -354,7 +335,7 @@ const CONFIG_STATIC = [
         emoji: "<:guerrenontraitee:1458742667533095136>",
         details:
           "Ce système permet d'être alerté lorsqu'une guerre avec le tag \"En Attente\" n'a pas été modifiée depuis un nombre de jour configurable.",
-        Forum: {
+        lien: {
           alpha:
             "https://nationsglory.fr/forums/category/declarations-de-guerre.682",
           black:
@@ -510,8 +491,42 @@ const CONFIG_STATIC = [
         emoji: "<:alerte:1458742674243981456>",
         details:
           "Ce système permet d'être alerté lorsque l'ONU de votre serveur commence.",
-        Heure: "Dimanche 17h30",
-        "Salon NationsGlory": "<#1142882421277204651>",
+        Heure: {
+          alpha: "Dimanche 17h00",
+          black: "Dimanche 16h00",
+          blue: "Samedi 17h00",
+          coral: "Samedi 16h00",
+          cyan: "Dimanche 17h30",
+          delta: "Dimanche 17h30",
+          epsilon: "Dimanche 15h30",
+          jade: "Samedi 15h00",
+          lime: "Samedi 17h30",
+          mocha: "Samedi 15h30",
+          omega: "Samedi 18h00",
+          orange: "Samedi 16h30",
+          red: "Samedi 18h00",
+          sigma: "Samedi 17h00",
+          white: "Dimanche 17h00",
+          yellow: "Dimanche 16h30",
+        },
+        "Salon NationsGlory": {
+          alpha: "825283850342105118",
+          black: "1142882601388998656",
+          blue: "1142876034967027762",
+          coral: "1142882303090114590",
+          cyan: "1142882421277204651",
+          delta: "990080466981912676",
+          epsilon: "1297686644144738344",
+          jade: "1165297482725597305",
+          lime: "1143617770538401902",
+          mocha: "1297495880479408158",
+          omega: "990080466981912676",
+          orange: "1142876353801228348",
+          red: "1144980485685133342",
+          sigma: "825285271406379029",
+          white: "1142882475849306243",
+          yellow: "1234150236293828678",
+        },
         Salon: {
           type: "channel",
           salonAutorise: [0, 5, 10, 11, 12],
@@ -531,6 +546,23 @@ const CONFIG_STATIC = [
         Role: {
           type: "role",
         },
+        Temps: {
+          type: "select",
+          valeurPropose: {
+            "5 minutes": "5",
+            "10 minutes": "10",
+            "15 minutes": "15",
+            "20 minutes": "20",
+            "30 minutes": "30",
+            "40 minutes": "40",
+            "50 minutes": "50",
+            "1 heure": "60",
+            "2 heure": "120",
+            "3 heure": "180",
+            "4 heure": "240",
+            "5 heure": "300",
+          },
+        },
       },
       "Rappel 2": {
         emoji: "<:rappel:1458742676504580239>",
@@ -543,6 +575,23 @@ const CONFIG_STATIC = [
         Role: {
           type: "role",
         },
+        Temps: {
+          type: "select",
+          valeurPropose: {
+            "5 minutes": "5",
+            "10 minutes": "10",
+            "15 minutes": "15",
+            "20 minutes": "20",
+            "30 minutes": "30",
+            "40 minutes": "40",
+            "50 minutes": "50",
+            "1 heure": "60",
+            "2 heure": "120",
+            "3 heure": "180",
+            "4 heure": "240",
+            "5 heure": "300",
+          },
+        },
       },
       "Rappel 3": {
         emoji: "<:rappel:1458742676504580239>",
@@ -554,6 +603,23 @@ const CONFIG_STATIC = [
         },
         Role: {
           type: "role",
+        },
+        Temps: {
+          type: "select",
+          valeurPropose: {
+            "5 minutes": "5",
+            "10 minutes": "10",
+            "15 minutes": "15",
+            "20 minutes": "20",
+            "30 minutes": "30",
+            "40 minutes": "40",
+            "50 minutes": "50",
+            "1 heure": "60",
+            "2 heure": "120",
+            "3 heure": "180",
+            "4 heure": "240",
+            "5 heure": "300",
+          },
         },
       },
     },
