@@ -5,11 +5,11 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
-const { getServeur } = require("../../../util/module/getServeur");
-const { getEmojiTete } = require("../../../util/module/emoji");
-const Configuration = require("../../../util/database/models/Configuration");
-const Absense = require("../../../util/database/models/Absence");
-const CONFIG_STATIC = require("../../../util/config");
+const { getServeur } = require("../../../../util/module/getServeur");
+const { getEmojiTete } = require("../../../../util/module/emoji");
+const Configuration = require("../../../../util/database/models/Configuration");
+const Absense = require("../../../../util/database/models/Absence");
+const CONFIG_STATIC = require("../../../../util/config");
 
 module.exports = {
   data: {

@@ -582,7 +582,7 @@ app.post("/staff", async (req, res) => {
         if (!channel) continue;
 
         const message = await channel.messages
-          .fetch(configuration.data.get("Message"))
+          .fetch(configuration.data.get("messageId"))
           .catch(() => null);
         if (!message) continue;
 

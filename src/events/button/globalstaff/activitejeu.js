@@ -11,6 +11,7 @@ const { getData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
 const { generateTableImage } = require("../../../../util/connexionTableImage");
 const { getTotalConnexionTable } = require("../../../../util/totalConnexion");
+const Configuration = require("../../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -51,14 +52,70 @@ module.exports = {
       name: "globalstaff_activitejeu.png",
     });
 
+    const [configRoutine, configJail] = await Promise.all([
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Routine",
+        systeme: "Routine",
+      }),
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Jail",
+        systeme: "Jail",
+      }),
+    ]);
+
+    const options = [
+      {
+        label: "Liste des Staffs",
+        value: "globalstaff_liste",
+        default: false,
+        emoji: "1441495206229835979",
+      },
+      {
+        label: "Activité en Jeu",
+        value: "globalstaff_activitejeu",
+        default: true,
+        emoji: "1441495207932596234",
+      },
+      {
+        label: "Activité Vocal sur Discord",
+        value: "globalstaff_activitediscord",
+        default: false,
+        emoji: "1441495208951808203",
+      },
+      {
+        label: "Traitement des Attentes Staffs",
+        value: "globalstaff_traitement",
+        default: false,
+        emoji: "1441495210206036141",
+      },
+    ];
+
+    if (configJail) {
+      options.push({
+        label: "Jail",
+        value: "globalstaff_jail",
+        default: false,
+        emoji: "1441734907260043264",
+      });
+    }
+
+    if (configRoutine) {
+      options.push({
+        label: "Routine",
+        value: "globalstaff_routine",
+        default: false,
+        emoji: "1441734905980649695",
+      });
+    }
+
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
       .addTextDisplayComponents((t) =>
-        t.setContent(
-          `## Activité en Jeu - ${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`,
-        ),
+        t.setContent("## <:activitejeu:1441495207932596234> Activité en Jeu"),
       )
       .addSeparatorComponents((s) => s)
       .addMediaGalleryComponents(
@@ -66,6 +123,7 @@ module.exports = {
           mediaGalleryItem.setURL("attachment://globalstaff_activitejeu.png"),
         ),
       )
+      .addSeparatorComponents((s) => s)
       .addActionRowComponents((row) =>
         row.setComponents(
           new ButtonBuilder()
@@ -88,34 +146,9 @@ module.exports = {
       .addActionRowComponents((row) =>
         row.setComponents(
           new StringSelectMenuBuilder()
-            .setCustomId(`globalstaff`)
+            .setCustomId("globalstaff")
             .setPlaceholder("Choisit une option")
-            .setOptions([
-              {
-                label: "Liste des Staffs",
-                value: "globalstaff_liste",
-                default: false,
-                emoji: "1441495206229835979",
-              },
-              {
-                label: "Activité en Jeu",
-                value: "globalstaff_activitejeu",
-                default: true,
-                emoji: "1441495207932596234",
-              },
-              {
-                label: "Activité Vocal sur Discord",
-                value: "globalstaff_activitediscord",
-                default: false,
-                emoji: "1441495208951808203",
-              },
-              {
-                label: "Traitement des Attentes Staffs",
-                value: "globalstaff_traitement",
-                default: false,
-                emoji: "1441495210206036141",
-              },
-            ]),
+            .setOptions(options),
         ),
       );
 

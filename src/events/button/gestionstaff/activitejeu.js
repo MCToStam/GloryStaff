@@ -240,6 +240,7 @@ module.exports = {
           mediaGalleryItem.setURL("attachment://gestionstaff_activitejeu.png"),
         ),
       )
+      .addSeparatorComponents((s) => s)
       .addActionRowComponents((row) =>
         row.setComponents(
           new ButtonBuilder()

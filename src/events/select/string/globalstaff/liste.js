@@ -6,6 +6,7 @@ const {
 const { getData } = require("../../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../../util/module/getServeur");
 const { discordLink } = require("../../../../../util/module/discordLink");
+const Configuration = require("../../../../../util/database/models/Configuration");
 
 module.exports = {
   data: {
@@ -17,7 +18,31 @@ module.exports = {
     const linkData = (await discordLink(false))?.data;
     const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
 
-    let fullStaffSection = "";
+    const container = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) =>
+        t.setContent("## <:liste:1441495206229835979> Liste des Staffs"),
+      )
+      .addSeparatorComponents((s) => s);
+
+    const gradeMap = {
+      Administrateur: { plural: "Administrateurs", normal: "Administrateur" },
+      "Super-Modérateur": {
+        plural: "Super Modérateurs",
+        normal: "Super Modérateur",
+      },
+      "Modérateur Plus": {
+        plural: "Modérateurs Plus",
+        normal: "Modérateur Plus",
+      },
+      Modérateur: { plural: "Modérateurs", normal: "Modérateur" },
+      "Modérateur Test": {
+        plural: "Modérateur Tests",
+        normal: "Modérateur Test",
+      },
+      Guide: { plural: "Guides", normal: "Guide" },
+    };
+
     for (const [grade, members] of Object.entries(fullStaffData)) {
       if (members.length > 0) {
         const emoji = config.emojigrade[grade] || "";
@@ -30,58 +55,88 @@ module.exports = {
             return linkedId ? `${escapedName} ( <@${linkedId}> )` : escapedName;
           })
           .join(", ");
-        fullStaffSection += `**${emoji} ${grade} :** ${memberNames}\n`;
+
+        container
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `**${emoji} ${members.length > 1 ? gradeMap[grade].plural : gradeMap[grade].normal} (${members.length}):**`,
+            ),
+          )
+          .addTextDisplayComponents((t) =>
+            t.setContent(memberNames || "Aucun staff ne possède ce grade"),
+          )
+          .addSeparatorComponents((s) => s);
       }
     }
-    fullStaffSection =
-      fullStaffSection ||
-      "Aucune donnée trouvée dans le fichier staff-serveur.json.";
 
-    const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
-      .addTextDisplayComponents((t) =>
-        t.setContent(
-          `## Liste des Staff - ${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
-          }`,
-        ),
-      )
-      .addSeparatorComponents((s) => s)
-      .addTextDisplayComponents((t) => t.setContent(fullStaffSection))
-      .addSeparatorComponents((s) => s)
-      .addActionRowComponents((row) =>
-        row.setComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`globalstaff`)
-            .setPlaceholder("Choisit une option")
-            .setOptions([
-              {
-                label: "Liste des Staffs",
-                value: "globalstaff_liste",
-                default: true,
-                emoji: "1441495206229835979",
-              },
-              {
-                label: "Activité en Jeu",
-                value: "globalstaff_activitejeu",
-                default: false,
-                emoji: "1441495207932596234",
-              },
-              {
-                label: "Activité Vocal sur Discord",
-                value: "globalstaff_activitediscord",
-                default: false,
-                emoji: "1441495208951808203",
-              },
-              {
-                label: "Traitement des Attentes Staffs",
-                value: "globalstaff_traitement",
-                default: false,
-                emoji: "1441495210206036141",
-              },
-            ]),
-        ),
-      );
+    const [configRoutine, configJail] = await Promise.all([
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Routine",
+        systeme: "Routine",
+      }),
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Jail",
+        systeme: "Jail",
+      }),
+    ]);
+
+    const options = [
+      {
+        label: "Liste des Staffs",
+        value: "globalstaff_liste",
+        default: true,
+        emoji: "1441495206229835979",
+      },
+      {
+        label: "Activité en Jeu",
+        value: "globalstaff_activitejeu",
+        default: false,
+        emoji: "1441495207932596234",
+      },
+      {
+        label: "Activité Vocal sur Discord",
+        value: "globalstaff_activitediscord",
+        default: false,
+        emoji: "1441495208951808203",
+      },
+      {
+        label: "Traitement des Attentes Staffs",
+        value: "globalstaff_traitement",
+        default: false,
+        emoji: "1441495210206036141",
+      },
+    ];
+
+    if (configJail) {
+      options.push({
+        label: "Jail",
+        value: "globalstaff_jail",
+        default: false,
+        emoji: "1441734907260043264",
+      });
+    }
+
+    if (configRoutine) {
+      options.push({
+        label: "Routine",
+        value: "globalstaff_routine",
+        default: false,
+        emoji: "1441734905980649695",
+      });
+    }
+
+    container.addActionRowComponents((row) =>
+      row.setComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId("globalstaff")
+          .setPlaceholder("Choisit une option")
+          .setOptions(options),
+      ),
+    );
 
     return interaction.update({
       components: [container],

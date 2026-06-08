@@ -1,7 +1,7 @@
-const Configuration = require("../../../util/database/models/Configuration");
-const { getServeur } = require("../../../util/module/getServeur");
-const { containerSingle } = require("../../../util/container/configSingle");
-const CONFIG_STATIC = require("../../../util/config");
+const Configuration = require("../../../../util/database/models/Configuration");
+const { getServeur } = require("../../../../util/module/getServeur");
+const { containerSingle } = require("../../../../util/container/configSingle");
+const CONFIG_STATIC = require("../../../../util/config");
 
 module.exports = {
   data: {

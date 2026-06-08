@@ -274,6 +274,7 @@ module.exports = {
           ),
         ),
       )
+      .addSeparatorComponents((s) => s)
       .addActionRowComponents((row) =>
         row.setComponents(
           new ButtonBuilder()

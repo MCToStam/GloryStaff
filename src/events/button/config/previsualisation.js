@@ -1,6 +1,6 @@
 const { ContainerBuilder, MessageFlags } = require("discord.js");
-const { getServeur } = require("../../../util/module/getServeur");
-const moduleContainers = require("../../../util/container/module");
+const { getServeur } = require("../../../../util/module/getServeur");
+const moduleContainers = require("../../../../util/container/module");
 
 module.exports = {
   data: {

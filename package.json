@@ -1,7 +1,7 @@
 {
   "name": "glorystaff",
   "version": "1.0.0",
-  "description": "Avec GloryBot, accédez à des informations essentielles pour dominer sur NationsGlory ! Découvrez un panel de commande utiles rien que pour vous !",
+  "description": "GloryStaff, un outil unique qui a pour but de faciliter le travail répétitif. Il peut être configuré très facilement et en autonomie totale !",
   "main": "main.js",
   "scripts": {
     "start": "node test.js",

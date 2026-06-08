@@ -5,8 +5,8 @@ const {
   ButtonStyle,
   ContainerBuilder,
 } = require("discord.js");
-const { getServeur } = require("../../../util/module/getServeur");
-const CONFIG_STATIC = require("../../../util/config");
+const { getServeur } = require("../../../../util/module/getServeur");
+const CONFIG_STATIC = require("../../../../util/config");
 
 module.exports = {
   data: {

@@ -4,10 +4,10 @@ const {
   TextInputStyle,
   LabelBuilder,
 } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
-const { getServeur } = require("../../../util/module/getServeur");
-const CONFIG_STATIC = require("../../../util/config");
-const Configuration = require("../../../util/database/models/Configuration");
+const { getData } = require("../../../../util/module/getAndSaveData");
+const { getServeur } = require("../../../../util/module/getServeur");
+const CONFIG_STATIC = require("../../../../util/config");
+const Configuration = require("../../../../util/database/models/Configuration");
 
 module.exports = {
   data: {

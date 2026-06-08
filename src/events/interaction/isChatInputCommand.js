@@ -170,7 +170,7 @@ module.exports = async (client, interaction) => {
         `**👷 Utilisateur :** ${
           interaction.user.globalName?.replace(/_/g, "\\_") ||
           interaction.user.username?.replace(/_/g, "\\_")
-        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${commandPath}`,
+        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${commandPath.replace(/_/g, "\\_")}`,
       ),
     );
 

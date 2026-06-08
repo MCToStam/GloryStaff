@@ -5,10 +5,10 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
-const { getData } = require("../../../util/module/getAndSaveData");
-const { getServeur } = require("../../../util/module/getServeur");
-const { getEmojiTete } = require("../../../util/module/emoji");
-const Configuration = require("../../../util/database/models/Configuration");
+const { getData } = require("../../../../util/module/getAndSaveData");
+const { getServeur } = require("../../../../util/module/getServeur");
+const { getEmojiTete } = require("../../../../util/module/emoji");
+const Configuration = require("../../../../util/database/models/Configuration");
 
 module.exports = {
   data: {

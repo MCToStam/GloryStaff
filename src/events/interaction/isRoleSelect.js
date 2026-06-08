@@ -112,7 +112,7 @@ module.exports = async (client, interaction) => {
         `**👷 Utilisateur :** ${
           interaction.user.globalName?.replace(/_/g, "\\_") ||
           interaction.user.username?.replace(/_/g, "\\_")
-        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${interaction.customId}`,
+        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${interaction.customId.replace(/_/g, "\\_")}`,
       ),
     );
 

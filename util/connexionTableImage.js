@@ -2,10 +2,6 @@ const { createCanvas, registerFont } = require("canvas");
 const path = require("path");
 const config = require("../config");
 
-registerFont(path.join(__dirname, "./fonts/JetBrainsMono-Regular.ttf"), {
-  family: "JetBrainsMono",
-});
-
 function formatDuration(sec) {
   const h = Math.floor(sec / 3600);
   const m = Math.floor((sec % 3600) / 60);
@@ -33,7 +29,7 @@ function generateTableImage(dates, data, staffRaw) {
 
   const tempCanvas = createCanvas(1, 1);
   const tempCtx = tempCanvas.getContext("2d");
-  tempCtx.font = "16px JetBrainsMono";
+  tempCtx.font = "16px";
   const longestPseudo = Math.max(
     ...Object.keys(data).map((p) => tempCtx.measureText(p).width),
   );
@@ -65,7 +61,7 @@ function generateTableImage(dates, data, staffRaw) {
     );
   }
 
-  ctx.font = "16px JetBrainsMono";
+  ctx.font = "16px";
   ctx.fillStyle = "#ffffff";
   ctx.textBaseline = "middle";
 
@@ -125,7 +121,7 @@ function generateTableNombreImage(dates, data, staffRaw) {
 
   const tempCanvas = createCanvas(1, 1);
   const tempCtx = tempCanvas.getContext("2d");
-  tempCtx.font = "16px JetBrainsMono";
+  tempCtx.font = "16px";
   const longestPseudo = Math.max(
     ...Object.keys(data).map((p) => tempCtx.measureText(p).width),
   );
@@ -157,7 +153,7 @@ function generateTableNombreImage(dates, data, staffRaw) {
     );
   }
 
-  ctx.font = "16px JetBrainsMono";
+  ctx.font = "16px";
   ctx.fillStyle = "#ffffff";
   ctx.textBaseline = "middle";
 

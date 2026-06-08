@@ -274,6 +274,7 @@ module.exports = {
           mediaGalleryItem.setURL("attachment://gestionstaff_traitement.png"),
         ),
       )
+      .addSeparatorComponents((s) => s)
       .addActionRowComponents((row) =>
         row.setComponents(
           new ButtonBuilder()

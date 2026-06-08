@@ -1,7 +1,9 @@
-const { getServeur } = require("../../../util/module/getServeur");
-const { containerMultiple } = require("../../../util/container/configMultiple");
-const allConfig = require("../../../util/container/allConfig");
-const CONFIG_STATIC = require("../../../util/config");
+const { getServeur } = require("../../../../util/module/getServeur");
+const {
+  containerMultiple,
+} = require("../../../../util/container/configMultiple");
+const allConfig = require("../../../../util/container/allConfig");
+const CONFIG_STATIC = require("../../../../util/config");
 
 module.exports = {
   data: {

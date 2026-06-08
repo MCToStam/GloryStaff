@@ -79,7 +79,7 @@ function getCandidatureJsonPath(serveur) {
 
 async function loadSavedData(serveur) {
   try {
-    return (await getData(getCandidatureJsonPath(serveur))) || {};
+    return getData(getCandidatureJsonPath(serveur)) || {};
   } catch {
     return {};
   }
