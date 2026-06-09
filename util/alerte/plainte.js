@@ -219,7 +219,7 @@ async function plainte(client) {
         for (const plainte of plaintesExistantes.filter(
           (p) => p.date < timestampLimite && !p?.alerteEnvoyee?.[guildId],
         )) {
-          const { components } = await Plaintenontraitée(
+          let { components } = await Plaintenontraitée(
             client,
             server,
             plainte,

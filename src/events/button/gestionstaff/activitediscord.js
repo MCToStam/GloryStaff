@@ -267,6 +267,7 @@ module.exports = {
       )
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) => t.setContent(description))
+      .addSeparatorComponents((s) => s)
       .addMediaGalleryComponents(
         new MediaGalleryBuilder().addItems((mediaGalleryItem) =>
           mediaGalleryItem.setURL(
