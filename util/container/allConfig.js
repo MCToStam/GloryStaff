@@ -58,10 +58,10 @@ async function allConfig(serveur, userId) {
   }
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
-        `## ${config.emoji_formate[serveur]} Configuration GloryStaff`,
+        `## ${config.serveur[serveur].emoji_formate} Configuration GloryStaff`,
       ),
     )
     .addSeparatorComponents((s) => s)

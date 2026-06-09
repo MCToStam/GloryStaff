@@ -33,7 +33,7 @@ module.exports = {
     const slice = absences.slice(start, end);
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addSectionComponents((section) =>
         section
           .addTextDisplayComponents((textDisplay) =>

@@ -264,7 +264,7 @@ module.exports = {
         const coordsText = claims
           .map(
             (c) =>
-              `↪ [${c.x[0]} 65 ${c.z[0]}](${config.dynmapColorMap[serveur]}/?worldname=${dimensionKey}&zoom=4&x=${c.x[0]}&z=${c.z[0]}&nocompass=true)`,
+              `↪ [${c.x[0]} 65 ${c.z[0]}](${config.serveur[serveur].dynmap}/?worldname=${dimensionKey}&zoom=4&x=${c.x[0]}&z=${c.z[0]}&nocompass=true)`,
           )
           .join("\n");
 
@@ -284,7 +284,7 @@ module.exports = {
     }));
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
           `## ${planetInfo.emoji} Claims Illégaux - ${planetInfo.name}`,

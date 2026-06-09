@@ -41,15 +41,33 @@ module.exports = {
         .addTextDisplayComponents((t) =>
           t.setContent(
             `Le système de Routine est désactivé sur le serveur ${
-              config.emoji_formate[serveur]
+              config.serveur[serveur].emoji_formate
             } ${serveur}.`,
           ),
         );
 
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     const salonId = configRoutine.data.get("Salon");
@@ -65,15 +83,33 @@ module.exports = {
         .addTextDisplayComponents((t) =>
           t.setContent(
             `Le système de Routine n'est pas correctement configuré sur ${
-              config.emoji_formate[serveur]
+              config.serveur[serveur].emoji_formate
             } ${serveur}.`,
           ),
         );
 
-      return interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     const { pseudonym, container } = await discordStaff(
@@ -83,10 +119,28 @@ module.exports = {
     );
 
     if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     const { components } = await Routine(client, serveur, pseudonym);
@@ -95,12 +149,13 @@ module.exports = {
       return interaction.update({
         components,
         flags: MessageFlags.IsComponentsV2,
+        withResponse: true,
+      });
+    } else {
+      return interaction.reply({
+        components,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
-
-    return interaction.reply({
-      components,
-      flags: MessageFlags.IsComponentsV2,
-    });
   },
 };

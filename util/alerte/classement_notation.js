@@ -32,9 +32,7 @@ async function classement_notation(client) {
     .slice(0, 3)
     .map(
       (entry) =>
-        `<:NG${entry.server.charAt(0).toUpperCase()}${entry.server.slice(1)}:${config.emoji[entry.server]}> ${
-          entry.pays
-        }・${entry.bourse}$`,
+        `${config.serveur[entry.server].emoji_formate} ${entry.pays}・${entry.bourse}$`,
     )
     .join("\n");
 
@@ -81,7 +79,7 @@ async function classement_notation(client) {
         .join("\n");
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent("## 🏆 Classement des Notations"),
         )

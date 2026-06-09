@@ -64,7 +64,7 @@ async function containerMultiple(guildId, serveur, type, configData) {
   });
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## ${configData.emoji ? `${configData.emoji} ` : ""}${configData.nom}`,

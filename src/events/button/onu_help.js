@@ -22,7 +22,7 @@ module.exports = {
     });
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(`## 🌐 Informations Supplémentaires`),
       )

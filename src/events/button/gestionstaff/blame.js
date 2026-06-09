@@ -23,7 +23,7 @@ module.exports = {
 
     if (pseudo === joueur) {
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent(`## 💢 Blâme - ${joueur.replace(/_/g, "\\_")}`),
         )

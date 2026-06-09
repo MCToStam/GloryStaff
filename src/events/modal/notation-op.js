@@ -41,7 +41,7 @@ module.exports = {
       const emojiStaff = (await getEmojiTete(client, staff)) || "🧑";
 
       const informationContainer = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent("## Pays Noté"),
         )

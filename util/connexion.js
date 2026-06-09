@@ -61,7 +61,7 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
 });
 
 async function generateGraphImage(serveur, labels, data, isTime) {
-  const valeur = config.couleur[serveur];
+  const valeur = config.serveur[serveur].couleur;
   const color = valeur
     ? `#${valeur.toString(16).padStart(6, "0").toUpperCase()}`
     : "#36A2EB";

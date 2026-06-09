@@ -162,7 +162,7 @@ async function getCandidatureContent(url, serveur) {
 
     return {
       type: 17,
-      accent_color: config.couleur[serveur],
+      accent_color: config.serveur[serveur].couleur,
       components,
     };
   } catch (err) {

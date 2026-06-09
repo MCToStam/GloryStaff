@@ -46,7 +46,7 @@ module.exports = {
     });
 
     if (!configExpansion.active) {
-      const container = new ContainerBuilder()
+      const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
           t.setContent("## ❌ Système Désactivé"),
@@ -55,19 +55,37 @@ module.exports = {
         .addTextDisplayComponents((t) =>
           t.setContent(
             `Le système de Conquête Territoriale est désactivé sur le serveur ${
-              config.emoji_formate[serveur]
+              config.serveur[serveur].emoji_formate
             } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
           ),
         );
 
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     if (!configExpansion.data.get("Salon")) {
-      const container = new ContainerBuilder()
+      const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
           t.setContent("## ❌ Configuration Invalide"),
@@ -76,17 +94,35 @@ module.exports = {
         .addTextDisplayComponents((t) =>
           t.setContent(
             `Le système de Conquête Territoriale n'est pas correctement configuré sur le serveur ${
-              config.emoji_formate[serveur]
+              config.serveur[serveur].emoji_formate
             } ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
             } pour votre serveur Discord, le choix du salon est manquant.`,
           ),
         );
 
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     if (interaction.isMessageComponent()) {
@@ -131,7 +167,7 @@ module.exports = {
     const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
 
     const userContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent("## ✈️ Conquête Territoriale"),
       )

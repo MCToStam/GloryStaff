@@ -218,7 +218,7 @@ module.exports = {
     const emojiTete = (await getEmojiTete(client, joueur)) || "🧑";
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(
           `## ${emojiTete} Gestion Staff - ${joueur.replace(/_/g, "\\_")}`,

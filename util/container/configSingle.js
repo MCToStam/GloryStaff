@@ -28,7 +28,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
     : "<:inactif:1318501225141895188>";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## ${settings.emoji ? `${settings.emoji} ` : ""}Configuration - ${systemName}`,

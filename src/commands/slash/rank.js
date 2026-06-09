@@ -147,14 +147,25 @@ module.exports = {
           );
 
         if (interaction.isMessageComponent()) {
-          return interaction.update({
+          const sentMessage = await interaction.update({
             components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
+            withResponse: true,
           });
+
+          setTimeout(async () => {
+            try {
+              if (sentMessage.resource) {
+                await sentMessage.resource.message.delete();
+              } else {
+                await sentMessage.delete();
+              }
+            } catch (error) {}
+          }, 5_000);
         } else {
           return interaction.reply({
             components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
       }
@@ -229,8 +240,7 @@ module.exports = {
             const errorEmbed = new EmbedBuilder()
               .setTitle(`❌ Liaison échouée - ${pseudonym}`)
               .setDescription(data.error)
-              .setColor(config.colors.error)
-              .setFooter({ text: config.footer });
+              .setColor(config.colors.error);
 
             return submitted.reply({
               embeds: [errorEmbed],
@@ -363,7 +373,7 @@ module.exports = {
     const badgeY = pseudoY - pseudoHeight / 2 - spacing - badgeHeight;
     const badgeX = textStartX;
 
-    const badgeColor = config.couleur[serveur] || 0x7b70ff;
+    const badgeColor = config.serveur[serveur].couleur || 0x7b70ff;
     ctx.fillStyle = `#${badgeColor.toString(16).padStart(6, "0")}`;
     ctx.beginPath();
     ctx.moveTo(badgeX + badgeRadius, badgeY);
@@ -488,9 +498,8 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(config.couleur[serveur])
+      .setColor(config.serveur[serveur].couleur)
       .setTitle(`${pseudonym} - ${gradeChoisi.nom}`)
-      .setFooter({ text: config.footer })
       .setImage(`attachment://affiche-rank.png`);
 
     if (historique && afficher_historique === "oui") {
@@ -539,7 +548,7 @@ module.exports = {
     }
 
     const userContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) => t.setContent("## ⬆️ Rank"))
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>

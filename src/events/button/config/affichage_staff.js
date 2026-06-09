@@ -148,7 +148,7 @@ module.exports = {
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Builder.lien[serveur])
                 .setLabel("Recrutement Builder")
-                .setEmoji(config.grade.builder.emoji)
+                .setEmoji("1458468397963808872")
                 .setStyle(ButtonStyle.Link),
             ),
           );
@@ -170,7 +170,7 @@ module.exports = {
     configStaff.save();
 
     const userContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) => t.setContent("## 📋 Affichage Staff"))
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>

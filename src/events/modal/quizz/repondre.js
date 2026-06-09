@@ -69,7 +69,7 @@ module.exports = {
 
     for (const questionData of questions) {
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((text) =>
           text.setContent("## 🧠 Nouvelle Réponse au Quizz"),
         )

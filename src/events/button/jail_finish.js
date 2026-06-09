@@ -11,12 +11,7 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    const embedColor = interaction.message?.embeds[0]?.color;
-
-    const serveur =
-      Object.keys(config.couleur).find(
-        (key) => config.couleur[key] === embedColor,
-      ) || (await getServeur(interaction));
+    const serveur = await getServeur(interaction);
 
     const configJail = await Configuration.findOne({
       serveur,

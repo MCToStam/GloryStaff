@@ -69,7 +69,7 @@ async function updateAllStaffWebhooks() {
     const components = [];
 
     for (const grade of GRADES) {
-      const membres = staffServeur.data[grade] || [];
+      const membres = staffServeur.staff[grade] || [];
       const membresPresents = membres.filter((m) => !absents.has(m));
       const membresAbsents = membres.filter((m) => absents.has(m));
 
@@ -144,7 +144,7 @@ async function updateAllStaffWebhooks() {
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Builder.lien[serveur])
                 .setLabel("Recrutement Builder")
-                .setEmoji(config.grade.builder.emoji)
+                .setEmoji("1458468397963808872")
                 .setStyle(ButtonStyle.Link),
             ),
           );
@@ -519,7 +519,7 @@ app.post("/staff", async (req, res) => {
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Builder.lien[serveur])
                   .setLabel("Recrutement Builder")
-                  .setEmoji(config.grade.builder.emoji)
+                  .setEmoji("1458468397963808872")
                   .setStyle(ButtonStyle.Link),
               ),
             );
@@ -577,7 +577,7 @@ app.post("/staff", async (req, res) => {
             (id) => linkData[id] === p.staff,
           );
 
-          return `${config.emoji_formate[p.serveur]} \`\`${p.staff}\`\` ${
+          return `${config.serveur[p.serveur].emoji_formate} \`\`${p.staff}\`\` ${
             discordId ? `(\`\`${discordId}\`\`) ` : ""
           }devient ${p.nouveau}`;
         })

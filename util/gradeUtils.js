@@ -29,7 +29,7 @@ async function generateContainer(serveur) {
   const roleData = getData(`data/${serveur}/grade.json`);
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((td) =>
       td.setContent("## Gestion des Catégories"),
     )
@@ -99,7 +99,7 @@ async function generateGradesContainer(client, serveur, idCat) {
   const categorie = roleData.categorie.find((c) => c.id === idCat);
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((td) =>
       td.setContent(
         `## Gestion des Grades - ${categorie ? categorie.nom : idCat}`,
@@ -205,7 +205,7 @@ async function handleInteraction(interaction, client, config) {
       const categorie = roleData.categorie.find((c) => c.id === idCat);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) =>
           td.setContent(`## Édition de la catégorie`),
         )
@@ -274,7 +274,7 @@ async function handleInteraction(interaction, client, config) {
       fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) =>
           td.setContent(`## Édition de la catégorie`),
         )
@@ -404,7 +404,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>
@@ -529,7 +529,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>
@@ -805,7 +805,7 @@ async function handleInteraction(interaction, client, config) {
       fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) =>
           td.setContent(`## Édition de la catégorie`),
         )
@@ -927,7 +927,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>
@@ -1047,7 +1047,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>
@@ -1163,7 +1163,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>
@@ -1274,7 +1274,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>
@@ -1385,7 +1385,7 @@ async function handleInteraction(interaction, client, config) {
       const emoji = await getHexEmoji(client, grade.couleur);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
         .addSeparatorComponents((sep) => sep)
         .addTextDisplayComponents((td) =>

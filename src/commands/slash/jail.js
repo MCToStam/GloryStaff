@@ -58,14 +58,25 @@ module.exports = {
         );
 
       if (interaction.isMessageComponent()) {
-        return interaction.update({
+        const sentMessage = await interaction.update({
           components: [errorContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
           components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
@@ -119,14 +130,25 @@ module.exports = {
         );
 
       if (interaction.isMessageComponent()) {
-        return interaction.update({
+        const sentMessage = await interaction.update({
           components: [errorContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
           components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
@@ -150,20 +172,31 @@ module.exports = {
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
             `Le système de Jail est désactivé sur le serveur ${
-              config.emoji_formate[serveur]
+              config.serveur[serveur].emoji_formate
             } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
           ),
         );
 
       if (interaction.isMessageComponent()) {
-        return interaction.update({
+        const sentMessage = await interaction.update({
           components: [errorContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
           components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
@@ -178,7 +211,7 @@ module.exports = {
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
             `Le système de Jail n'est pas correctement configuré sur le serveur ${
-              config.emoji_formate[serveur]
+              config.serveur[serveur].emoji_formate
             } ${
               serveur.charAt(0).toUpperCase() + serveur.slice(1)
             } pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
@@ -186,14 +219,25 @@ module.exports = {
         );
 
       if (interaction.isMessageComponent()) {
-        return interaction.update({
+        const sentMessage = await interaction.update({
           components: [errorContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
           components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
@@ -207,10 +251,28 @@ module.exports = {
     );
 
     if (container) {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [container],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     const salon = await interaction.client.channels.fetch(
@@ -237,7 +299,7 @@ module.exports = {
     });
 
     const introContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
           `## 🔎 Connexion de ${vraiCriminel.replace(/_/g, "\\_")}`,
@@ -276,7 +338,7 @@ module.exports = {
     const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
 
     const userContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent("## 🚧 Jail"),
       )
@@ -288,9 +350,10 @@ module.exports = {
       );
 
     if (interaction.isMessageComponent()) {
-      const sentMessage = interaction.update({
+      const sentMessage = await interaction.update({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
+        withResponse: true,
       });
 
       setTimeout(async () => {
@@ -301,9 +364,7 @@ module.exports = {
             await sentMessage.delete();
           }
         } catch (error) {}
-        return;
       }, 5_000);
-      return;
     } else {
       return interaction.reply({
         components: [userContainer],

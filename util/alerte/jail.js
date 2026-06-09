@@ -55,9 +55,7 @@ async function jail(client) {
                   )
                   .addTextDisplayComponents((textDisplay) =>
                     textDisplay.setContent(
-                      `Le joueur **${group}** vient de se connecter sur le serveur <:NG${server}:${
-                        config.emoji[server.toLowerCase()]
-                      }> **${
+                      `Le joueur **${group}** vient de se connecter sur le serveur ${config.serveur[server].emoji_formate} **${
                         server.charAt(0).toUpperCase() + server.slice(1)
                       }**.`,
                     ),
@@ -108,9 +106,7 @@ async function jail(client) {
                   )
                   .addTextDisplayComponents((textDisplay) =>
                     textDisplay.setContent(
-                      `Le joueur **${group}** vient de se déconnecter sur le serveur <:NG${server}:${
-                        config.emoji[server.toLowerCase()]
-                      }> **${
+                      `Le joueur **${group}** vient de se déconnecter sur le serveur ${config.serveur[server].emoji_formate} **${
                         server.charAt(0).toUpperCase() + server.slice(1)
                       }**.`,
                     ),

@@ -31,11 +31,7 @@ module.exports = {
         .sort((a, b) => a.classementConnection - b.classementConnection)
         .map(
           (entry, index) =>
-            `#${index + 1} <:NG${entry.serveur
-              .charAt(0)
-              .toUpperCase()}${entry.serveur.slice(1)}:${
-              config.emoji[entry.serveur.toLowerCase()]
-            }> **${entry.serveur.charAt(0).toUpperCase()}${entry.serveur.slice(
+            `#${index + 1} ${config.serveur[serveur].emoji_formate} **${entry.serveur.charAt(0).toUpperCase()}${entry.serveur.slice(
               1,
             )}** : ${entry.moyenneConnexion.toFixed(0)} joueurs`,
         )
@@ -45,11 +41,7 @@ module.exports = {
         .sort((a, b) => a.classementNotation - b.classementNotation)
         .map(
           (entry, index) =>
-            `#${index + 1} <:NG${entry.serveur
-              .charAt(0)
-              .toUpperCase()}${entry.serveur.slice(1)}:${
-              config.emoji[entry.serveur.toLowerCase()]
-            }> **${entry.serveur.charAt(0).toUpperCase()}${entry.serveur.slice(
+            `#${index + 1} ${config.serveur[serveur].emoji_formate} **${entry.serveur.charAt(0).toUpperCase()}${entry.serveur.slice(
               1,
             )}** : ${entry.argentNotation.toLocaleString()}$`,
         )
@@ -58,9 +50,8 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle(`Classement - ${isNotation ? "Notations" : "Connexions"}`)
-      .setColor(config.couleur[serveur])
-      .setDescription(classementText)
-      .setFooter({ text: config.footer });
+      .setColor(config.serveur[serveur].couleur)
+      .setDescription(classementText);
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
   },

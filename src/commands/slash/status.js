@@ -87,7 +87,7 @@ module.exports = {
     const messageLink = `https://discord.com/channels/${messageMaintenance.guildId}/${messageMaintenance.channelId}/${messageMaintenance.id}`;
 
     const userContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) => t.setContent("## 🚧 Maintenance"))
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>
@@ -97,30 +97,27 @@ module.exports = {
     if (channel.type === ChannelType.GuildNews)
       await messageMaintenance.crosspost();
 
-    let sentMessage;
-
     if (interaction.isMessageComponent()) {
-      sentMessage = await interaction.update({
+      const sentMessage = await interaction.update({
         components: [userContainer],
         flags: MessageFlags.IsComponentsV2,
         withResponse: true,
       });
+
+      setTimeout(async () => {
+        try {
+          if (sentMessage.resource) {
+            await sentMessage.resource.message.delete();
+          } else {
+            await sentMessage.delete();
+          }
+        } catch (error) {}
+      }, 5_000);
     } else {
-      sentMessage = await interaction.reply({
+      return interaction.reply({
         components: [userContainer],
-        flags: MessageFlags.IsComponentsV2,
-        withResponse: true,
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
-
-    setTimeout(async () => {
-      try {
-        if (sentMessage.resource) {
-          await sentMessage.resource.message.delete();
-        } else {
-          await sentMessage.delete();
-        }
-      } catch (error) {}
-    }, 5_000);
   },
 };

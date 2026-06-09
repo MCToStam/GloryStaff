@@ -131,7 +131,7 @@ async function repartition_notation(client) {
       ).join("\n");
 
       const repartitionContainer = new ContainerBuilder()
-        .setAccentColor(config.couleur[server])
+        .setAccentColor(config.serveur[server].couleur)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
             `## 🏆 Annonce des Notations - Semaine du ${jour}/${mois}`,

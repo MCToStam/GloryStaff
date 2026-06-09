@@ -57,7 +57,7 @@ module.exports = {
       );
 
       if (!sanctionData) {
-        const container = new ContainerBuilder()
+        const errorContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
           .addTextDisplayComponents((t) =>
             t.setContent("## ❌ Sanction Introuvable"),
@@ -67,34 +67,31 @@ module.exports = {
             t.setContent("La sanction demandé n'a pas pu être trouvée."),
           );
 
-        let sentMessage;
-
         if (interaction.isMessageComponent()) {
-          sentMessage = await interaction.update({
-            components: [container],
+          const sentMessage = await interaction.update({
+            components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
             withResponse: true,
           });
+
+          setTimeout(async () => {
+            try {
+              if (sentMessage.resource) {
+                await sentMessage.resource.message.delete();
+              } else {
+                await sentMessage.delete();
+              }
+            } catch (error) {}
+          }, 5_000);
         } else {
-          sentMessage = await interaction.reply({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
+          return interaction.reply({
+            components: [errorContainer],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
       } else {
         const container = new ContainerBuilder()
-          .setAccentColor(config.couleur[serveur])
+          .setAccentColor(config.serveur[serveur].couleur)
           .addTextDisplayComponents((t) =>
             t.setContent(`## 💢 Sanction : ${sanctionData.name}`),
           )
@@ -131,7 +128,7 @@ module.exports = {
       }
     } else if (config.liste_serveur_java.includes(serveur)) {
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent("## 💢 Tableau des Sanctions - Tchat"),
         )
@@ -198,7 +195,7 @@ module.exports = {
       const imageExists = fs.existsSync(imagePath);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent("## 💢 Tableau des Sanctions - Tchat"),
         )

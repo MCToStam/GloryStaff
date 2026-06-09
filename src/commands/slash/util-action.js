@@ -4,7 +4,6 @@ const {
   ContainerBuilder,
   SlashCommandBuilder,
   MessageFlags,
-  EmbedBuilder,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -98,17 +97,40 @@ module.exports = {
 
   async execute(client, interaction, config) {
     if (!config.developpeur.includes(interaction.user.id)) {
-      const error = new EmbedBuilder()
-        .setColor(config.colors.error)
-        .setTitle("Erreur")
-        .setDescription(
-          "Vous n'avez pas les permissions requises pour effectuer cette commande.",
+      const errorContainer = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent("## ❌ Permission Manquante"),
         )
-        .setFooter({ text: config.footer });
-      return interaction.reply({
-        embeds: [error],
-        flags: MessageFlags.Ephemeral,
-      });
+        .addSeparatorComponents((separator) => separator)
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `Tu n'as pas la permission d'effectuer cette action.`,
+          ),
+        );
+
+      if (interaction.isMessageComponent()) {
+        const sentMessage = await interaction.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
+      } else {
+        return interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
     }
 
     const actions = scanUtil();

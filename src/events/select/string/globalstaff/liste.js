@@ -21,7 +21,7 @@ module.exports = {
     }).lean();
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent("## <:liste:1441495206229835979> Liste des Staffs"),
       )

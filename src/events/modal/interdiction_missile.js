@@ -23,7 +23,7 @@ module.exports = {
       const pays = interaction.fields.getTextInputValue("pays");
 
       const channelContainer = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent(
             `## 🚀 Interdiction Missile - ${pays.charAt(0).toUpperCase() + pays.slice(1)}`,
@@ -47,7 +47,7 @@ module.exports = {
       saveData(`data/${serveur}/interdiction-missile.json`, data);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent(
             `## 🚀 Interdiction Missile - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,

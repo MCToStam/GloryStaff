@@ -112,7 +112,7 @@ module.exports = {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(
           "## <:activitediscord:1441495208951808203> Activité Vocal sur Discord",

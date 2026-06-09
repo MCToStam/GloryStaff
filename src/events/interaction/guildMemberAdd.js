@@ -39,7 +39,7 @@ module.exports = async (client, member) => {
     }
 
     const serverRoles = guideServers
-      .map((server) => config.role[server])
+      .map((server) => config.serveur[server].role)
       .filter(Boolean);
 
     rolesToAdd.push(...serverRoles);

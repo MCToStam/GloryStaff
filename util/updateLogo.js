@@ -78,8 +78,7 @@ async function updateLogo(client) {
   for (const guildId of client.guilds.cache.keys()) {
     const serveurs = guildServers.get(guildId);
 
-    const mustRemove =
-      guildId === config.support_serveur_id || !serveurs || serveurs.size !== 1;
+    const mustRemove = !serveurs || serveurs.size !== 1;
 
     if (mustRemove && cache.has(guildId)) {
       try {

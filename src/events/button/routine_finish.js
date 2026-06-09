@@ -59,7 +59,7 @@ module.exports = {
 
       const teteEmoji = (await getEmojiTete(client, pseudo)) || "⏱️";
       const routineContainer = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
             `## ${teteEmoji} Routine de ${pseudo.replace(/_/g, "\\_")}`,

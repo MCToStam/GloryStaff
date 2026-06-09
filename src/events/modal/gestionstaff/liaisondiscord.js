@@ -39,11 +39,7 @@ module.exports = {
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur <:NG${serveur
-              .charAt(0)
-              .toUpperCase()}${serveur.slice(1)}:${
-              config.emoji[serveur]
-            }> **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
+            `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
           ),
         );
 
@@ -214,7 +210,7 @@ module.exports = {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(
           `## ${emojiTete} Gestion Staff - ${joueur.replace(/_/g, "\\_")}`,

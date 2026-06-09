@@ -97,7 +97,7 @@ async function proxyCommande(client, interaction, config) {
     const options = serveur.map((srv) => ({
       label: srv.charAt(0).toUpperCase() + srv.slice(1),
       value: `selectServeur-${srv}`,
-      emoji: config.emoji[srv],
+      emoji: config.serveur[srv].emoji,
     }));
 
     const encodedArgs = argsSansServeur

@@ -80,7 +80,7 @@ module.exports = {
     );
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((text) =>
         text.setContent("## 🧠 Gestion du Quizz"),
       );

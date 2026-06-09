@@ -124,7 +124,7 @@ module.exports = {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(`## <:activitejeu:1441495207932596234> Activité en Jeu`),
       )

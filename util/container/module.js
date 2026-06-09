@@ -67,7 +67,7 @@ async function Guerre(client, serveur, guerre) {
   const emoji = (await getEmojiTete(client, guerre.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) => t.setContent(`## 📍 Nouvelle Guerre`))
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -102,7 +102,7 @@ async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
   const emoji = (await getEmojiTete(client, guerre.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) => t.setContent(`## 🚨 Guerre non traitée`))
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -138,7 +138,7 @@ async function Plainte(client, serveur, plainte) {
   const emoji = (await getEmojiTete(client, plainte.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) => t.setContent(`## 📍 Nouvelle Plainte`))
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -173,7 +173,7 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
   const emoji = (await getEmojiTete(client, plainte.auteur)) || "🧑";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) => t.setContent(`## 🚨 Plainte non traitée`))
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -209,7 +209,7 @@ async function AttenteStaff(client, serveur, joueur, id, salon) {
     : undefined;
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## ${emoji || "🕓"} Attente Staff ${
@@ -249,7 +249,7 @@ async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
   const teteEmoji = (await getEmojiTete(client, vraiCriminel)) || "🚧";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
         `## ${teteEmoji} Jail sur ${vraiCriminel.replace(/_/g, "\\_")}`,
@@ -290,7 +290,7 @@ async function Routine(client, serveur, pseudonym) {
   const teteEmoji = (await getEmojiTete(client, pseudonym)) || "⏱️";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
         `## ${teteEmoji} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
@@ -376,7 +376,7 @@ async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
   const drapeauB = (await getEmojiDrapeau(client, serveur, paysb)) || "🏳️";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent("## ✈️ Conquête Territoriale"),
     )
@@ -402,7 +402,7 @@ async function FullBuild(client, serveur, pseudo, paysa, paysb) {
   const drapeauB = (await getEmojiDrapeau(client, serveur, paysb)) || "🏳️";
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) => t.setContent("## 🏚️ FullBuild"))
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -445,7 +445,7 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
 
       const tete = (await getEmojiTete(client, s.staff)) || "🧑";
 
-      return `${config.emoji_formate[s.serveur] || ""} **${
+      return `${config.serveur[s.serveur].emoji_formate} **${
         s.type
       }** ${dureeStr}pour **${s.raison}** par ${tete} **${s.staff}** ${ts}`;
     }),
@@ -458,7 +458,7 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
   } :\n\n${lignes.join("\n")}`;
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## 🔨 ${newSanctions.length > 1 ? "Nouvelles Sanctions" : "Nouvelle Sanction"}`,
@@ -479,7 +479,7 @@ async function Alerte(client, serveur) {
   );
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## 🌐 ONU ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
@@ -527,7 +527,7 @@ async function Rappel1(client, serveur, temps) {
   );
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## 📅 Rappel ONU ${
@@ -568,7 +568,7 @@ async function Rappel2(client, serveur, temps) {
   );
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## 📅 Rappel ONU ${
@@ -609,7 +609,7 @@ async function Rappel3(client, serveur, temps) {
   );
 
   const container = new ContainerBuilder()
-    .setAccentColor(config.couleur[serveur])
+    .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## 📅 Rappel ONU ${

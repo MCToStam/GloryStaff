@@ -35,7 +35,7 @@ module.exports = {
 
     const data = getData(`data/${serveur}/quizz.json`);
     if (!data) {
-      const erreurContainer = new ContainerBuilder()
+      const errorContainer = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((text) =>
           text.setContent(`## ❌ Données Manquantes`),
@@ -48,9 +48,10 @@ module.exports = {
         );
 
       if (interaction.isMessageComponent()) {
-        const sentMessage = interaction.update({
-          components: [erreurContainer],
+        const sentMessage = await interaction.update({
+          components: [errorContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
 
         setTimeout(async () => {
@@ -61,12 +62,10 @@ module.exports = {
               await sentMessage.delete();
             }
           } catch (error) {}
-          return;
         }, 5_000);
-        return;
       } else {
         return interaction.reply({
-          components: [erreurContainer],
+          components: [errorContainer],
           flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
@@ -172,7 +171,7 @@ module.exports = {
 
         if (recapChannel) {
           const recapContainer = new ContainerBuilder()
-            .setAccentColor(config.couleur[serveur])
+            .setAccentColor(config.serveur[serveur].couleur)
             .addTextDisplayComponents((text) =>
               text.setContent("## 📊 Récapitulatif du Quizz"),
             );
@@ -232,7 +231,7 @@ module.exports = {
       saveData(`data/${serveur}/quizz.json`, data);
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((text) =>
           text.setContent(
             `## 🧠 Quizz de la semaine\nRépondez aux 3 questions ci-dessous.`,
@@ -266,7 +265,7 @@ module.exports = {
       });
     } else if (subcommand === "gerer") {
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((text) =>
           text.setContent("## 🧠 Gestion du Quizz"),
         );
@@ -298,14 +297,25 @@ module.exports = {
       });
 
       if (interaction.isMessageComponent()) {
-        return interaction.update({
+        const sentMessage = await interaction.update({
           components: [container],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
           components: [container],
-          flags: MessageFlags.IsComponentsV2,
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }

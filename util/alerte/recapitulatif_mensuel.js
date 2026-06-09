@@ -315,8 +315,7 @@ async function recapitulatif_mensuel(client) {
           inline: true,
         },
       )
-      .setColor(config.couleur[serveur])
-      .setFooter({ text: config.footer })
+      .setColor(config.serveur[serveur].couleur)
       .setImage("attachment://graphique.png");
 
     const actionRow = new ActionRowBuilder().addComponents(

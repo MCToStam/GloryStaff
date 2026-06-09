@@ -98,7 +98,7 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
 
     for (const grade of gradesHierarchie) {
       const staffList = srvData.staff[grade];
-      if (staffList && staffList.map((m) => m.toLowerCase()).includes(pseudoLower)) {
+      if (staffList.map((m) => m.toLowerCase()).includes(pseudoLower)) {
         userGrade = grade;
         break;
       }
@@ -115,7 +115,6 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
   if (userServers.length === 0 && typeof serveur === "string") {
     const capitalizedServeur =
       serveur.charAt(0).toUpperCase() + serveur.slice(1);
-    const emojiId = config.emoji[serveur.toLowerCase()];
 
     container = new ContainerBuilder()
       .setAccentColor(config.colors.error)
@@ -127,7 +126,7 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
         textDisplay.setContent(
           `Tu n'as pas la permission d'effectuer cette action ${
             serveur !== "all"
-              ? `pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** !`
+              ? `pour le serveur ${config.serveur[serveur].emoji_formate} **${capitalizedServeur}** !`
               : "!"
           }`,
         ),
@@ -191,7 +190,6 @@ async function errorStaffContainer(serveur) {
   }
 
   const capitalizedServeur = serveur.charAt(0).toUpperCase() + serveur.slice(1);
-  const emojiId = config.emoji[serveur.toLowerCase()];
 
   if (serveur === "permission") {
     const errorContainer = new ContainerBuilder()
@@ -202,7 +200,7 @@ async function errorStaffContainer(serveur) {
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `Tu n'as pas la permission d'effectuer cette action pour le serveur <:NG${capitalizedServeur}:${emojiId}> **${capitalizedServeur}** !`,
+          `Tu n'as pas la permission d'effectuer cette action pour le serveur ${config.serveur[serveur].emoji_formate} **${capitalizedServeur}** !`,
         ),
       );
 

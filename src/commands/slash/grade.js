@@ -25,9 +25,9 @@ module.exports = {
     const configGrade = getData(`data/${serveur}/grade.json`);
 
     const gradeContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(`## Configuration des Grades`),
+        textDisplay.setContent("## Configuration des Grades"),
       )
       .addSeparatorComponents((separator) => separator);
 

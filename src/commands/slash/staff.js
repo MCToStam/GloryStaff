@@ -54,7 +54,7 @@ module.exports = {
       }).lean();
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent("## <:liste:1441495206229835979> Liste des Staffs"),
         )
@@ -168,29 +168,36 @@ module.exports = {
     } else {
       const staffData = getData(`data/${serveur}/staff/${staff}.json`);
       if (!staffData) {
-        const container = new ContainerBuilder()
+        const errorContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
           .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `Le joueur "**${staff}**" n'existe pas ou ne fait pas partie du staff du serveur <:NG${serveur
-                .charAt(0)
-                .toUpperCase()}${serveur.slice(1)}:${
-                config.emoji[serveur]
-              }> **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
+              `Le joueur "**${staff}**" n'existe pas ou ne fait pas partie du staff du serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
             ),
           );
 
         if (interaction.isMessageComponent()) {
-          return interaction.update({
-            components: [container],
+          const sentMessage = await interaction.update({
+            components: [errorContainer],
             flags: MessageFlags.IsComponentsV2,
+            withResponse: true,
           });
+
+          setTimeout(async () => {
+            try {
+              if (sentMessage.resource) {
+                await sentMessage.resource.message.delete();
+              } else {
+                await sentMessage.delete();
+              }
+            } catch (error) {}
+          }, 5_000);
         } else {
           return interaction.reply({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
+            components: [errorContainer],
+            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
           });
         }
       }
@@ -360,7 +367,7 @@ module.exports = {
       }
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent(
             `## ${emojiTete} Gestion Staff - ${staff.replace(/_/g, "\\_")}`,

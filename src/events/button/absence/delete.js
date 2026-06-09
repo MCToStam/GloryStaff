@@ -34,7 +34,7 @@ module.exports = {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent("## ✅ Absence Supprimée"),
       )

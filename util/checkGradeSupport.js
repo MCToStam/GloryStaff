@@ -53,7 +53,7 @@ async function checkGradeSupport(client) {
         }
 
         const serverRoles = guideServers
-          .map((server) => config.role[server])
+          .map((server) => config.serveur[server].role)
           .filter(Boolean);
 
         expectedRoles.push(...serverRoles);

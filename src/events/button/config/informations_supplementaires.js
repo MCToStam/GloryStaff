@@ -21,10 +21,10 @@ module.exports = {
     const systemeData = categorieData.systeme[systeme];
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `## ${config.emoji_formate[serveur]} Information Supplémentaire - ${systeme}`,
+          `## ${config.serveur[serveur].emoji_formate} Information Supplémentaire - ${systeme}`,
         ),
       )
       .addSeparatorComponents((separator) => separator)

@@ -268,7 +268,9 @@ async function recapitulatif_hebdomadaire(client) {
     });
 
     let couleur_graphique =
-      serveur === "black" ? config.couleur["white"] : config.couleur[serveur];
+      serveur === "black"
+        ? config.serveur["white"].couleur
+        : config.serveur[serveur].couleur;
 
     const couleur_hex = `#${couleur_graphique.toString(16).padStart(6, "0")}`;
 
@@ -357,8 +359,7 @@ async function recapitulatif_hebdomadaire(client) {
           inline: true,
         },
       )
-      .setColor(config.couleur[serveur])
-      .setFooter({ text: config.footer })
+      .setColor(config.serveur[serveur].couleur)
       .setImage("attachment://graphique.png");
 
     const actionRow = new ActionRowBuilder().addComponents(

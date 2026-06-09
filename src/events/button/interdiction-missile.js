@@ -33,7 +33,7 @@ module.exports = {
       await message.delete();
 
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur])
+        .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent(
             `## 🚀 Interdiction Missile - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,

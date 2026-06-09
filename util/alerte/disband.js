@@ -53,7 +53,7 @@ async function disband_14h00(client) {
     });
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent("## 💥 C'est l'heure des disbands !"),
       )
@@ -166,7 +166,7 @@ async function disband_14h00(client) {
     }
 
     const containerPrevisualisation = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent("## 💥 C'est l'heure des disbands !"),
       )
@@ -368,7 +368,7 @@ async function disband_18h15(client) {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent("## 💥 Les pays sont supprimés !"),
       )

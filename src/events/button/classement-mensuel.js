@@ -32,11 +32,7 @@ module.exports = {
           .sort((a, b) => b.moyenneNotation - a.moyenneNotation)
           .map(
             (entry, index) =>
-              `#${index + 1} <:NG${entry.serveur
-                .charAt(0)
-                .toUpperCase()}${entry.serveur.slice(1)}:${
-                config.emoji[entry.serveur.toLowerCase()]
-              }> **${entry.serveur
+              `#${index + 1} ${config.serveur[serveur].emoji_formate} **${entry.serveur
                 .charAt(0)
                 .toUpperCase()}${entry.serveur.slice(1)}** : ${Math.round(
                 entry.moyenneNotation,
@@ -50,11 +46,7 @@ module.exports = {
           .sort((a, b) => b.moyenneConnexion - a.moyenneConnexion)
           .map(
             (entry, index) =>
-              `#${index + 1} <:NG${entry.serveur
-                .charAt(0)
-                .toUpperCase()}${entry.serveur.slice(1)}:${
-                config.emoji[entry.serveur.toLowerCase()]
-              }> **${entry.serveur
+              `#${index + 1} ${config.serveur[serveur].emoji_formate} **${entry.serveur
                 .charAt(0)
                 .toUpperCase()}${entry.serveur.slice(
                 1,
@@ -67,9 +59,8 @@ module.exports = {
         .setTitle(
           `Classement Mensuel - ${isNotation ? "Notations" : "Connexions"}`,
         )
-        .setColor(config.couleur[serveur])
-        .setDescription(classementTexte)
-        .setFooter({ text: config.footer });
+        .setColor(config.serveur[serveur].couleur)
+        .setDescription(classementTexte);
 
       return interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {

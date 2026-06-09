@@ -22,7 +22,9 @@ module.exports = {
 
     if (subId === "notation_module") {
       const container = new ContainerBuilder()
-        .setAccentColor(config.couleur[serveur] || config.colors.success)
+        .setAccentColor(
+          config.serveur[serveur].couleur || config.colors.success,
+        )
         .addTextDisplayComponents((t) =>
           t.setContent(`## 🎲 Configuration - Notation (${serveur})`),
         )
@@ -181,7 +183,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur] || config.colors.success)
+      .setAccentColor(config.serveur[serveur].couleur || config.colors.success)
       .addTextDisplayComponents((t) =>
         t.setContent("## 🧮 Répartition manuelle"),
       )
@@ -267,7 +269,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     }
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur] || config.colors.success)
+      .setAccentColor(config.serveur[serveur].couleur || config.colors.success)
       .addTextDisplayComponents((t) =>
         t.setContent(`## 🧑‍⚖️ Qui note de **${start} à ${end}** ?`),
       )
@@ -376,7 +378,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     }
 
     const nextContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur] || config.colors.success)
+      .setAccentColor(config.serveur[serveur].couleur || config.colors.success)
       .addTextDisplayComponents((t) =>
         t.setContent(`## 🧑‍⚖️ Qui note de **${nextStart} à ${nextEnd}** ?`),
       )

@@ -30,11 +30,7 @@ module.exports = {
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `Le joueur "**${joueur}**" n'existe pas ou n'apparait pas dans les données du serveur <:NG${serveur
-              .charAt(0)
-              .toUpperCase()}${serveur.slice(1)}:${
-              config.emoji[serveur]
-            }> **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
+            `Le joueur "**${joueur}**" n'existe pas ou n'apparait pas dans les données du serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
           ),
         );
 
@@ -133,7 +129,7 @@ module.exports = {
     const emojiTete = (await getEmojiTete(client, joueur)) || "⏱️";
 
     const container = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(
           `## ${emojiTete} Activité - ${joueur.replace(/_/g, "\\_")}`,

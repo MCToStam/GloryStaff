@@ -5,6 +5,7 @@ const {
   ContainerBuilder,
   MessageFlags,
 } = require("discord.js");
+const { getServeur } = require("../../../util/module/getServeur");
 
 module.exports = {
   data: {
@@ -12,20 +13,10 @@ module.exports = {
   },
 
   async execute(client, interaction, config) {
-    let color = interaction.message.components[0].data.accent_color;
-    if (!color) {
-      color = interaction.message.components[1].data.accent_color;
-    }
-
-    const serveur = Object.keys(config.couleur).find((key) => {
-      const hexValue = config.couleur[key];
-      const decimalValue =
-        typeof hexValue === "string" ? parseInt(hexValue, 16) : hexValue;
-      return decimalValue === color;
-    });
+    const serveur = await getServeur(interaction);
 
     const informationContainer = new ContainerBuilder()
-      .setAccentColor(config.couleur[serveur])
+      .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent("## 🗒️ Informations Supplémentaires"),
       )
