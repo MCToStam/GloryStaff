@@ -79,6 +79,15 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
         break;
 
       case "grade":
+        console.log(
+          Object.entries(config.grade)
+            .sort((a, b) => a[1].priorite - b[1].priorite)
+            .map(([key, grade]) => ({
+              label: grade?.nom?.normal,
+              value: `config_grade-${key}`,
+              default: getData(key) === key,
+            })),
+        );
         container
           .addTextDisplayComponents((t) => t.setContent(`\n\n**${key} :**`))
           .addActionRowComponents((row) =>
@@ -88,18 +97,13 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
                 .setCustomId(`config_grade-${type}-${systemName}-${key}`)
                 .setPlaceholder("Choisit un grade")
                 .setOptions(
-                  [
-                    "Administrateur",
-                    "Super-Modérateur",
-                    "Modérateur Plus",
-                    "Modérateur",
-                    "Modérateur Test",
-                    "Guide",
-                  ].map((g) => ({
-                    label: g,
-                    value: `config_grade-${g}`,
-                    default: getData(key) === g,
-                  })),
+                  Object.entries(config.grade)
+                    .sort((a, b) => a[1].priorite - b[1].priorite)
+                    .map(([idGrade, grade]) => ({
+                      label: grade?.nom?.normal,
+                      value: `config_grade-${idGrade}`,
+                      default: getData(key) === idGrade,
+                    })),
                 ),
             ),
           );
@@ -111,7 +115,7 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
             .setCustomId(item.customId)
             .setLabel(key)
             .setStyle(ButtonStyle[item.style] ?? ButtonStyle.Secondary)
-            .setDisabled(item.disabled === true && active),
+            .setDisabled(item.disabled === true && !active),
         );
         break;
 

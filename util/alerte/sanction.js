@@ -2,6 +2,7 @@ const config = require("../../config");
 const log = require("../../util/module/log");
 const { getData, saveData } = require("../../util/module/getAndSaveData");
 const { SanctionStaff } = require("../../util/container/module");
+const Serveur = require("../../util/database/models/Serveur");
 const { MessageFlags, TextDisplayBuilder, ChannelType } = require("discord.js");
 
 function sameSanction(a, b) {
@@ -173,12 +174,13 @@ async function sanction(client, serveur) {
     "gray",
   );
 
-  const staffServer = getData(`data/${serveur}/staff-serveur.json`);
-  const currentStaff = new Set(
-    Object.entries(staffServer)
-      .filter(([k]) => k !== "timestamp")
-      .flatMap(([_, v]) => v),
-  );
+  const staffServeur = await Serveur.findOne({
+    serveur,
+  }).lean();
+
+  const staffList = staffServeur?.staff ?? {};
+
+  const currentStaff = new Set(Object.values(staffList).flat());
 
   for (const pseudonyme of currentStaff) {
     if (!pseudonyme) continue;

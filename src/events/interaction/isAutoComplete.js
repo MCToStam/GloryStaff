@@ -2,6 +2,7 @@ const log = require("../../../util/module/log");
 const { getData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const getServerCommand = require("../../../util/getServerCommand");
+const Serveur = require("../../../util/database/models/Serveur");
 const config = require("../../../config");
 
 module.exports = async (client, interaction) => {
@@ -67,16 +68,16 @@ module.exports = async (client, interaction) => {
       const staffOptions = [];
 
       for (const srv of serveursAccessibles) {
-        const fullStaffData = getData(`data/${srv}/staff-serveur.json`) || {};
+        const staffServeur = await Serveur.findOne({
+          serveur,
+        }).lean();
 
-        for (const [grade, members] of Object.entries(fullStaffData)) {
-          if (!Array.isArray(members)) continue;
-
+        for (const [grade, members] of Object.entries(staffServeur.staff)) {
           members.forEach((member) => {
             if (!member || member.trim() === "") return;
 
             staffOptions.push({
-              name: `${serveursAccessibles.length > 1 ? `[${srv.toUpperCase()}] ` : ""}${grade} : ${member}`,
+              name: `${serveursAccessibles.length > 1 ? `[${srv.toUpperCase()}] ` : ""}${config.grade[grade].nom.normal} : ${member}`,
               value: member,
             });
           });

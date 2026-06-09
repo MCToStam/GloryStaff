@@ -27,30 +27,28 @@ const readFile = util.promisify(fs.readFile);
 const Absense = require("./util/database/models/Absence");
 const CONFIG_STATIC = require("./util/config");
 const Configuration = require("./util/database/models/Configuration");
+const Serveur = require("./util/database/models/Serveur");
 
 async function updateAllStaffWebhooks() {
   for (const serveur of config.liste_serveur) {
     let configWebhook = getData(`data/${serveur}/webhookListeDesStaffs.json`);
-    const staffData = getData(`data/${serveur}/staff-serveur.json`);
+    const staffServeur = await Serveur.findOne({
+      serveur,
+    }).lean();
 
     const { messageId, webhookUrl } = configWebhook;
 
-    const GRADES = [
-      "Administrateur",
-      "Super-Modérateur",
-      "Modérateur Plus",
-      "Modérateur",
-      "Modérateur Test",
-      "Guide",
-    ];
+    const GRADES = Object.entries(config.grade)
+      .sort(([, a], [, b]) => b.priorite - a.priorite)
+      .map(([grade]) => grade);
 
     const GRADES_EMOJI = {
-      Administrateur: "<:admin:1289928191674290187>",
-      "Super-Modérateur": "<:supermodo:1289928193595281480>",
-      "Modérateur Plus": "<:modoplus:1289934725569581086>",
-      Modérateur: "<:modo:1289934724294250588>",
-      "Modérateur Test": "<:modotest:1289934722151088180>",
-      Guide: "<:guide:1289928200800964628>",
+      administrateur: "<:admin:1289928191674290187>",
+      super_moderateur: "<:supermodo:1289928193595281480>",
+      modérateur_plus: "<:modoplus:1289934725569581086>",
+      moderateur: "<:modo:1289934724294250588>",
+      moderateur_test: "<:modotest:1289934722151088180>",
+      guide: "<:guide:1289928200800964628>",
     };
 
     const configCandidature = CONFIG_STATIC.find(
@@ -58,11 +56,6 @@ async function updateAllStaffWebhooks() {
     );
 
     const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
-
-    const effectifRole = (role) => {
-      const members = staffData[role].filter((name) => name.trim() !== "");
-      return members.length;
-    };
 
     const now = new Date();
     const absenceData = await Absense.find({
@@ -76,7 +69,7 @@ async function updateAllStaffWebhooks() {
     const components = [];
 
     for (const grade of GRADES) {
-      const membres = staffData[grade] || [];
+      const membres = staffServeur.data[grade] || [];
       const membresPresents = membres.filter((m) => !absents.has(m));
       const membresAbsents = membres.filter((m) => absents.has(m));
 
@@ -91,21 +84,20 @@ async function updateAllStaffWebhooks() {
             ).join(", ")
           : "Aucun";
 
-      const color = config.grade[grade]
-        ? parseInt(config.grade[grade].replace("#", ""), 16)
+      const color = config.grade[grade].couleur
+        ? parseInt(config.grade[grade].couleur.replace("#", ""), 16)
         : null;
 
-      const nbEffectif = effectifRole(grade);
-
-      let nomGrade = grade + (nbEffectif > 1 ? "s" : "");
-      if (grade === "Modérateur Plus" && nbEffectif > 1)
-        nomGrade = "Modérateurs Plus";
+      const nomGrade =
+        membres.length > 1
+          ? config.grade[grade].nom.pluriel
+          : config.grade[grade].nom.normal;
 
       const container = new ContainerBuilder()
         .setAccentColor(color)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `### ${GRADES_EMOJI[grade]} ${nomGrade} (${nbEffectif}) :`,
+            `### ${GRADES_EMOJI[grade]} ${nomGrade} (${membres.length}) :`,
           ),
         )
         .addSeparatorComponents((separator) => separator)
@@ -134,7 +126,7 @@ async function updateAllStaffWebhooks() {
           );
       }
 
-      if (grade === "Guide") {
+      if (grade === GRADES[GRADES.length - 1]) {
         container
           .addSeparatorComponents((separator) => separator)
           .addActionRowComponents(
@@ -142,17 +134,17 @@ async function updateAllStaffWebhooks() {
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Guide.lien[serveur])
                 .setLabel("Recrutement Guide")
-                .setEmoji("1289928200800964628")
+                .setEmoji(config.grade.guide.emoji)
                 .setStyle(ButtonStyle.Link),
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Modérateur.lien[serveur])
                 .setLabel("Recrutement Modérateur")
-                .setEmoji("1289934724294250588")
+                .setEmoji(config.grade.moderateur.emoji)
                 .setStyle(ButtonStyle.Link),
               new ButtonBuilder()
                 .setURL(configCandidature.systeme.Builder.lien[serveur])
                 .setLabel("Recrutement Builder")
-                .setEmoji("1289935984460304506")
+                .setEmoji(config.grade.builder.emoji)
                 .setStyle(ButtonStyle.Link),
             ),
           );
@@ -422,25 +414,6 @@ app.post("/staff", async (req, res) => {
         }
       }
 
-      const serverFilePath = path.join(
-        __dirname,
-        "data",
-        serveur,
-        `staff-serveur.json`,
-      );
-
-      const serverDirectory = path.dirname(serverFilePath);
-      if (!fs.existsSync(serverDirectory)) {
-        fs.mkdirSync(serverDirectory, { recursive: true });
-      }
-
-      processedData.timestamp = Math.floor(Date.now() / 1000);
-
-      fs.writeFileSync(
-        serverFilePath,
-        JSON.stringify(processedData, null, 2),
-        "utf8",
-      );
       log(`✅ Données sauvegardées pour le serveur ${serveur}`, "LOG", "gray");
 
       const configAffichage = await Configuration.find({
@@ -455,21 +428,9 @@ app.post("/staff", async (req, res) => {
 
       const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
 
-      const effectifRole = (role) => {
-        const members = processedData[role].filter(
-          (name) => name.trim() !== "",
-        );
-        return members.length;
-      };
-
-      const GRADES = [
-        "Administrateur",
-        "Super-Modérateur",
-        "Modérateur Plus",
-        "Modérateur",
-        "Modérateur Test",
-        "Guide",
-      ];
+      const GRADES = Object.entries(config.grade)
+        .sort(([, a], [, b]) => b.priorite - a.priorite)
+        .map(([grade]) => grade);
 
       const now = new Date();
 
@@ -500,21 +461,20 @@ app.post("/staff", async (req, res) => {
               ).join(", ")
             : "Aucun";
 
-        const color = config.grade[grade]
-          ? parseInt(config.grade[grade].replace("#", ""), 16)
+        const color = config.grade[grade].couleur
+          ? parseInt(config.grade[grade].couleur.replace("#", ""), 16)
           : null;
 
-        const nbEffectif = effectifRole(grade);
-
-        let nomGrade = grade + (nbEffectif > 1 ? "s" : "");
-        if (grade === "Modérateur Plus" && nbEffectif > 1)
-          nomGrade = "Modérateurs Plus";
+        const nomGrade =
+          membres.length > 1
+            ? config.grade[grade].nom.pluriel
+            : config.grade[grade].nom.normal;
 
         const container = new ContainerBuilder()
           .setAccentColor(color)
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `### ${config.emojigrade[grade]} ${nomGrade} (${effectifRole(grade)}) :`,
+              `### <:${grade}:${config.grade[grade].emoji}> ${nomGrade} (${membres.length}) :`,
             ),
           )
           .addSeparatorComponents((separator) => separator)
@@ -541,7 +501,7 @@ app.post("/staff", async (req, res) => {
             );
         }
 
-        if (grade === "Guide") {
+        if (grade === GRADES[GRADES.length - 1]) {
           container
             .addSeparatorComponents((separator) => separator)
             .addActionRowComponents(
@@ -549,17 +509,17 @@ app.post("/staff", async (req, res) => {
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Guide.lien[serveur])
                   .setLabel("Recrutement Guide")
-                  .setEmoji("1289928200800964628")
+                  .setEmoji(config.grade.guide.emoji)
                   .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Modérateur.lien[serveur])
                   .setLabel("Recrutement Modérateur")
-                  .setEmoji("1289934724294250588")
+                  .setEmoji(config.grade.moderateur.emoji)
                   .setStyle(ButtonStyle.Link),
                 new ButtonBuilder()
                   .setURL(configCandidature.systeme.Builder.lien[serveur])
                   .setLabel("Recrutement Builder")
-                  .setEmoji("1289935984460304506")
+                  .setEmoji(config.grade.builder.emoji)
                   .setStyle(ButtonStyle.Link),
               ),
             );
@@ -830,194 +790,7 @@ app.get("/webhookListeDesStaffs/:serveur", (req, res) => {
   });
 });
 
-app.post("/webhookListeDesStaffs/:serveur", async (req, res) => {
-  const authHeader = req.headers.authorization;
-
-  const TOKEN = "33:$+gj{csMS75.,9sWd7?^rVaE9%7HMRcU3Pj-8";
-
-  if (!authHeader || authHeader !== `Bearer ${TOKEN}`) {
-    return res.status(401).json({ error: "Accès non autorisé" });
-  }
-
-  const serveur = req.params.serveur;
-  const filePath = path.join(
-    __dirname,
-    "data",
-    serveur,
-    "webhookListeDesStaffs.json",
-  );
-  const staffFilePath = path.join(
-    __dirname,
-    "data",
-    serveur,
-    "staff-serveur.json",
-  );
-  const {
-    messageId,
-    webhookUrl,
-    titre,
-    description: rawDescription,
-    footerTexte,
-    footerImage,
-    image,
-    thumbnail,
-    couleur,
-    auteurNom,
-    auteurUrl,
-  } = req.body;
-
-  function normalizeRoleKey(role) {
-    return role
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[\s-]+/g, "_");
-  }
-
-  let staffData = null;
-  let lastUpdated = null;
-
-  try {
-    const staffRaw = await readFile(staffFilePath, "utf8");
-    staffData = JSON.parse(staffRaw);
-    lastUpdated = staffData.timestamp;
-  } catch (e) {
-    console.warn(`Impossible de lire ou parser ${staffFilePath}`, e);
-  }
-
-  const replacePlaceholders = (text) => {
-    if (!staffData) return text;
-
-    let replaced = text;
-
-    Object.entries(staffData).forEach(([role, users]) => {
-      if (!Array.isArray(users)) return;
-      const normalizedRole = normalizeRoleKey(role);
-
-      replaced = replaced.replace(
-        new RegExp(`{${normalizedRole}}`, "gi"),
-        users.map((u) => u.replace(/_/g, "\\_")).join(", "),
-      );
-
-      replaced = replaced.replace(
-        new RegExp(`{${normalizedRole}_nombre}`, "gi"),
-        String(users.length),
-      );
-    });
-
-    replaced = replaced.replace(
-      /{timestamp}/gi,
-      lastUpdated ? String(lastUpdated) : "",
-    );
-
-    return replaced;
-  };
-
-  const description = replacePlaceholders(rawDescription || "");
-
-  const embed = new EmbedBuilder().setColor(couleur || "#0099ff");
-
-  if (titre) embed.setTitle(titre);
-  if (description) embed.setDescription(description || "");
-  if (footerTexte || footerImage) {
-    embed.setFooter({
-      text: footerTexte || "",
-      iconURL: footerImage || undefined,
-    });
-  }
-  if (image) {
-    embed.setImage(image);
-  }
-  if (thumbnail) {
-    embed.setThumbnail(thumbnail);
-  }
-  if (auteurNom || auteurUrl) {
-    embed.setAuthor({ name: auteurNom || "", url: auteurUrl || undefined });
-  }
-
-  function saveFile(data) {
-    return new Promise((resolve, reject) => {
-      fs.mkdir(path.dirname(filePath), { recursive: true }, (err) => {
-        if (err) return reject(err);
-
-        fs.writeFile(filePath, JSON.stringify(data, null, 2), "utf8", (err) => {
-          if (err) return reject(err);
-          resolve();
-        });
-      });
-    });
-  }
-
-  try {
-    if (!webhookUrl) {
-      return res
-        .status(400)
-        .json({ error: "webhookUrl manquant dans la requête" });
-    }
-
-    const webhookParts = webhookUrl.split("/");
-    const webhookId = webhookParts[webhookParts.length - 2];
-    const webhookToken = webhookParts[webhookParts.length - 1];
-    const webhookClient = new WebhookClient({
-      id: webhookId,
-      token: webhookToken,
-    });
-
-    if (messageId) {
-      try {
-        await webhookClient.editMessage(messageId, {
-          embeds: [embed],
-        });
-        req.body.messageId = messageId;
-      } catch (editError) {
-        console.warn(
-          "Erreur lors de la modification du message, on tente de poster un nouveau :",
-          editError,
-        );
-
-        try {
-          const sentMessage = await webhookClient.send({
-            embeds: [embed],
-          });
-          req.body.messageId = sentMessage.id;
-        } catch (sendError) {
-          console.error(
-            "Erreur lors de l'envoi du nouveau message :",
-            sendError,
-          );
-          req.body.messageId = false;
-          return res.status(500).json({
-            error: "Erreur critique lors de l'envoi du message webhook.",
-          });
-        }
-      }
-    } else {
-      const sentMessage = await webhookClient.send({
-        embeds: [embed],
-      });
-      req.body.messageId = sentMessage.id;
-    }
-
-    await saveFile(req.body);
-
-    return res.status(200).json({
-      success: true,
-      message: `Webhook ListeDesStaffs de ${serveur} mis à jour avec succès`,
-      messageId: req.body.messageId,
-    });
-  } catch (error) {
-    console.error(
-      "Erreur lors de l'envoi ou modification du message webhook :",
-      error,
-    );
-    req.body.messageId = false;
-    return res.status(500).json({
-      error: "Erreur lors de l'envoi ou modification du message webhook",
-    });
-  }
-});
-
-app.get("/api/staff", (req, res) => {
+app.get("/api/staff", async (req, res) => {
   const { serveur } = req.query;
 
   if (!serveur) {
@@ -1036,28 +809,18 @@ app.get("/api/staff", (req, res) => {
 
   const serveurLower = serveur.toLowerCase();
 
-  const dataFilePath = path.join(
-    __dirname,
-    "data",
-    serveurLower,
-    "staff-serveur.json",
-  );
+  const staffServeur = await Serveur.findOne({
+    serveur: serveurLower,
+  }).lean();
 
-  fs.readFile(dataFilePath, "utf8", (err, data) => {
-    if (err) {
-      return res
-        .status(500)
-        .json({ error: 'Le paramètre "serveur" est invalide.' });
-    }
-    try {
-      const jsonData = JSON.parse(data);
-      res.json(jsonData);
-    } catch (parseErr) {
-      res
-        .status(500)
-        .json({ message: "Erreur de l'API, veuillez contacter ToStam." });
-    }
-  });
+  try {
+    const jsonData = JSON.parse(staffServeur.staff);
+    res.json(jsonData);
+  } catch (parseErr) {
+    res
+      .status(500)
+      .json({ message: "Erreur de l'API, veuillez contacter ToStam." });
+  }
 });
 
 app.get("/gestionStaff", async (req, res) => {

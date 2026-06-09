@@ -9,6 +9,7 @@ const { getServeur } = require("../../../../util/module/getServeur");
 const { getEmojiTete } = require("../../../../util/module/emoji");
 const Configuration = require("../../../../util/database/models/Configuration");
 const Absense = require("../../../../util/database/models/Absence");
+const Serveur = require("../../../../util/database/models/Serveur");
 const CONFIG_STATIC = require("../../../../util/config");
 
 module.exports = {
@@ -26,7 +27,7 @@ module.exports = {
       systeme: "Affichage Staff",
     });
 
-    if (!configStaff?.active) {
+    if (!configStaff?.active || !configStaff.data.get("Salon")) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>
@@ -34,7 +35,9 @@ module.exports = {
         )
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
-          t.setContent("Le système est désactivé ou mal configuré."),
+          t.setContent(
+            "Le système est désactivé ou le salon n'est pas défini.",
+          ),
         );
 
       return interaction.reply({
@@ -43,30 +46,17 @@ module.exports = {
       });
     }
 
-    const staffServeur = require(`../../../data/${serveur}/staff-serveur.json`);
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-    const processedData = {
-      Administrateur: staffServeur["Administrateur"] || [],
-      "Super-Modérateur": staffServeur["Super-Modérateur"] || [],
-      "Modérateur Plus": staffServeur["Modérateur Plus"] || [],
-      Modérateur: staffServeur["Modérateur"] || [],
-      "Modérateur Test": staffServeur["Modérateur Test"] || [],
-      Guide: staffServeur["Guide"] || [],
-    };
+    const staffServeur = await Serveur.findOne({
+      serveur,
+    }).lean();
 
-    const GRADES = [
-      "Administrateur",
-      "Super-Modérateur",
-      "Modérateur Plus",
-      "Modérateur",
-      "Modérateur Test",
-      "Guide",
-    ];
+    const GRADES = Object.entries(config.grade)
+      .sort(([, a], [, b]) => b.priorite - a.priorite)
+      .map(([grade]) => grade);
 
     const escapeUnderscore = (text = "") => text.replace(/_/g, "\\_");
-
-    const effectifRole = (role) =>
-      (processedData[role] || []).filter((n) => n?.trim()).length;
 
     const now = new Date();
 
@@ -85,7 +75,7 @@ module.exports = {
     );
 
     for (const grade of GRADES) {
-      const membres = processedData[grade] || [];
+      const membres = staffServeur.staff[grade] || [];
 
       const membresPresents = membres.filter((m) => !absents.has(m));
       const membresAbsents = membres.filter((m) => absents.has(m));
@@ -102,21 +92,20 @@ module.exports = {
             ).join(", ")
           : "Aucun";
 
-      const color = config.grade?.[grade]
-        ? parseInt(config.grade[grade].replace("#", ""), 16)
+      const color = config.grade[grade].couleur
+        ? parseInt(config.grade[grade].couleur.replace("#", ""), 16)
         : null;
 
-      const nbEffectif = effectifRole(grade);
-
-      let nomGrade = grade + (nbEffectif > 1 ? "s" : "");
-      if (grade === "Modérateur Plus" && nbEffectif > 1)
-        nomGrade = "Modérateurs Plus";
+      const nomGrade =
+        membres.length > 1
+          ? config.grade[grade].nom.pluriel
+          : config.grade[grade].nom.normal;
 
       const container = new ContainerBuilder()
         .setAccentColor(color || config.colors.success)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `### ${config.emojigrade?.[grade] || ""} ${nomGrade} (${nbEffectif}) :`,
+            `### <:${grade}:${config.grade[grade].emoji}> ${nomGrade} (${membres.length}) :`,
           ),
         )
         .addSeparatorComponents((s) => s)
@@ -141,32 +130,57 @@ module.exports = {
           );
       }
 
-      if (grade === "Guide") {
-        container.addSeparatorComponents((s) => s);
-
-        container.addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setURL(configCandidature.systeme.Guide.lien[serveur])
-              .setLabel("Recrutement Guide")
-              .setStyle(ButtonStyle.Link),
-            new ButtonBuilder()
-              .setURL(configCandidature.systeme.Modérateur.lien[serveur])
-              .setLabel("Recrutement Modérateur")
-              .setStyle(ButtonStyle.Link),
-            new ButtonBuilder()
-              .setURL(configCandidature.systeme.Builder.lien[serveur])
-              .setLabel("Recrutement Builder")
-              .setStyle(ButtonStyle.Link),
-          ),
-        );
+      if (grade === GRADES[GRADES.length - 1]) {
+        container
+          .addSeparatorComponents((s) => s)
+          .addActionRowComponents(
+            new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setURL(configCandidature.systeme.Guide.lien[serveur])
+                .setLabel("Recrutement Guide")
+                .setEmoji(config.grade.guide.emoji)
+                .setStyle(ButtonStyle.Link),
+              new ButtonBuilder()
+                .setURL(configCandidature.systeme.Modérateur.lien[serveur])
+                .setLabel("Recrutement Modérateur")
+                .setEmoji(config.grade.moderateur.emoji)
+                .setStyle(ButtonStyle.Link),
+              new ButtonBuilder()
+                .setURL(configCandidature.systeme.Builder.lien[serveur])
+                .setLabel("Recrutement Builder")
+                .setEmoji(config.grade.builder.emoji)
+                .setStyle(ButtonStyle.Link),
+            ),
+          );
       }
 
       components.push(container);
     }
 
-    return interaction.reply({
+    const salon = await client.channels.fetch(configStaff.data.get("Salon"));
+
+    const message = await salon.send({
       components,
+      flags: MessageFlags.IsComponentsV2,
+    });
+
+    const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
+
+    configStaff.data.set("messageId", message.id);
+    configStaff.save();
+
+    const userContainer = new ContainerBuilder()
+      .setAccentColor(config.couleur[serveur])
+      .addTextDisplayComponents((t) => t.setContent("## 📋 Affichage Staff"))
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
+          `L'affichage staff a correctement été envoyé ici : ${messageLink}`,
+        ),
+      );
+
+    await interaction.editReply({
+      components: [userContainer],
       flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
   },

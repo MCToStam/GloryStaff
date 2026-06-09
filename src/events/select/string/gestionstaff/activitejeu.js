@@ -12,6 +12,7 @@ const { getData } = require("../../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../../util/module/getServeur");
 const { generateConnexionGraph } = require("../../../../../util/connexion");
 const Configuration = require("../../../../../util/database/models/Configuration");
+const Serveur = require("../../../../../util/database/models/Serveur");
 
 module.exports = {
   data: {
@@ -152,9 +153,12 @@ module.exports = {
       true,
     );
 
-    const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
+    const staffServeur = await Serveur.findOne({
+      serveur,
+    }).lean();
+
     const gradeDuJoueur =
-      Object.entries(fullStaffData).find(
+      Object.entries(staffServeur.staff).find(
         ([, members]) => Array.isArray(members) && members.includes(joueur),
       )?.[0] || "Inconnu";
 
@@ -176,14 +180,9 @@ module.exports = {
     const roleAutoriseRoutine = configRoutine?.data.get("Grade");
     const roleAutoriseJail = configJail?.data.get("Grade");
 
-    const gradesHierarchie = [
-      "Administrateur",
-      "Super-Modérateur",
-      "Modérateur Plus",
-      "Modérateur",
-      "Modérateur Test",
-      "Guide",
-    ];
+    const gradesHierarchie = Object.entries(config.grade)
+      .sort(([, a], [, b]) => b.priorite - a.priorite)
+      .map(([grade]) => grade);
 
     const utilisateurAutoriseRoutine =
       configRoutine?.active &&

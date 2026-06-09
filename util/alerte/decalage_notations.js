@@ -1,6 +1,7 @@
 const log = require("../../util/module/log");
 const config = require("../../config");
 const Configuration = require("../../util/database/models/Configuration");
+const Serveur = require("../../util/database/models/Serveur");
 
 function rotateArray(arr, shift = 1) {
   if (!arr.length) return arr;
@@ -11,15 +12,14 @@ function rotateArray(arr, shift = 1) {
 
 async function decalage_notations(typeRotation) {
   for (const serveur of config.liste_serveur) {
-    if (serveur !== "blue") continue;
     try {
-      const staffData = require("../../util/module/getAndSaveData").getData(
-        `data/${serveur}/staff-serveur.json`,
-      );
+      const staffServeur = await Serveur.findOne({
+        serveur,
+      });
 
       const currentStaffList = [
-        ...(staffData["Administrateur"] || []),
-        ...(staffData["Super-Modérateur"] || []),
+        ...(staffServeur.staff.administrateur || []),
+        ...(staffServeur.staff.super_moderateur || []),
       ];
 
       const configs = await Configuration.find({

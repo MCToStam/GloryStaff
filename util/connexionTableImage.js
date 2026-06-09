@@ -65,7 +65,7 @@ function generateTableImage(dates, data, staffRaw) {
   ctx.fillStyle = "#ffffff";
   ctx.textBaseline = "middle";
 
-  ctx.fillText("Pseudo", padding, padding + rowHeight / 2);
+  ctx.fillText("Pseudonyme", padding, padding + rowHeight / 2);
   formattedDates.forEach((date, i) => {
     ctx.fillText(
       date,
@@ -78,7 +78,9 @@ function generateTableImage(dates, data, staffRaw) {
   for (const pseudo in data) {
     const grade = staffList[pseudo];
     let gradeColor =
-      grade && config.grade[grade] ? config.grade[grade] : "#ffffff";
+      grade && config.grade[grade]?.couleur
+        ? config.grade[grade]?.couleur
+        : "#ffffff";
     if (grade === "Super-Modérateur") gradeColor = "#3bb0c2";
     ctx.fillStyle = gradeColor;
     ctx.fillText(
@@ -169,9 +171,10 @@ function generateTableNombreImage(dates, data, staffRaw) {
   let rowIndex = 1;
   for (const pseudo in data) {
     const grade = staffList[pseudo];
-    let gradeColor =
-      grade && config.grade[grade] ? config.grade[grade] : "#ffffff";
-    if (grade === "Super-Modérateur") gradeColor = "#3bb0c2";
+    const gradeColor =
+      grade && config.grade[grade]?.couleur
+        ? config.grade[grade]?.couleur
+        : "#ffffff";
     ctx.fillStyle = gradeColor;
     ctx.fillText(
       pseudo,

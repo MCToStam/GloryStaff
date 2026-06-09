@@ -1,12 +1,60 @@
 const mongoose = require("mongoose");
 
-const { getGloryProjectsConnection } = require("../index");
+const { getGloryBotConnection } = require("../index");
 
-const GloryProjectsConnection = getGloryProjectsConnection();
+const GloryBotConnection = getGloryBotConnection();
 
-const serveurDiscordSchema = new mongoose.Schema({
-  robot: { type: String, required: true, unique: true },
-  serveur: { type: Array, required: true },
+const serveurSchema = new mongoose.Schema({
+  serveur: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  description: { type: String, default: "" },
+  banniere: { type: String, default: "" },
+  dateCreation: { type: Date, default: null },
+  paysCrees: { type: Array, default: [] },
+  paysDisponibles: { type: Array, default: [] },
+  reseau: {
+    type: {
+      discord: { type: String, default: "" },
+      youtube: { type: String, default: "" },
+      x: { type: String, default: "" },
+      _id: false,
+    },
+    default: {},
+  },
+  forum: {
+    type: {
+      journal: { type: String, default: "" },
+      resumeonu: {
+        type: {
+          categorie: { type: String, default: "" },
+          posts: { type: Array, default: [] },
+          _id: false,
+        },
+        default: {},
+      },
+      _id: false,
+    },
+  },
+  ressource: {
+    type: Array,
+    default: [],
+    _id: false,
+  },
+  staff: {
+    type: {
+      administrateur: { type: Array, default: [] },
+      super_moderateur: { type: Array, default: [] },
+      moderateur_plus: { type: Array, default: [] },
+      moderateur: { type: Array, default: [] },
+      moderateur_test: { type: Array, default: [] },
+      guide: { type: Array, default: [] },
+      _id: false,
+    },
+    default: {},
+  },
 });
 
-module.exports = GloryProjectsConnection.model("Serveur", serveurDiscordSchema);
+module.exports = GloryBotConnection.model("Serveur", serveurSchema);

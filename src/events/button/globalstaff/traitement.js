@@ -7,7 +7,6 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { getData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
 const {
   generateTableNombreImage,
@@ -16,6 +15,7 @@ const {
   getTotalAttenteStaffTable,
 } = require("../../../../util/totalConnexion");
 const Configuration = require("../../../../util/database/models/Configuration");
+const Serveur = require("../../../../util/database/models/Serveur");
 
 module.exports = {
   data: {
@@ -40,17 +40,20 @@ module.exports = {
       year: "numeric",
     });
 
-    const staffRaw = getData(`data/${serveur}/staff-serveur.json`);
-    const staffList = Object.values(staffRaw)
-      .filter((v) => Array.isArray(v))
-      .flat();
+    const staffServeur = await Serveur.findOne({
+      serveur,
+    }).lean();
+
+    const staffList = staffServeur?.staff ?? {};
+
+    const pseudos = Object.values(staffList).flat();
 
     const { dates, data } = getTotalAttenteStaffTable(
       serveur,
-      staffList,
+      pseudos,
       semaineOffset,
     );
-    const imageBuffer = generateTableNombreImage(dates, data, staffRaw);
+    const imageBuffer = generateTableNombreImage(dates, data, staffList);
 
     const attachment = new AttachmentBuilder(imageBuffer, {
       name: "globalstaff_traitement.png",

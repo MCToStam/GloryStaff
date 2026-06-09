@@ -13,6 +13,7 @@ const {
 } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Configuration = require("../../../util/database/models/Configuration");
+const Serveur = require("../../../util/database/models/Serveur");
 
 module.exports = {
   config: { permission: "guide" },
@@ -48,7 +49,9 @@ module.exports = {
 
     if (!staff) {
       const linkData = (await discordLink(false))?.data;
-      const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
+      const staffServeur = await Serveur.findOne({
+        serveur,
+      }).lean();
 
       const container = new ContainerBuilder()
         .setAccentColor(config.couleur[serveur])
@@ -57,50 +60,27 @@ module.exports = {
         )
         .addSeparatorComponents((s) => s);
 
-      const gradeMap = {
-        Administrateur: { plural: "Administrateurs", normal: "Administrateur" },
-        "Super-Modérateur": {
-          plural: "Super Modérateurs",
-          normal: "Super Modérateur",
-        },
-        "Modérateur Plus": {
-          plural: "Modérateurs Plus",
-          normal: "Modérateur Plus",
-        },
-        Modérateur: { plural: "Modérateurs", normal: "Modérateur" },
-        "Modérateur Test": {
-          plural: "Modérateur Tests",
-          normal: "Modérateur Test",
-        },
-        Guide: { plural: "Guides", normal: "Guide" },
-      };
+      for (const [grade, members] of Object.entries(staffServeur.staff)) {
+        const memberNames = members
+          .map((name) => {
+            const linkedId = Object.keys(linkData).find(
+              (id) => linkData[id] === name,
+            );
+            const escapedName = name.replace(/_/g, "\\_");
+            return linkedId ? `${escapedName} ( <@${linkedId}> )` : escapedName;
+          })
+          .join(", ");
 
-      for (const [grade, members] of Object.entries(fullStaffData)) {
-        if (members.length > 0) {
-          const emoji = config.emojigrade[grade] || "";
-          const memberNames = members
-            .map((name) => {
-              const linkedId = Object.keys(linkData).find(
-                (id) => linkData[id] === name,
-              );
-              const escapedName = name.replace(/_/g, "\\_");
-              return linkedId
-                ? `${escapedName} ( <@${linkedId}> )`
-                : escapedName;
-            })
-            .join(", ");
-
-          container
-            .addTextDisplayComponents((t) =>
-              t.setContent(
-                `**${emoji} ${members.length > 1 ? gradeMap[grade].plural : gradeMap[grade].normal} (${members.length}):**`,
-              ),
-            )
-            .addTextDisplayComponents((t) =>
-              t.setContent(memberNames || "Aucun staff ne possède ce grade"),
-            )
-            .addSeparatorComponents((s) => s);
-        }
+        container
+          .addTextDisplayComponents((t) =>
+            t.setContent(
+              `**<:${grade}:${config.grade[grade].emoji}> ${members.length > 1 ? config.grade[grade].nom.pluriel : config.grade[grade].nom.normal} (${members.length}):**`,
+            ),
+          )
+          .addTextDisplayComponents((t) =>
+            t.setContent(memberNames || "Aucun staff ne possède ce grade"),
+          )
+          .addSeparatorComponents((s) => s);
       }
 
       const [configRoutine, configJail] = await Promise.all([
@@ -215,9 +195,12 @@ module.exports = {
         }
       }
 
-      const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
+      const staffServeur = await Serveur.findOne({
+        serveur,
+      }).lean();
+
       const gradeDuJoueur =
-        Object.entries(fullStaffData).find(
+        Object.entries(staffServeur.staff).find(
           ([, members]) => Array.isArray(members) && members.includes(staff),
         )?.[0] || "Inconnu";
 
@@ -304,14 +287,9 @@ module.exports = {
       const roleAutoriseRoutine = configRoutine?.data.get("Grade");
       const roleAutoriseJail = configJail?.data.get("Grade");
 
-      const gradesHierarchie = [
-        "Administrateur",
-        "Super-Modérateur",
-        "Modérateur Plus",
-        "Modérateur",
-        "Modérateur Test",
-        "Guide",
-      ];
+      const gradesHierarchie = Object.entries(config.grade)
+        .sort(([, a], [, b]) => b.priorite - a.priorite)
+        .map(([grade]) => grade);
 
       const utilisateurAutoriseRoutine =
         configRoutine?.active &&
@@ -395,9 +373,7 @@ module.exports = {
 
       container.addTextDisplayComponents((t) =>
         t.setContent(
-          `**Grade :** ${
-            config.emojigrade[gradeDuJoueur] || ""
-          } ${gradeDuJoueur}`,
+          `**Grade :** <:${gradeDuJoueur}:${config.grade[gradeDuJoueur].emoji}> ${config.grade[gradeDuJoueur].nom.normal}`,
         ),
       );
 

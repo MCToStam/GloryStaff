@@ -13,6 +13,7 @@ const {
   generateTableNombreImage,
 } = require("../../../../util/connexionTableImage");
 const Configuration = require("../../../../util/database/models/Configuration");
+const Serveur = require("../../../../util/database/models/Serveur");
 
 module.exports = {
   data: {
@@ -67,16 +68,13 @@ module.exports = {
       dates.push(`${jour}-${mois}`);
     }
 
-    const staffRaw = getData(`data/${serveur}/staff-serveur.json`);
+    const staffServeur = await Serveur.findOne({
+      serveur,
+    }).lean();
 
-    const gradesHierarchie = [
-      "Administrateur",
-      "Super-Modérateur",
-      "Modérateur Plus",
-      "Modérateur",
-      "Modérateur Test",
-      "Guide",
-    ];
+    const gradesHierarchie = Object.entries(config.grade)
+      .sort(([, a], [, b]) => b.priorite - a.priorite)
+      .map(([grade]) => grade);
 
     const gradeAutorise = configRoutine?.data?.get("Grade");
 
@@ -84,7 +82,7 @@ module.exports = {
 
     const staffAutorise = {};
 
-    for (const [grade, membres] of Object.entries(staffRaw)) {
+    for (const [grade, membres] of Object.entries(staffServeur.staff)) {
       if (!Array.isArray(membres)) continue;
       const indexGrade = gradesHierarchie.indexOf(grade);
       if (indexGrade === -1) continue;
@@ -117,7 +115,11 @@ module.exports = {
       });
     }
 
-    const imageBuffer = generateTableNombreImage(dates, data, staffRaw);
+    const imageBuffer = generateTableNombreImage(
+      dates,
+      data,
+      staffServeur.staff,
+    );
 
     const attachment = new AttachmentBuilder(imageBuffer, {
       name: "globalstaff_routine.png",

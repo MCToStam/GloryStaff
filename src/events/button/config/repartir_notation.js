@@ -9,6 +9,7 @@ const { getData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
 const { getEmojiTete } = require("../../../../util/module/emoji");
 const Configuration = require("../../../../util/database/models/Configuration");
+const Serveur = require("../../../../util/database/models/Serveur");
 
 module.exports = {
   data: {
@@ -65,10 +66,13 @@ module.exports = {
 async function modeAutomatique(client, interaction, config, serveur) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-  const staffData = getData(`data/${serveur}/staff-serveur.json`);
+  const staffServeur = await Serveur.findOne({
+    serveur,
+  }).lean();
+
   const staffList = [
-    ...(staffData["Administrateur"] || []),
-    ...(staffData["Super-Modérateur"] || []),
+    ...(staffServeur.staff.administrateur || []),
+    ...(staffServeur.staff.super_moderateur || []),
   ];
 
   staffList.sort(() => Math.random() - 0.5);
@@ -146,10 +150,13 @@ async function modeAutomatique(client, interaction, config, serveur) {
 const manualCache = new Map();
 
 async function modeManuel(client, interaction, config, serveur, subId) {
-  const staffData = getData(`data/${serveur}/staff-serveur.json`);
+  const staffServeur = await Serveur.findOne({
+    serveur,
+  }).lean();
+
   const staffList = [
-    ...(staffData["Administrateur"] || []),
-    ...(staffData["Super-Modérateur"] || []),
+    ...(staffServeur.staff.administrateur || []),
+    ...(staffServeur.staff.super_moderateur || []),
   ];
 
   if (!manualCache.has(serveur)) manualCache.set(serveur, new Map());

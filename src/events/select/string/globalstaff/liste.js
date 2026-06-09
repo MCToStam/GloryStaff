@@ -3,10 +3,10 @@ const {
   MessageFlags,
   ContainerBuilder,
 } = require("discord.js");
-const { getData } = require("../../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../../util/module/getServeur");
 const { discordLink } = require("../../../../../util/module/discordLink");
 const Configuration = require("../../../../../util/database/models/Configuration");
+const Serveur = require("../../../../../util/database/models/Serveur");
 
 module.exports = {
   data: {
@@ -16,7 +16,9 @@ module.exports = {
   async execute(client, interaction, config) {
     const serveur = await getServeur(interaction);
     const linkData = (await discordLink(false))?.data;
-    const fullStaffData = getData(`data/${serveur}/staff-serveur.json`);
+    const staffServeur = await Serveur.findOne({
+      serveur,
+    }).lean();
 
     const container = new ContainerBuilder()
       .setAccentColor(config.couleur[serveur])
@@ -25,48 +27,27 @@ module.exports = {
       )
       .addSeparatorComponents((s) => s);
 
-    const gradeMap = {
-      Administrateur: { plural: "Administrateurs", normal: "Administrateur" },
-      "Super-Modérateur": {
-        plural: "Super Modérateurs",
-        normal: "Super Modérateur",
-      },
-      "Modérateur Plus": {
-        plural: "Modérateurs Plus",
-        normal: "Modérateur Plus",
-      },
-      Modérateur: { plural: "Modérateurs", normal: "Modérateur" },
-      "Modérateur Test": {
-        plural: "Modérateur Tests",
-        normal: "Modérateur Test",
-      },
-      Guide: { plural: "Guides", normal: "Guide" },
-    };
+    for (const [grade, members] of Object.entries(staffServeur.staff)) {
+      const memberNames = members
+        .map((name) => {
+          const linkedId = Object.keys(linkData).find(
+            (id) => linkData[id] === name,
+          );
+          const escapedName = name.replace(/_/g, "\\_");
+          return linkedId ? `${escapedName} ( <@${linkedId}> )` : escapedName;
+        })
+        .join(", ");
 
-    for (const [grade, members] of Object.entries(fullStaffData)) {
-      if (members.length > 0) {
-        const emoji = config.emojigrade[grade] || "";
-        const memberNames = members
-          .map((name) => {
-            const linkedId = Object.keys(linkData).find(
-              (id) => linkData[id] === name,
-            );
-            const escapedName = name.replace(/_/g, "\\_");
-            return linkedId ? `${escapedName} ( <@${linkedId}> )` : escapedName;
-          })
-          .join(", ");
-
-        container
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              `**${emoji} ${members.length > 1 ? gradeMap[grade].plural : gradeMap[grade].normal} (${members.length}):**`,
-            ),
-          )
-          .addTextDisplayComponents((t) =>
-            t.setContent(memberNames || "Aucun staff ne possède ce grade"),
-          )
-          .addSeparatorComponents((s) => s);
-      }
+      container
+        .addTextDisplayComponents((t) =>
+          t.setContent(
+            `**<:${grade}:${config.grade[grade].emoji}> ${members.length > 1 ? config.grade[grade].nom.pluriel : config.grade[grade].nom.normal} (${members.length}):**`,
+          ),
+        )
+        .addTextDisplayComponents((t) =>
+          t.setContent(memberNames || "Aucun staff ne possède ce grade"),
+        )
+        .addSeparatorComponents((s) => s);
     }
 
     const [configRoutine, configJail] = await Promise.all([

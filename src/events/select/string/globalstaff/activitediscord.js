@@ -7,13 +7,13 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const { getData } = require("../../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../../util/module/getServeur");
 const {
   generateTableImage,
 } = require("../../../../../util/connexionTableImage");
 const { getTotalVocalTable } = require("../../../../../util/totalConnexion");
 const Configuration = require("../../../../../util/database/models/Configuration");
+const Serveur = require("../../../../../util/database/models/Serveur");
 
 module.exports = {
   data: {
@@ -42,17 +42,16 @@ module.exports = {
       year: "numeric",
     });
 
-    const staffRaw = getData(`data/${serveur}/staff-serveur.json`);
-    const staffList = Object.values(staffRaw)
-      .filter((v) => Array.isArray(v))
-      .flat();
-
-    const { dates, data } = getTotalVocalTable(
+    const staffServeur = await Serveur.findOne({
       serveur,
-      staffList,
-      semaineOffset,
-    );
-    const imageBuffer = generateTableImage(dates, data, staffRaw);
+    }).lean();
+
+    const staffList = staffServeur?.staff ?? {};
+
+    const pseudos = Object.values(staffList).flat();
+
+    const { dates, data } = getTotalVocalTable(serveur, pseudos, semaineOffset);
+    const imageBuffer = generateTableImage(dates, data, staffList);
 
     const attachment = new AttachmentBuilder(imageBuffer, {
       name: "globalstaff_activitediscord.png",

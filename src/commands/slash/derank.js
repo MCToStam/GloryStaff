@@ -425,14 +425,9 @@ module.exports = {
 
     let historique = "";
 
-    const gradesValides = [
-      "Guide",
-      "Modérateur Test",
-      "Modérateur",
-      "Modérateur Plus",
-      "Super-Modérateur",
-      "Administrateur",
-    ];
+    const gradesValides = Object.entries(config.grade)
+      .sort(([, a], [, b]) => b.priorite - a.priorite)
+      .map(([grade]) => grade.nom);
 
     const data = getData(`data/staff/${pseudonym}.json`);
 

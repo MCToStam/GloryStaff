@@ -89,14 +89,9 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
   }
   if (!allStaff) allStaff = getData("data/api_all_staff.json");
 
-  const gradesHierarchie = [
-    "administrateur",
-    "super_moderateur",
-    "moderateur_plus",
-    "moderateur",
-    "moderateur_test",
-    "guide",
-  ];
+  const gradesHierarchie = Object.entries(config.grade)
+    .sort(([, a], [, b]) => b.priorite - a.priorite)
+    .map(([grade]) => grade);
 
   const pseudoLower = pseudonym.toLowerCase();
   const minIndex = gradesHierarchie.indexOf(gradeMin);
