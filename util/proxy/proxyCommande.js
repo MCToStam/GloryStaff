@@ -43,15 +43,30 @@ async function proxyCommande(client, interaction, config) {
   const commandFile = require(`../../src/commands/slash/${commandName}.js`);
   const permission = commandFile?.config?.permission;
 
-  let serveur = interaction.options.getString("serveur")?.toLowerCase();
-  if (!serveur)
-    serveur = await getServerCommand(
-      interaction.guild?.id,
-      interaction.user.id,
-    );
+  const serveur = await getServerCommand(
+    interaction.guild?.id,
+    interaction.user.id,
+  );
 
-  if (serveur && typeof serveur === "string") {
-    const errorContainer = await errorStaffContainer(serveur);
+  if (serveur.length === 0) {
+    const container = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent("## ❌ Aucun Serveur"),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          "Aucun serveur par défaut n'a été trouvé pour votre utilisateur Discord, assurez vous d'avoir lié votre compte Discord avec votre compte NationsGlory ainsi que d'être membre du staff d'un serveur NationsGlory.",
+        ),
+      );
+
+    return interaction.reply({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    });
+  } else if (serveur.length === 1) {
+    const errorContainer = await errorStaffContainer(serveur[0]);
 
     if (errorContainer) {
       return interaction.reply({
@@ -63,7 +78,7 @@ async function proxyCommande(client, interaction, config) {
     if (permission) {
       const { container } = await discordStaff(
         interaction.user.id,
-        serveur,
+        serveur[0],
         permission,
       );
 
@@ -75,17 +90,15 @@ async function proxyCommande(client, interaction, config) {
       }
     }
 
-    interaction.parametre.serveur = serveur;
+    interaction.parametre.serveur = serveur[0];
 
     await commandFile.proxy(client, interaction, config);
-  } else if (serveur && Array.isArray(serveur)) {
-    const options = serveur
-      .filter((srv) => config.liste_serveur.includes(srv))
-      .map((srv) => ({
-        label: srv.charAt(0).toUpperCase() + srv.slice(1),
-        value: `selectServeur-${srv}`,
-        emoji: config.emoji[srv],
-      }));
+  } else {
+    const options = serveur.map((srv) => ({
+      label: srv.charAt(0).toUpperCase() + srv.slice(1),
+      value: `selectServeur-${srv}`,
+      emoji: config.emoji[srv],
+    }));
 
     const encodedArgs = argsSansServeur
       .map((arg) => `${arg.name}=${arg.value}`)
@@ -115,23 +128,6 @@ async function proxyCommande(client, interaction, config) {
     return interaction.reply({
       components: [container],
       flags: MessageFlags.IsComponentsV2,
-    });
-  } else {
-    const container = new ContainerBuilder()
-      .setAccentColor(config.colors.error)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("## ❌ Aucun Serveur"),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          "Aucun serveur par défaut n'a été trouvé pour votre utilisateur Discord, veuillez en spécifier un manuellement.",
-        ),
-      );
-
-    return interaction.reply({
-      components: [container],
-      flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     });
   }
 }

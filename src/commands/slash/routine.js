@@ -76,21 +76,10 @@ module.exports = {
       });
     }
 
-    const gradeAutoriseMap = {
-      Administrateur: "administrateur",
-      "Super-Modérateur": "super_moderateur",
-      "Modérateur Plus": "moderateur_plus",
-      Modérateur: "moderateur",
-      "Modérateur Test": "moderateur_test",
-      Guide: "guide",
-    };
-
-    const roleAutorise = gradeAutoriseMap[grade];
-
     const { pseudonym, container } = await discordStaff(
       interaction.user.id,
       serveur,
-      roleAutorise,
+      grade,
     );
 
     if (container) {

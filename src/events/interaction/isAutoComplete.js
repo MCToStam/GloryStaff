@@ -36,40 +36,20 @@ module.exports = async (client, interaction) => {
         interaction.user.id,
       );
 
-      let serveursAccessibles = [];
-
-      if (serveur) {
-        const result = await discordStaff(
-          interaction.user.id,
-          serveur,
-          "guide",
-        );
-
-        if (!result.servers.includes(serveur)) {
-          return interaction.respond([
-            {
-              name: "Tu n'as pas le droit d'effectuer ceci !",
-              value: "nopermission",
-            },
-          ]);
-        }
-
-        serveursAccessibles = [serveur];
-      } else {
-        for (const srv of config.liste_serveur) {
-          const result = await discordStaff(interaction.user.id, srv, "guide");
-
-          if (result.servers.includes(srv)) {
-            serveursAccessibles.push(srv);
-          }
-        }
+      if (serveur.length === 0) {
+        return interaction.respond([
+          {
+            name: "Tu n'as pas le droit d'effectuer ceci !",
+            value: "nopermission",
+          },
+        ]);
       }
 
       const staffOptions = [];
 
-      for (const srv of serveursAccessibles) {
+      for (const srv of serveur) {
         const staffServeur = await Serveur.findOne({
-          serveur,
+          serveur: srv,
         }).lean();
 
         for (const [grade, members] of Object.entries(staffServeur.staff)) {
@@ -77,7 +57,7 @@ module.exports = async (client, interaction) => {
             if (!member || member.trim() === "") return;
 
             staffOptions.push({
-              name: `${serveursAccessibles.length > 1 ? `[${srv.toUpperCase()}] ` : ""}${config.grade[grade].nom.normal} : ${member}`,
+              name: `${serveur.length > 1 ? `[${srv.toUpperCase()}] ` : ""}${config.grade[grade].nom.normal} : ${member}`,
               value: member,
             });
           });
@@ -95,17 +75,17 @@ module.exports = async (client, interaction) => {
         interaction.user.id,
       );
 
-      if (!serveur || !config.liste_serveur.includes(serveur)) {
-        return await interaction.respond([
+      if (serveur.length === 0) {
+        return interaction.respond([
           {
-            name: "Il te faut sélectionner un serveur",
-            value: "non-choisit",
+            name: "Tu n'as pas le droit d'effectuer ceci !",
+            value: "nopermission",
           },
         ]);
       }
 
       const paysRes = await fetch(
-        `${config.glorybot_url}/api/paysCree?serveur=${serveur}`,
+        `${config.glorybot_url}/api/paysCree?serveur=${serveur[0]}`,
         {
           method: "GET",
           headers: {
@@ -150,25 +130,17 @@ module.exports = async (client, interaction) => {
         interaction.guild.id,
         interaction.user.id,
       );
-      if (!serveur || typeof serveur !== "string") {
-        return await interaction.respond([
+
+      if (serveur.length === 0) {
+        return interaction.respond([
           {
-            name: "Il te faut sélectionner un serveur",
-            value: "non-choisit",
+            name: "Tu n'as pas le droit d'effectuer ceci !",
+            value: "nopermission",
           },
         ]);
       }
 
-      if (serveur === "non-lie") {
-        return await interaction.respond([
-          {
-            name: "Compte NationsGlory non lié, fait le maintenant : https://glorybot.fr",
-            value: "non-lie",
-          },
-        ]);
-      }
-
-      const gradeData = getData(`data/${serveur}/grade.json`);
+      const gradeData = getData(`data/${serveur[0]}/grade.json`);
 
       const allGrades = gradeData.grade.map((g) => {
         const categorie = gradeData.categorie.find((c) => c.id === g.categorie);

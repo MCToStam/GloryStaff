@@ -6,6 +6,7 @@ const {
   ActionRowBuilder,
 } = require("discord.js");
 const { getData } = require("../../util/module/getAndSaveData");
+const Serveur = require("../../util/database/models/Serveur");
 
 async function discordLink(discordId) {
   try {
@@ -64,37 +65,6 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
     return { pseudonym: null, servers: [], container: linkContainer };
   }
 
-  if (config.developpeur.includes(discordId)) {
-    return {
-      pseudonym,
-      servers:
-        serveur === "all"
-          ? config.liste_serveur
-          : Array.isArray(serveur)
-            ? serveur
-            : [serveur],
-      container: false,
-    };
-  }
-
-  let allStaff = null;
-  try {
-    const response = await fetch(`${config.glorybot_url}/api/allStaff`, {
-      headers: { Authorization: `Bearer ${config.glorybot_token}` },
-    });
-    if (!response.ok) throw new Error("API non fonctionnelle");
-    allStaff = await response.json();
-  } catch {
-    allStaff = getData("data/api_all_staff.json");
-  }
-  if (!allStaff) allStaff = getData("data/api_all_staff.json");
-
-  const gradesHierarchie = Object.entries(config.grade)
-    .sort(([, a], [, b]) => b.priorite - a.priorite)
-    .map(([grade]) => grade);
-
-  const pseudoLower = pseudonym.toLowerCase();
-  const minIndex = gradesHierarchie.indexOf(gradeMin);
   const targetServers =
     serveur === "all"
       ? config.liste_serveur
@@ -102,19 +72,33 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
         ? serveur
         : [serveur];
 
+  if (config.developpeur.includes(discordId)) {
+    return {
+      pseudonym,
+      servers: targetServers,
+      container: false,
+    };
+  }
+
+  const staffData = await Serveur.find({
+    serveur: targetServers,
+  });
+
+  const gradesHierarchie = Object.entries(config.grade)
+    .sort(([, a], [, b]) => b.priorite - a.priorite)
+    .map(([grade]) => grade);
+
+  const pseudoLower = pseudonym.toLowerCase();
+  const minIndex = gradesHierarchie.indexOf(gradeMin);
+
   const userServers = [];
 
-  for (const srvData of allStaff) {
-    if (!targetServers.includes(srvData.serveur)) continue;
-
+  for (const srvData of staffData) {
     let userGrade = null;
 
     for (const grade of gradesHierarchie) {
-      const staffList = srvData[grade];
-      if (
-        Array.isArray(staffList) &&
-        staffList.map((m) => m.toLowerCase()).includes(pseudoLower)
-      ) {
+      const staffList = srvData.staff[grade];
+      if (staffList.map((m) => m.toLowerCase()).includes(pseudoLower)) {
         userGrade = grade;
         break;
       }

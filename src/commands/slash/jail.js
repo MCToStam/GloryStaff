@@ -200,19 +200,10 @@ module.exports = {
 
     const roleAutorise = configJail.data.get("Grade");
 
-    const gradeAutorise = {
-      Administrateur: "administrateur",
-      "Super-Modérateur": "super_moderateur",
-      "Modérateur Plus": "moderateur_plus",
-      Modérateur: "moderateur",
-      "Modérateur Test": "moderateur_test",
-      Guide: "guide",
-    };
-
     const { container } = await discordStaff(
       interaction.user.id,
       serveur,
-      gradeAutorise[roleAutorise],
+      roleAutorise,
     );
 
     if (container) {

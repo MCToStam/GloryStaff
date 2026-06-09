@@ -37,7 +37,6 @@ const {
 const { sanction } = require("../../../util/alerte/sanction");
 const { checkCandidature } = require("../../../util/alerte/candidature");
 const { checkONU } = require("../../../util/alerte/onu");
-const { cacheApiGloryBot } = require("../../../util/module/cacheApiGloryBot");
 
 async function cycleStatus(client, index = 0) {
   const server = config.liste_serveur[index];
@@ -134,7 +133,6 @@ module.exports = async (client, interaction) => {
       for (const serveur of config.liste_serveur) {
         await sanction(client, serveur);
       }
-      await cacheApiGloryBot();
       await updateSanctionsCache();
     },
     {

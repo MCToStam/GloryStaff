@@ -939,7 +939,5 @@ app.post("/api/attenteStaff", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(
-    `Le serveur est en fonctionnement sur http://de3.bot-hosting.net:${port}`,
-  );
+  log(`Serveur API démarré sur le port ${port}`, "READY", "green");
 });
