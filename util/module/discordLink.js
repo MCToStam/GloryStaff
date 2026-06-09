@@ -98,7 +98,7 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
 
     for (const grade of gradesHierarchie) {
       const staffList = srvData.staff[grade];
-      if (staffList.map((m) => m.toLowerCase()).includes(pseudoLower)) {
+      if (staffList && staffList.map((m) => m.toLowerCase()).includes(pseudoLower)) {
         userGrade = grade;
         break;
       }
