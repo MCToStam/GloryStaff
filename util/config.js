@@ -5,7 +5,7 @@ const CONFIG_STATIC = [
     permission: "guide",
     systeme: {
       "Attente Staff": {
-        emoji: false,
+        emoji: "<:attentestaff:1458459659043078154>",
         details: false,
         Salon: {
           type: "channel",
@@ -441,7 +441,7 @@ const CONFIG_STATIC = [
     permission: "guide",
     systeme: {
       Classement: {
-        emoji: false,
+        emoji: "<:classement:1458742669697351748>",
         details: false,
         Salon: {
           type: "channel",
@@ -452,7 +452,7 @@ const CONFIG_STATIC = [
         },
       },
       Répartition: {
-        emoji: false,
+        emoji: "<:repartition:1458742671962149018>",
         details: false,
         Salon: {
           type: "channel",

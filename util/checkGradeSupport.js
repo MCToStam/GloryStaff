@@ -58,7 +58,10 @@ async function checkGradeSupport(client) {
 
         expectedRoles.push(...serverRoles);
 
-        const managedRoles = Object.values(config.role);
+        const managedRoles = [
+          ...Object.values(config.role),
+          ...Object.values(config.serveur).map((s) => s.role),
+        ];
 
         const currentRoles = member.roles.cache
           .filter((r) => managedRoles.includes(r.id))

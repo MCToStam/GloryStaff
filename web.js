@@ -445,7 +445,7 @@ app.post("/staff", async (req, res) => {
       const components = [];
 
       for (const grade of GRADES) {
-        const membres = processedData[grade] || [];
+        const membres = serverData[grade] || [];
         const membresPresents = membres.filter((m) => !absents.has(m));
         const membresAbsents = membres.filter((m) => absents.has(m));
 
