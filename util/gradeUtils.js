@@ -1,5 +1,3 @@
-const fs = require("fs");
-const path = require("path");
 const {
   ContainerBuilder,
   StringSelectMenuBuilder,
@@ -15,8 +13,8 @@ const {
 } = require("discord.js");
 const config = require("../config");
 const { getHexEmoji } = require("../util/module/emoji");
-const { getData } = require("../util/module/getAndSaveData");
 const { getServeur } = require("../util/module/getServeur");
+const Grade = require("../util/database/models/Grade");
 
 function formatHexColor(input) {
   let color = input.toUpperCase();
@@ -25,17 +23,22 @@ function formatHexColor(input) {
   return color;
 }
 
+async function getOrCreateConfig(serveur) {
+  let doc = await Grade.findOne({ serveur });
+  if (!doc) doc = await Grade.create({ serveur, categorie: [] });
+  return doc;
+}
+
 async function generateContainer(serveur) {
-  const roleData = getData(`data/${serveur}/grade.json`);
+  const doc = await getOrCreateConfig(serveur);
+  const categories = doc.categorie || [];
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((td) =>
-      td.setContent("## Gestion des Catégories"),
+      td.setContent("## 📁 Gestion des Catégories"),
     )
     .addSeparatorComponents((sep) => sep);
-
-  const categories = roleData.categorie || [];
 
   if (categories.length > 0) {
     categories.forEach((cat) => {
@@ -93,24 +96,23 @@ async function generateContainer(serveur) {
 }
 
 async function generateGradesContainer(client, serveur, idCat) {
-  const roleData = getData(`data/${serveur}/grade.json`);
-
-  const grades = (roleData.grade || []).filter((g) => g.categorie === idCat);
-  const categorie = roleData.categorie.find((c) => c.id === idCat);
+  const doc = await getOrCreateConfig(serveur);
+  const categorie = doc.categorie.find((c) => c.id === idCat);
+  const grades = categorie ? categorie.grade : [];
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((td) =>
       td.setContent(
-        `## Gestion des Grades - ${categorie ? categorie.nom : idCat}`,
+        `## 👦 Gestion des Grades - ${categorie ? categorie.nom : idCat}`,
       ),
     )
     .addSeparatorComponents((sep) => sep);
 
   if (grades.length > 0) {
-    for (const g of grades) {
+    for (let i = 0; i < grades.length; i++) {
+      const g = grades[i];
       const emoji = await getHexEmoji(client, g.couleur);
-
       container
         .addTextDisplayComponents((td) =>
           td.setContent(`- ${emoji ? emoji : ""} **${g.nom}** (${g.couleur})`),
@@ -127,6 +129,10 @@ async function generateGradesContainer(client, serveur, idCat) {
               .setStyle(ButtonStyle.Danger),
           ),
         );
+
+      if (i < grades.length - 1) {
+        container.addSeparatorComponents((sep) => sep);
+      }
     }
   } else {
     container.addTextDisplayComponents((td) =>
@@ -152,11 +158,168 @@ async function generateGradesContainer(client, serveur, idCat) {
   return { container };
 }
 
+function buildGradeEditContainer(serveurCouleur, idCat, grade, emoji) {
+  return new ContainerBuilder()
+    .setAccentColor(serveurCouleur)
+    .addTextDisplayComponents((td) => td.setContent("## ✏️ Édition du Grade"))
+    .addSeparatorComponents((sep) => sep)
+    .addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(`**Nom du grade :** ${grade.nom}`),
+        )
+        .setButtonAccessory((button) =>
+          button
+            .setCustomId(`grade_rename-${idCat}-${grade.id}`)
+            .setLabel("Modifier le Nom")
+            .setStyle(ButtonStyle.Primary),
+        ),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `**Couleur :** ${emoji ? emoji : ""} ${grade.couleur}`,
+          ),
+        )
+        .setButtonAccessory((button) =>
+          button
+            .setCustomId(`grade_couleur-${idCat}-${grade.id}`)
+            .setLabel("Modifier la Couleur")
+            .setStyle(ButtonStyle.Primary),
+        ),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
+          ),
+        )
+        .setButtonAccessory((button) =>
+          button
+            .setCustomId(`grade_subtitlerank-${idCat}-${grade.id}`)
+            .setLabel("Modifier la Description de Rank")
+            .setStyle(ButtonStyle.Primary),
+        ),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(
+            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
+          ),
+        )
+        .setButtonAccessory((button) =>
+          button
+            .setCustomId(`grade_subtitlederank-${idCat}-${grade.id}`)
+            .setLabel("Modifier la Description de Dérank")
+            .setStyle(ButtonStyle.Primary),
+        ),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addTextDisplayComponents((td) =>
+      td.setContent(
+        `**${
+          grade.role && grade.role.length > 1
+            ? "Rôles donnés ou enlevé"
+            : "Rôle donné ou enlevé"
+        } lors d'un rank ou dérank :**`,
+      ),
+    )
+    .addActionRowComponents((actionRow) =>
+      actionRow.setComponents(
+        new RoleSelectMenuBuilder()
+          .setDisabled(false)
+          .setCustomId(`grade_role-${idCat}-${grade.id}`)
+          .setPlaceholder(
+            grade.role && grade.role.length > 0
+              ? "Choisit un ou plusieurs rôles"
+              : "Aucun rôle",
+          )
+          .setDefaultRoles(grade.role)
+          .setMinValues(0)
+          .setMaxValues(25),
+      ),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`grade_back-${idCat}`)
+          .setLabel("🚪 Retour à la Catégorie")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`grade_delete-${idCat}-${grade.id}`)
+          .setLabel("🗑️ Supprimer le Grade")
+          .setStyle(ButtonStyle.Danger),
+      ),
+    );
+}
+
+function buildCategorieEditContainer(serveurCouleur, idCat, categorie) {
+  return new ContainerBuilder()
+    .setAccentColor(serveurCouleur)
+    .addTextDisplayComponents((td) =>
+      td.setContent(`## ✏️ Édition de la Catégorie`),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addSectionComponents((section) =>
+      section
+        .addTextDisplayComponents((textDisplay) =>
+          textDisplay.setContent(`**Nom de la catégorie :** ${categorie.nom}`),
+        )
+        .setButtonAccessory((button) =>
+          button
+            .setCustomId(`grade_categorie_rename-${idCat}`)
+            .setLabel("Modifier le Nom")
+            .setStyle(ButtonStyle.Primary),
+        ),
+    )
+    .addTextDisplayComponents((td) =>
+      td.setContent(
+        `**${
+          categorie.role && categorie.role.length > 1
+            ? "Rôles mentionnés"
+            : "Rôle mentionné"
+        } lors d'un rank ou dérank :**`,
+      ),
+    )
+    .addActionRowComponents((actionRow) =>
+      actionRow.setComponents(
+        new RoleSelectMenuBuilder()
+          .setDisabled(false)
+          .setCustomId(`grade_categorie_role-${idCat}`)
+          .setPlaceholder(
+            categorie.role && categorie.role.length > 0
+              ? "Choisit un ou plusieurs rôles"
+              : "Aucun rôle",
+          )
+          .setDefaultRoles(categorie.role)
+          .setMinValues(0)
+          .setMaxValues(25),
+      ),
+    )
+    .addSeparatorComponents((sep) => sep)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("categorie_grade_back")
+          .setLabel("🚪 Retour aux Catégories")
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`grade_categorie_delete-${idCat}`)
+          .setLabel("🗑️ Supprimer la Catégorie")
+          .setStyle(ButtonStyle.Danger),
+      ),
+    );
+}
+
 async function handleInteraction(interaction, client, config) {
   const serveur = await getServeur(interaction);
-
-  const filePath = path.join(__dirname, "..", "data", serveur, "grade.json");
-  let roleData = getData(`data/${serveur}/grade.json`);
 
   if (interaction.isButton() || interaction.isAnySelectMenu()) {
     const id = interaction.customId;
@@ -187,11 +350,9 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_categorie_delete-")) {
       const idCat = id.replace("grade_categorie_delete-", "");
-      roleData.categorie =
-        roleData.categorie?.filter((c) => c.id !== idCat) || [];
-      roleData.grade =
-        roleData.grade?.filter((g) => g.categorie !== idCat) || [];
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      const doc = await getOrCreateConfig(serveur);
+      doc.categorie = doc.categorie.filter((c) => c.id !== idCat);
+      await doc.save();
 
       const container = await generateContainer(serveur);
       return interaction.update({
@@ -202,63 +363,13 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_categorie_edit-")) {
       const idCat = id.replace("grade_categorie_edit-", "");
-      const categorie = roleData.categorie.find((c) => c.id === idCat);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`## Édition de la catégorie`),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom de la catégorie :** ${categorie.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_categorie_rename-${idCat}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              categorie.role && categorie.role.length > 1
-                ? "Rôles mentionnés"
-                : "Rôle mentionné"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_categorie_role-${idCat}`)
-              .setPlaceholder(
-                categorie.role && categorie.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(categorie.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("categorie_grade_back")
-              .setLabel("🚪 Retour aux Catégories")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_categorie_delete-${idCat}`)
-              .setLabel("🗑️ Supprimer la Catégorie")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
-
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const container = buildCategorieEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        categorie,
+      );
       return interaction.update({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -268,65 +379,16 @@ async function handleInteraction(interaction, client, config) {
     if (id.startsWith("grade_categorie_role-")) {
       const idCat = id.replace("grade_categorie_role-", "");
       const roleIds = [...interaction.roles.keys()];
-      const categorie = roleData.categorie.find((c) => c.id === idCat);
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
       categorie.role = roleIds;
+      await doc.save();
 
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`## Édition de la catégorie`),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom de la catégorie :** ${categorie.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_categorie_rename-${idCat}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              categorie.role && categorie.role.length > 1
-                ? "Rôles mentionnés"
-                : "Rôle mentionné"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_categorie_role-${idCat}`)
-              .setPlaceholder(
-                categorie.role && categorie.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(categorie.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("categorie_grade_back")
-              .setLabel("🚪 Retour aux Catégories")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_categorie_delete-${idCat}`)
-              .setLabel("🗑️ Supprimer la Catégorie")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildCategorieEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        categorie,
+      );
       return interaction.update({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -335,7 +397,8 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_categorie_rename-")) {
       const idCat = id.replace("grade_categorie_rename-", "");
-      const categorie = roleData.categorie.find((c) => c.id === idCat);
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
       const modal = new ModalBuilder()
         .setCustomId(`modal_edit_categorie-${idCat}`)
         .setTitle(`Modifier ${categorie.nom}`)
@@ -371,7 +434,8 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_create-")) {
       const idCat = id.replace("grade_create-", "");
-      const categorie = roleData.categorie.find((c) => c.id === idCat);
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
       const modal = new ModalBuilder()
         .setCustomId(`modal_create_grade-${idCat}`)
         .setTitle(`Créer un grade dans ${categorie.nom}`)
@@ -396,103 +460,18 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_edit-")) {
       const [_, idCat, idGrade] = id.split("-");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       if (!grade) return;
 
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${grade.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${grade.couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              grade.role && grade.role.length > 1
-                ? "Rôles donnés ou enlevé"
-                : "Rôle donné ou enlevé"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${idGrade}`)
-              .setPlaceholder(
-                grade.role && grade.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(grade.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
-
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       await interaction.update({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -515,108 +494,22 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_role-")) {
       const [_, idCat, idGrade] = id.split("-");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
-      if (!grade) return;
       const roleIds = [...interaction.roles.keys()];
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
+      if (!grade) return;
       grade.role = roleIds;
-
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      await doc.save();
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${grade.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${grade.couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la description de dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              grade.role && grade.role.length > 1
-                ? "Rôles donnés ou enlevé"
-                : "Rôle donné ou enlevé"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${idGrade}`)
-              .setPlaceholder(
-                grade.role && grade.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(grade.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       return interaction.editReply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -625,9 +518,9 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_rename-")) {
       const [_, idCat, idGrade] = id.split("-");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       if (!grade) return;
 
       const modal = new ModalBuilder()
@@ -648,9 +541,9 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_couleur-")) {
       const [_, idCat, idGrade] = id.split("-");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       if (!grade) return;
 
       const modal = new ModalBuilder()
@@ -671,9 +564,9 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_subtitlerank-")) {
       const [_, idCat, idGrade] = id.split("-");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       if (!grade) return;
 
       function truncate(str, max = 45) {
@@ -698,9 +591,9 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_subtitlederank-")) {
       const [_, idCat, idGrade] = id.split("-");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       if (!grade) return;
 
       function truncate(str, max = 45) {
@@ -725,10 +618,12 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("grade_delete-")) {
       const [_, idCat, idGrade] = id.split("-");
-      roleData.grade = roleData.grade.filter(
-        (g) => !(g.id === idGrade && g.categorie === idCat),
-      );
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      if (categorie) {
+        categorie.grade = categorie.grade.filter((g) => g.id !== idGrade);
+        await doc.save();
+      }
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
       const { container } = await generateGradesContainer(
@@ -748,8 +643,9 @@ async function handleInteraction(interaction, client, config) {
 
     if (id === "modal_create_categorie") {
       const nom = interaction.fields.getTextInputValue("categorie_name");
-      if (!roleData.categorie) roleData.categorie = [];
-      if (roleData.categorie.find((c) => c.nom === nom)) {
+      const doc = await getOrCreateConfig(serveur);
+
+      if (doc.categorie.find((c) => c.nom === nom)) {
         const erreurContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
           .addTextDisplayComponents((textDisplay) =>
@@ -761,16 +657,12 @@ async function handleInteraction(interaction, client, config) {
         });
       }
 
-      function getNextCategorieId() {
-        const ids = roleData.categorie.map((c) => Number(c.id));
-        let idJson = 1;
-        while (ids.includes(idJson)) idJson++;
-        return idJson.toString();
-      }
-      const newCategorieId = getNextCategorieId();
+      const ids = doc.categorie.map((c) => Number(c.id));
+      let newId = 1;
+      while (ids.includes(newId)) newId++;
 
-      roleData.categorie.push({ id: newCategorieId, nom, role: [] });
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      doc.categorie.push({ id: newId.toString(), nom, role: [], grade: [] });
+      await doc.save();
 
       const container = await generateContainer(serveur);
       return interaction.update({
@@ -782,7 +674,9 @@ async function handleInteraction(interaction, client, config) {
     if (id.startsWith("modal_edit_categorie-")) {
       const idCat = id.replace("modal_edit_categorie-", "");
       const nouveauNom = interaction.fields.getTextInputValue("categorie_name");
-      if (roleData.categorie.find((c) => c.nom === nouveauNom)) {
+      const doc = await getOrCreateConfig(serveur);
+
+      if (doc.categorie.find((c) => c.nom === nouveauNom)) {
         const erreurContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
           .addTextDisplayComponents((textDisplay) =>
@@ -796,68 +690,15 @@ async function handleInteraction(interaction, client, config) {
         });
       }
 
-      const categorie = roleData.categorie.find((c) => c.id === idCat);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      categorie.nom = nouveauNom;
+      await doc.save();
 
-      roleData.categorie = roleData.categorie.map((c) =>
-        c.id === idCat ? { ...c, nom: nouveauNom } : c,
+      const container = buildCategorieEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        categorie,
       );
-
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`## Édition de la catégorie`),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom de la catégorie :** ${nouveauNom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_categorie_rename-${idCat}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              categorie.role && categorie.role.length > 1
-                ? "Rôles mentionnés"
-                : "Rôle mentionné"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_categorie_role-${idCat}`)
-              .setPlaceholder(
-                categorie.role && categorie.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(categorie.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId("categorie_grade_back")
-              .setLabel("🚪 Retour aux Catégories")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_categorie_delete-${idCat}`)
-              .setLabel("🗑️ Supprimer la Catégorie")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
       return interaction.update({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -869,6 +710,7 @@ async function handleInteraction(interaction, client, config) {
       const nom = interaction.fields.getTextInputValue("grade_nom");
       let couleur = interaction.fields.getTextInputValue("grade_couleur");
       couleur = formatHexColor(couleur);
+
       if (!couleur) {
         const erreurContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
@@ -883,8 +725,10 @@ async function handleInteraction(interaction, client, config) {
         });
       }
 
-      if (!roleData.grade) roleData.grade = [];
-      if (roleData.grade.find((g) => g.nom === nom && g.categorie === idCat)) {
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+
+      if (categorie.grade.find((g) => g.nom === nom)) {
         const erreurContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
           .addTextDisplayComponents((textDisplay) =>
@@ -902,109 +746,31 @@ async function handleInteraction(interaction, client, config) {
         });
       }
 
-      function getNextGradeId() {
-        const ids = roleData.grade.map((c) => Number(c.id));
-        let idJson = 1;
-        while (ids.includes(idJson)) idJson++;
-        return idJson.toString();
-      }
-      const newGradeId = getNextGradeId();
+      const allGradeIds = doc.categorie.flatMap((c) =>
+        c.grade.map((g) => Number(g.id)),
+      );
+      let newGradeId = 1;
+      while (allGradeIds.includes(newGradeId)) newGradeId++;
 
       const grade = {
-        id: newGradeId,
+        id: newGradeId.toString(),
         nom,
         couleur,
-        categorie: idCat,
         subtitle_rank: `Rejoint l'équipe des ${nom}s`,
         subtitle_derank: `Quitte l'équipe des ${nom}s`,
         role: [],
       };
-      roleData.grade.push(grade);
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      categorie.grade.push(grade);
+      await doc.save();
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${newGradeId}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${newGradeId}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${newGradeId}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${newGradeId}`)
-              .setLabel("Modifier la Description de Dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent("**Rôle donné ou enlevé lors d'un rank ou dérank :**"),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${newGradeId}`)
-              .setPlaceholder("Aucun rôle")
-              .setDefaultRoles([])
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${newGradeId}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       await interaction.editReply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -1014,11 +780,11 @@ async function handleInteraction(interaction, client, config) {
     if (id.startsWith("modal_nom_grade-")) {
       const [_, idCat, idGrade] = id.split("-");
       const nom = interaction.fields.getTextInputValue("grade_nom");
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
 
-      if (roleData.grade.find((g) => g.nom === nom && g.categorie === idCat)) {
+      if (categorie.grade.find((g) => g.nom === nom)) {
         const erreurContainer = new ContainerBuilder()
           .setAccentColor(config.colors.error)
           .addTextDisplayComponents((textDisplay) =>
@@ -1036,105 +802,17 @@ async function handleInteraction(interaction, client, config) {
         });
       }
 
-      roleData.grade = roleData.grade.map((g) =>
-        g.id === idGrade && g.categorie === idCat ? { ...g, nom } : g,
-      );
-
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      grade.nom = nom;
+      await doc.save();
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${grade.couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              grade.role && grade.role.length > 1
-                ? "Rôles donnés ou enlevé"
-                : "Rôle donné ou enlevé"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${idGrade}`)
-              .setPlaceholder(
-                grade.role && grade.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(grade.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       await interaction.editReply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -1151,106 +829,20 @@ async function handleInteraction(interaction, client, config) {
           flags: MessageFlags.Ephemeral,
         });
 
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       grade.couleur = couleur;
-
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      await doc.save();
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${grade.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              grade.role && grade.role.length > 1
-                ? "Rôles donnés ou enlevé"
-                : "Rôle donné ou enlevé"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${idGrade}`)
-              .setPlaceholder(
-                grade.role && grade.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(grade.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       await interaction.editReply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -1259,109 +851,22 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("modal_subtitlerank_grade-")) {
       const [_, idCat, idGrade] = id.split("-");
-      let subtitle_rank =
+      const subtitle_rank =
         interaction.fields.getTextInputValue("grade_subtitlerank") || "";
-
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       grade.subtitle_rank = subtitle_rank;
-
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      await doc.save();
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${grade.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${grade.couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${idGrade}}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              grade.role && grade.role.length > 1
-                ? "Rôles donnés ou enlevé"
-                : "Rôle donné ou enlevé"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${idGrade}`)
-              .setPlaceholder(
-                grade.role && grade.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(grade.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       await interaction.editReply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
@@ -1370,109 +875,22 @@ async function handleInteraction(interaction, client, config) {
 
     if (id.startsWith("modal_subtitlederank_grade-")) {
       const [_, idCat, idGrade] = id.split("-");
-      let subtitle_derank =
+      const subtitle_derank =
         interaction.fields.getTextInputValue("grade_subtitlederank") || "";
-
-      const grade = roleData.grade.find(
-        (g) => g.id === idGrade && g.categorie === idCat,
-      );
+      const doc = await getOrCreateConfig(serveur);
+      const categorie = doc.categorie.find((c) => c.id === idCat);
+      const grade = categorie?.grade.find((g) => g.id === idGrade);
       grade.subtitle_derank = subtitle_derank;
-
-      fs.writeFileSync(filePath, JSON.stringify(roleData, null, 2), "utf-8");
+      await doc.save();
 
       await interaction.deferUpdate({ flags: MessageFlags.Ephemeral });
-
       const emoji = await getHexEmoji(client, grade.couleur);
-
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((td) => td.setContent(`## Édition du Grade`))
-        .addSeparatorComponents((sep) => sep)
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Nom du grade :** ${grade.nom}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_rename-${idCat}-${idGrade}`)
-              .setLabel("Modifier le Nom")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(`**Couleur :** ${emoji ? emoji : ""} ${grade.couleur}`),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_couleur-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Couleur")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un rank :** ${grade.subtitle_rank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlerank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Rank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**Description lors d'un dérank :** ${grade.subtitle_derank}`,
-          ),
-        )
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_subtitlederank-${idCat}-${idGrade}`)
-              .setLabel("Modifier la Description de Dérank")
-              .setStyle(ButtonStyle.Primary),
-          ),
-        )
-        .addTextDisplayComponents((td) =>
-          td.setContent(
-            `**${
-              grade.role && grade.role.length > 1
-                ? "Rôles donnés ou enlevé"
-                : "Rôle donné ou enlevé"
-            } lors d'un rank ou dérank :**`,
-          ),
-        )
-        .addActionRowComponents((actionRow) =>
-          actionRow.setComponents(
-            new RoleSelectMenuBuilder()
-              .setDisabled(false)
-              .setCustomId(`grade_role-${idCat}-${idGrade}`)
-              .setPlaceholder(
-                grade.role && grade.role.length > 0
-                  ? "Choisit un ou plusieurs rôles"
-                  : "Aucun rôle",
-              )
-              .setDefaultRoles(grade.role)
-              .setMinValues(0)
-              .setMaxValues(25),
-          ),
-        )
-        .addSeparatorComponents((sep) => sep)
-        .addActionRowComponents(
-          new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setCustomId(`grade_back-${idCat}`)
-              .setLabel("🚪 Retour à la Catégorie")
-              .setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder()
-              .setCustomId(`grade_delete-${idCat}-${idGrade}`)
-              .setLabel("🗑️ Supprimer le Grade")
-              .setStyle(ButtonStyle.Danger),
-          ),
-        );
+      const container = buildGradeEditContainer(
+        config.serveur[serveur].couleur,
+        idCat,
+        grade,
+        emoji,
+      );
       await interaction.editReply({
         components: [container],
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,

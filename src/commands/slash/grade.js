@@ -1,4 +1,3 @@
-const { getData } = require("../../../util/module/getAndSaveData");
 const {
   SlashCommandBuilder,
   ContainerBuilder,
@@ -9,6 +8,7 @@ const {
   StringSelectMenuBuilder,
 } = require("discord.js");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const Grade = require("../../../util/database/models/Grade");
 
 module.exports = {
   config: { permission: "super_moderateur" },
@@ -22,16 +22,15 @@ module.exports = {
   async proxy(client, interaction, config) {
     const { serveur } = interaction.parametre;
 
-    const configGrade = getData(`data/${serveur}/grade.json`);
+    const doc = await Grade.findOne({ serveur });
+    const categories = doc?.categorie || [];
 
     const gradeContainer = new ContainerBuilder()
       .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("## Configuration des Grades"),
+        textDisplay.setContent("## 📁 Gestion des Catégories"),
       )
       .addSeparatorComponents((separator) => separator);
-
-    const categories = configGrade.categorie || [];
 
     if (categories.length > 0) {
       categories.forEach((cat) => {

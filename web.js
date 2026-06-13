@@ -45,7 +45,7 @@ async function updateAllStaffWebhooks() {
     const GRADES_EMOJI = {
       administrateur: "<:admin:1289928191674290187>",
       super_moderateur: "<:supermodo:1289928193595281480>",
-      modérateur_plus: "<:modoplus:1289934725569581086>",
+      moderateur_plus: "<:modoplus:1289934725569581086>",
       moderateur: "<:modo:1289934724294250588>",
       moderateur_test: "<:modotest:1289934722151088180>",
       guide: "<:guide:1289928200800964628>",

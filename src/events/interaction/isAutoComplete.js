@@ -3,6 +3,7 @@ const { getData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const getServerCommand = require("../../../util/getServerCommand");
 const Serveur = require("../../../util/database/models/Serveur");
+const Grade = require("../../../util/database/models/Grade");
 const config = require("../../../config");
 
 module.exports = async (client, interaction) => {
@@ -140,17 +141,19 @@ module.exports = async (client, interaction) => {
         ]);
       }
 
-      const gradeData = getData(`data/${serveur[0]}/grade.json`);
+      const docs = await Grade.find({ serveur: { $in: serveur } });
 
-      const allGrades = gradeData.grade.map((g) => {
-        const categorie = gradeData.categorie.find((c) => c.id === g.categorie);
-        return {
-          id: g.id,
-          nom: g.nom,
-          categorieId: g.categorie,
-          categorieNom: categorie ? categorie.nom : "Autre",
-        };
-      });
+      const allGrades = docs.flatMap((doc) =>
+        doc.categorie.flatMap((cat) =>
+          cat.grade.map((g) => ({
+            id: g.id,
+            nom: g.nom,
+            categorieId: cat.id,
+            categorieNom: cat.nom,
+            serveur: doc.serveur,
+          })),
+        ),
+      );
 
       const filteredGrades = allGrades.filter(
         (g) =>
@@ -159,7 +162,10 @@ module.exports = async (client, interaction) => {
       );
 
       const choices = filteredGrades.slice(0, 25).map((g) => ({
-        name: `${g.categorieNom} : ${g.nom}`,
+        name:
+          docs.length > 1
+            ? `[${g.serveur.toUpperCase()}] ${g.categorieNom} : ${g.nom}`
+            : `${g.categorieNom} : ${g.nom}`,
         value: `${g.categorieId}_${g.id}`,
       }));
 

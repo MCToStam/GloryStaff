@@ -15,6 +15,7 @@ const {
 } = require("discord.js");
 const { discordLink } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const Grade = require("../../../util/database/models/Grade");
 
 function getContrastTextColor(colorNumber) {
   const hex = colorNumber.toString(16).padStart(6, "0");
@@ -32,10 +33,7 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
 
   for (let n = 0; n < words.length; n++) {
     const testLine = line + (line ? " " : "") + words[n];
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-
-    if (testWidth > maxWidth && n > 0) {
+    if (ctx.measureText(testLine).width > maxWidth && n > 0) {
       ctx.fillText(line, x, y + offsetY);
       line = words[n];
       offsetY += lineHeight;
@@ -58,13 +56,11 @@ function drawRoundedHexagonPath(ctx, x, y, width, height, radius) {
 
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
-
   for (let i = 0; i < points.length; i++) {
     const p1 = points[i];
     const p2 = points[(i + 1) % points.length];
     ctx.arcTo(p1.x, p1.y, p2.x, p2.y, radius);
   }
-
   ctx.closePath();
 }
 
@@ -89,9 +85,7 @@ module.exports = {
     .addStringOption((option) =>
       option
         .setName("afficher_historique")
-        .setDescription(
-          "Afficher l'historique des grades (Fonctionnalité pouvant être bug)",
-        )
+        .setDescription("Afficher l'historique des grades")
         .setRequired(true)
         .addChoices(
           { name: "Oui", value: "oui" },
@@ -102,88 +96,85 @@ module.exports = {
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
   },
+
   async proxy(client, interaction, config) {
     const { serveur, grade, pseudo, afficher_historique } =
       interaction.parametre;
 
     const utilisateur = interaction.guild.members.cache.get(pseudo);
 
-    const gradeConfig = getData(`data/${serveur}/grade.json`);
+    const doc = await Grade.findOne({ serveur });
+
+    async function sendError(target, message) {
+      const errorContainer = new ContainerBuilder()
+        .setAccentColor(config.colors.error)
+        .addTextDisplayComponents((t) => t.setContent("## ❌ Grade Invalide"))
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) => t.setContent(message));
+
+      if (target.isMessageComponent()) {
+        const sent = await target.update({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
+        });
+        setTimeout(async () => {
+          try {
+            await (sent.resource?.message ?? sent).delete();
+          } catch {}
+        }, 5_000);
+      } else {
+        await target.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      }
+    }
+
+    if (!doc) {
+      return sendError(
+        interaction,
+        "Aucune configuration de grade trouvée pour ce serveur.",
+      );
+    }
 
     let gradeChoisi = null;
-    let gradesCategorie = [];
-    let categorieId = null;
+    let categorieChoisie = null;
 
     if (grade.includes("_")) {
       const [catId, gradeId] = grade.split("_");
-
-      const gradesCat = gradeConfig.grade.filter((g) => g.categorie === catId);
-
-      const found = gradesCat.find((g) => g.id === gradeId);
-
+      const cat = doc.categorie.find((c) => c.id === catId);
+      const found = cat?.grade.find((g) => g.id === gradeId);
       if (found) {
-        categorieId = catId;
-        gradesCategorie = gradesCat;
+        categorieChoisie = cat;
         gradeChoisi = found;
       }
     }
 
     if (!gradeChoisi) {
-      const gradesParNom = gradeConfig.grade.filter(
-        (g) => g.nom.toLowerCase() === grade.toLowerCase(),
+      const matches = doc.categorie.flatMap((cat) =>
+        cat.grade
+          .filter((g) => g.nom.toLowerCase() === grade.toLowerCase())
+          .map((g) => ({ grade: g, categorie: cat })),
       );
 
-      if (gradesParNom.length === 0 || gradesParNom.length > 1) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent("## ❌ Grade Invalide"),
-          )
-          .addSeparatorComponents((separator) => separator)
-          .addTextDisplayComponents((textDisplay) =>
-            textDisplay.setContent(
-              "Le grade spécifié n'a pas été trouvé pour le serveur choisit.",
-            ),
-          );
-
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+      if (matches.length !== 1) {
+        return sendError(
+          interaction,
+          "Le grade spécifié n'a pas été trouvé ou est ambigu pour ce serveur.",
+        );
       }
 
-      gradeChoisi = gradesParNom[0];
-      categorieId = gradeChoisi.categorie;
-
-      gradesCategorie = gradeConfig.grade.filter(
-        (g) => g.categorie === categorieId,
-      );
+      gradeChoisi = matches[0].grade;
+      categorieChoisie = matches[0].categorie;
     }
 
-    const rolesCategorie = gradesCategorie.flatMap((g) => g.role || []);
+    const rolesCategorie = categorieChoisie.grade.flatMap((g) => g.role || []);
     const rolesGrade = gradeChoisi.role || [];
 
     let pseudonym = await discordLink(pseudo);
-
     let replyInteraction;
+
     if (pseudonym) {
       if (interaction.isMessageComponent()) {
         await interaction.deferUpdate();
@@ -194,27 +185,26 @@ module.exports = {
     } else {
       const modal = new ModalBuilder()
         .setCustomId("rankModal_" + pseudo)
-        .setTitle("Choisissez le pseudonyme de la personne");
+        .setTitle("Choisissez le pseudonyme de la personne")
+        .addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId("pseudonymInput")
+              .setLabel(`Pseudonyme de ${utilisateur.displayName}`)
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+              .setMaxLength(32),
+          ),
+        );
 
-      const pseudonymInput = new TextInputBuilder()
-        .setCustomId("pseudonymInput")
-        .setLabel(`Pseudonyme de ${utilisateur.displayName}`)
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true)
-        .setMaxLength(32);
-
-      const actionRow = new ActionRowBuilder().addComponents(pseudonymInput);
-      modal.addComponents(actionRow);
       await interaction.showModal(modal);
-
-      const filter = (i) =>
-        i.customId === "rankModal_" + pseudo &&
-        i.user.id === interaction.user.id;
 
       try {
         const submitted = await interaction.awaitModalSubmit({
-          filter,
-          time: 120000,
+          filter: (i) =>
+            i.customId === "rankModal_" + pseudo &&
+            i.user.id === interaction.user.id,
+          time: 120_000,
         });
 
         pseudonym = submitted.fields.getTextInputValue("pseudonymInput").trim();
@@ -222,10 +212,7 @@ module.exports = {
         await fetch(`${config.glorybot_url}/api/ng-link`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            discord_id: pseudo,
-            pseudo_ng: pseudonym,
-          }),
+          body: JSON.stringify({ discord_id: pseudo, pseudo_ng: pseudonym }),
         });
 
         if (interaction.isMessageComponent()) {
@@ -246,12 +233,11 @@ module.exports = {
 
     const subtitle = gradeChoisi.subtitle_derank;
     const badgeText = serveur.charAt(0).toUpperCase() + serveur.slice(1);
-    let iconPath;
-    if (config.liste_serveur_bedrock.includes(serveur)) {
-      iconPath = getAbsolutePath("data/icon-bedrock.png");
-    } else {
-      iconPath = getAbsolutePath("data/icon-java.png");
-    }
+    const iconPath = getAbsolutePath(
+      config.liste_serveur_bedrock.includes(serveur)
+        ? "data/icon-bedrock.png"
+        : "data/icon-java.png",
+    );
     const avatarUrl = `https://skins.nationsglory.fr/body/${pseudonym}/3d/4?vr=-20&hr=10&hrh=20&vrla=50&vrra=-10&vrll=-10&vrrl=20&ratio=12&format=png&displayHair=true&headOnly=false&layers=false`;
 
     const W = 1920;
@@ -320,8 +306,7 @@ module.exports = {
 
     const avatar = await loadImage(avatarUrl);
     const imgH = 882;
-    const ratio = avatar.width / avatar.height;
-    const imgW = imgH * ratio;
+    const imgW = imgH * (avatar.width / avatar.height);
     ctx.drawImage(
       avatar,
       hexX + hexWidth / 2 - imgW / 2,
@@ -333,7 +318,6 @@ module.exports = {
 
     const textStartX = W * 0.45 + 10;
     const hexCenterY = hexY + hexHeight / 2;
-
     const badgeWidth = 223;
     const badgeHeight = 69;
     const badgeRadius = 12;
@@ -376,17 +360,11 @@ module.exports = {
     ctx.fill();
 
     const icon = await loadImage(iconPath);
-    const iconHeight = icon.height;
-    const iconY = badgeY + (badgeHeight - iconHeight) / 2;
-
+    const iconY = badgeY + (badgeHeight - icon.height) / 2;
     ctx.font = "32px Arial";
     const textWidth = ctx.measureText(badgeText).width;
-    const spaceBetween = 16;
-    const totalWidth = icon.width + spaceBetween + textWidth;
+    const totalWidth = icon.width + 16 + textWidth;
     const startX = badgeX + (badgeWidth - totalWidth) / 2;
-    const iconX = startX;
-    const textX = iconX + icon.width + spaceBetween;
-
     const contrastColor = getContrastTextColor(badgeColor);
 
     const tmpCanvas = createCanvas(icon.width, icon.height);
@@ -396,18 +374,14 @@ module.exports = {
     tmpCtx.fillStyle = contrastColor;
     tmpCtx.fillRect(0, 0, icon.width, icon.height);
 
-    ctx.drawImage(tmpCanvas, iconX, iconY, icon.width, icon.height);
-
+    ctx.drawImage(tmpCanvas, startX, iconY, icon.width, icon.height);
     ctx.fillStyle = contrastColor;
     ctx.textBaseline = "middle";
-    ctx.fillText(badgeText, textX, badgeY + badgeHeight / 2);
+    ctx.fillText(badgeText, startX + icon.width + 16, badgeY + badgeHeight / 2);
 
-    const maxPseudoWidth = 1000;
     let fontSize = 128;
-
     ctx.font = `bold ${fontSize}px Arial`;
-
-    while (ctx.measureText(pseudonym).width > maxPseudoWidth && fontSize > 40) {
+    while (ctx.measureText(pseudonym).width > 1000 && fontSize > 40) {
       fontSize -= 4;
       ctx.font = `bold ${fontSize}px Arial`;
     }
@@ -417,41 +391,26 @@ module.exports = {
 
     ctx.fillStyle = "#8f939b";
     ctx.font = "48px Arial";
-    const subtitleHeight = 48;
-    const subtitleY = pseudoY + pseudoHeight / 2 + spacing + subtitleHeight / 2;
-    ctx.fillStyle = "#8f939b";
-    ctx.font = "48px Arial";
-    const subtitleMaxWidth = 1000;
-    const subtitleLineHeight = 60;
-    drawWrappedText(
-      ctx,
-      subtitle,
-      textStartX,
-      subtitleY,
-      subtitleMaxWidth,
-      subtitleLineHeight,
-    );
+    const subtitleY = pseudoY + pseudoHeight / 2 + spacing + 24;
+    drawWrappedText(ctx, subtitle, textStartX, subtitleY, 1000, 60);
 
     const buffer = await canvas.toBuffer("image/png");
-
-    let historique = "";
 
     const gradesValides = Object.entries(config.grade)
       .sort(([, a], [, b]) => b.priorite - a.priorite)
       .map(([grade]) => grade.nom);
 
-    const data = getData(`data/staff/${pseudonym}.json`);
+    const staffData = getData(`data/staff/${pseudonym}.json`);
+    let historique = "";
 
-    if (data) {
-      historique = Object.entries(data)
-        .filter(([date, details]) => gradesValides.includes(details.grade))
+    if (staffData) {
+      historique = Object.entries(staffData)
+        .filter(([, details]) => gradesValides.includes(details.grade))
         .map(
           ([date, details]) =>
-            `${config.emojigrade[details.grade]} **${
-              details.grade
-            } ${details.serveur.charAt(0).toUpperCase()}${details.serveur.slice(
-              1,
-            )}** : ${date}`,
+            `${config.emojigrade[details.grade]} **${details.grade} ${
+              details.serveur.charAt(0).toUpperCase() + details.serveur.slice(1)
+            }** : ${date}`,
         )
         .join("\n");
     }
@@ -465,22 +424,19 @@ module.exports = {
       embed.setDescription(historique);
     }
 
-    const categorie = gradeConfig.categorie.find((g) => g.id === categorieId);
-
     const channel = await client.channels.fetch(interaction.channelId);
+    const messagePayload = {
+      embeds: [embed],
+      files: [{ attachment: buffer, name: "affiche-derank.png" }],
+    };
 
-    if (categorie.role.length > 0) {
-      channel.send({
-        content: categorie.role.map((r) => `<@&${r}>`).join(" "),
-        embeds: [embed],
-        files: [{ attachment: buffer, name: `affiche-derank.png` }],
-      });
-    } else {
-      channel.send({
-        embeds: [embed],
-        files: [{ attachment: buffer, name: `affiche-derank.png` }],
-      });
+    if (categorieChoisie.role.length > 0) {
+      messagePayload.content = categorieChoisie.role
+        .map((r) => `<@&${r}>`)
+        .join(" ");
     }
+
+    await channel.send(messagePayload);
 
     const userContainer = new ContainerBuilder()
       .setAccentColor(config.serveur[serveur].couleur)
@@ -501,14 +457,8 @@ module.exports = {
 
     setTimeout(async () => {
       try {
-        if (sentMessage.resource) {
-          await sentMessage.resource.message.delete();
-        } else {
-          await sentMessage.delete();
-        }
-      } catch (error) {
-        console.log(error);
-      }
+        await (sentMessage.resource?.message ?? sentMessage).delete();
+      } catch {}
     }, 5_000);
 
     for (const guild of interaction.client.guilds.cache.values()) {
@@ -521,15 +471,14 @@ module.exports = {
             await member.roles.remove(roleId).catch(() => {});
           }
         }
-
         for (const roleId of rolesGrade) {
-          if (!member.roles.cache.has(roleId)) {
+          if (member.roles.cache.has(roleId)) {
             await member.roles.remove(roleId).catch(() => {});
           }
         }
       } catch (err) {
         console.error(
-          `Erreur lors de l'attribution ou le retrait des rôles à ${member.user.tag} sur ${guild.name} :`,
+          `Erreur lors du retrait des rôles à ${member.user.tag} sur ${guild.name} :`,
           err,
         );
       }
