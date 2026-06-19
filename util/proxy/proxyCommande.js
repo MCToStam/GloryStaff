@@ -118,7 +118,7 @@ async function proxyCommande(client, interaction, config) {
         row.setComponents(
           new StringSelectMenuBuilder()
             .setCustomId(
-              `selectServeur-${commandName.replace(/-/g, "_")}${encodedArgs ? `-${encodedArgs}` : ""}`,
+              `selectServeur-${commandName.replace(/-/g, "_")}${subcommand ? `-${subcommand}` : ""}${encodedArgs ? `-${encodedArgs}` : ""}`,
             )
             .setPlaceholder("Choisit un serveur")
             .setOptions(options),

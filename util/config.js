@@ -497,7 +497,7 @@ const CONFIG_STATIC = [
           blue: "Samedi 17h00",
           coral: "Samedi 16h00",
           cyan: "Dimanche 17h30",
-          delta: "Dimanche 17h30",
+          delta: "Samedi 17h30",
           epsilon: "Dimanche 15h30",
           jade: "Samedi 15h00",
           lime: "Samedi 17h30",

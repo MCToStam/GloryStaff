@@ -134,7 +134,7 @@ module.exports = {
     if (!doc) {
       return sendError(
         interaction,
-        "Aucune configuration de grade trouvée pour ce serveur.",
+        "Aucune configuration de grade trouvée sur ce serveur.",
       );
     }
 
@@ -161,7 +161,7 @@ module.exports = {
       if (matches.length !== 1) {
         return sendError(
           interaction,
-          "Le grade spécifié n'a pas été trouvé ou est ambigu pour ce serveur.",
+          "Le grade spécifié n'a pas été trouvé ou est ambigu sur ce serveur.",
         );
       }
 

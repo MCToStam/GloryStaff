@@ -11,10 +11,20 @@ module.exports = {
 
   async execute(client, interaction, config) {
     const serveur = interaction.values[0].split("-")[1];
+
     const parts = interaction.customId.split("-");
 
     const commandName = parts[1].replace(/_/g, "-");
-    const argsSansServeur = parts.slice(2).map((part) => {
+
+    let indexArgsStart = 2;
+    let subcommand = null;
+
+    if (parts[2] && !parts[2].includes("=")) {
+      subcommand = parts[2];
+      indexArgsStart = 3;
+    }
+
+    const argsSansServeur = parts.slice(indexArgsStart).map((part) => {
       const [name, value] = part.split("=");
       return { name, value };
     });
@@ -23,9 +33,12 @@ module.exports = {
       argsSansServeur.map((arg) => [arg.name, arg.value]),
     );
 
+    interaction.subcommand = subcommand;
+
     const commandFile = require(
       `../../../../src/commands/slash/${commandName}.js`,
     );
+
     const permission = commandFile?.config?.permission;
 
     const errorContainer = await errorStaffContainer(serveur);

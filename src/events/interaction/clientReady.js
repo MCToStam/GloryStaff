@@ -206,7 +206,7 @@ module.exports = async (client, interaction) => {
     await updateLogo(client);
   });
 
-  cron.schedule("* * * * 0,6,1", async () => {
+  cron.schedule("* * * * 0,6", async () => {
     await checkONU(client);
   });
 
