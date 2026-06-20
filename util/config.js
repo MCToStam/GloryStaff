@@ -711,6 +711,21 @@ const CONFIG_STATIC = [
       },
     },
   },
+  {
+    nom: "Événement",
+    emoji: "<:evenement:1517878287072890932>",
+    permission: "super_moderateur",
+    systeme: {
+      Événement: {
+        emoji: "<:evenement:1517878287072890932>",
+        details:
+          "Ce système permet de mentionner un rôle lors du début d'un événement ou du choix du/des événement(s) aléatoire(s).",
+        Role: {
+          type: "role",
+        },
+      },
+    },
+  },
 ];
 
 module.exports = CONFIG_STATIC;

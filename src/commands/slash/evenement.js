@@ -5,10 +5,12 @@ const {
   ButtonStyle,
   MessageFlags,
   AttachmentBuilder,
+  TextDisplayBuilder,
 } = require("discord.js");
 const { discordStaff } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Evenement = require("../../../util/database/models/Evenement");
+const Configuration = require("../../../util/database/models/Configuration");
 
 const EVENEMENTS_PAR_PAGE = 5;
 
@@ -299,6 +301,13 @@ module.exports = {
         }
       }
 
+      const configEvenement = await Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Événement",
+        systeme: "Événement",
+      });
+
       const container = new ContainerBuilder()
         .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
@@ -349,17 +358,50 @@ module.exports = {
           );
       }
 
+      let components = [container];
+      if (configEvenement.data.get("Role").length > 0) {
+        const roleMentions = configEvenement.data
+          .get("Role")
+          .map((roleId) => `<@&${roleId}>`)
+          .join(", ");
+
+        const roleTextDisplay = new TextDisplayBuilder().setContent(
+          roleMentions,
+        );
+        components = [roleTextDisplay, container];
+      }
+
+      const channel = await client.channels.fetch(interaction.channelId);
+      await channel.send({ components, flags: MessageFlags.IsComponentsV2 });
+
+      const userContainer = new ContainerBuilder()
+        .setAccentColor(config.serveur[serveur].couleur)
+        .addTextDisplayComponents((t) => t.setContent("## 🎉 Événement"))
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent("Le message d'événement a bien été envoyé"),
+        );
+
       if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
-          files,
+        const sentMessage = await interaction.update({
+          components: [userContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
-          components: [container],
-          files,
-          flags: MessageFlags.IsComponentsV2,
+          components: [userContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
@@ -474,6 +516,13 @@ module.exports = {
         }
       }
 
+      const configEvenement = await Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Événement",
+        systeme: "Événement",
+      });
+
       for (let i = tousLesEvenements.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [tousLesEvenements[i], tousLesEvenements[j]] = [
@@ -497,7 +546,7 @@ module.exports = {
         container
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `**${evenementData.emoji ?? "🎉"} ${evenementData.nom}**${evenementData.description ? `\n> *${evenementData.description}*` : ""}`,
+              `**${evenementData.emoji ?? "🎉"} ${evenementData.nom}**${evenementData.description ? `\n> *${evenementData.description}*` : ""}${evenementData.createur.length > 0 ? `\n- Créé par ${evenementData.createur.join(", ")}` : ""}`,
             ),
           )
           .addSeparatorComponents((s) => s);
@@ -509,15 +558,50 @@ module.exports = {
         ),
       );
 
+      let components = [container];
+      if (configEvenement.data.get("Role").length > 0) {
+        const roleMentions = configEvenement.data
+          .get("Role")
+          .map((roleId) => `<@&${roleId}>`)
+          .join(", ");
+
+        const roleTextDisplay = new TextDisplayBuilder().setContent(
+          roleMentions,
+        );
+        components = [roleTextDisplay, container];
+      }
+
+      const channel = await client.channels.fetch(interaction.channelId);
+      await channel.send({ components, flags: MessageFlags.IsComponentsV2 });
+
+      const userContainer = new ContainerBuilder()
+        .setAccentColor(config.serveur[serveur].couleur)
+        .addTextDisplayComponents((t) => t.setContent("## 🎉 Événement"))
+        .addSeparatorComponents((s) => s)
+        .addTextDisplayComponents((t) =>
+          t.setContent("Le message d'événement a bien été envoyé"),
+        );
+
       if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
+        const sentMessage = await interaction.update({
+          components: [userContainer],
           flags: MessageFlags.IsComponentsV2,
+          withResponse: true,
         });
+
+        setTimeout(async () => {
+          try {
+            if (sentMessage.resource) {
+              await sentMessage.resource.message.delete();
+            } else {
+              await sentMessage.delete();
+            }
+          } catch (error) {}
+        }, 5_000);
       } else {
         return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
+          components: [userContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
         });
       }
     }
