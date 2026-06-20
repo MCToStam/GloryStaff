@@ -283,11 +283,11 @@ async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
   return { components, files: [] };
 }
 
-async function Routine(client, serveur, pseudonym) {
+async function Routine(client, serveur, pseudonym, emoji) {
   const buttonEnable = pseudonym ? false : true;
   if (!pseudonym) pseudonym = "ToStam";
 
-  const teteEmoji = (await getEmojiTete(client, pseudonym)) || "⏱️";
+  const teteEmoji = emoji || "⏱️";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)

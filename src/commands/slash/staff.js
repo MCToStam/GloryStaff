@@ -29,11 +29,7 @@ module.exports = {
     ),
 
   async execute(client, interaction, config) {
-    try {
-      await proxyCommande(client, interaction, config);
-    } catch (e) {
-      console.log(e);
-    }
+    await proxyCommande(client, interaction, config);
   },
   async proxy(client, interaction, config) {
     const { serveur, staff: staffParam } = interaction.parametre;

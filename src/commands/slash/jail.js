@@ -10,7 +10,6 @@ const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
-  guild: true,
   data: new SlashCommandBuilder()
     .setContexts(0)
     .setName("jail")
@@ -73,6 +72,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -145,6 +145,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -193,6 +194,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -234,6 +236,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -267,6 +270,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [container],

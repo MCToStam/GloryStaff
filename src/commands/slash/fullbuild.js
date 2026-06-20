@@ -11,7 +11,6 @@ const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Configuration = require("../../../util/database/models/Configuration");
 
 module.exports = {
-  guild: true,
   config: { permission: "super_moderateur" },
   data: new SlashCommandBuilder()
     .setContexts(0)
@@ -76,6 +75,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -117,6 +117,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],

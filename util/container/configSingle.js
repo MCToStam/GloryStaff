@@ -79,15 +79,6 @@ async function containerSingle(guildId, serveur, systemName, configData, type) {
         break;
 
       case "grade":
-        console.log(
-          Object.entries(config.grade)
-            .sort((a, b) => a[1].priorite - b[1].priorite)
-            .map(([key, grade]) => ({
-              label: grade?.nom?.normal,
-              value: `config_grade-${key}`,
-              default: getData(key) === key,
-            })),
-        );
         container
           .addTextDisplayComponents((t) => t.setContent(`\n\n**${key} :**`))
           .addActionRowComponents((row) =>

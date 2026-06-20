@@ -248,6 +248,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],

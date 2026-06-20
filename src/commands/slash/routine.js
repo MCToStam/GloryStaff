@@ -7,10 +7,16 @@ const { discordStaff } = require("../../../util/module/discordLink");
 const { Routine } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Configuration = require("../../../util/database/models/Configuration");
+const {
+  getCachedEmojiTete,
+  getEmojiTete,
+} = require("../../../util/module/emoji");
+const {
+  editReplyIfCurrent,
+  trackInteractionMessage,
+} = require("../../../util/module/interactionMessageState");
 
 module.exports = {
-  guild: true,
-
   data: new SlashCommandBuilder()
     .setContexts(0)
     .setName("routine")
@@ -62,6 +68,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -104,6 +111,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [errorContainer],
@@ -135,6 +143,7 @@ module.exports = {
             }
           } catch (error) {}
         }, 5_000);
+        return;
       } else {
         return interaction.reply({
           components: [container],
@@ -143,19 +152,46 @@ module.exports = {
       }
     }
 
-    const { components } = await Routine(client, serveur, pseudonym);
+    const cachedEmoji = getCachedEmojiTete(
+      pseudonym,
+      "<:tete_default:1517896405841215619>",
+    );
+    const { components } = await Routine(
+      client,
+      serveur,
+      pseudonym,
+      cachedEmoji,
+    );
 
     if (interaction.isMessageComponent()) {
-      return interaction.update({
+      await interaction.update({
         components,
         flags: MessageFlags.IsComponentsV2,
         withResponse: true,
       });
     } else {
-      return interaction.reply({
+      await interaction.reply({
         components,
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        withResponse: true,
       });
     }
+
+    const tracker = await trackInteractionMessage(interaction);
+
+    void (async () => {
+      const emoji = await getEmojiTete(client, pseudonym);
+      const { components: updatedComponents } = await Routine(
+        client,
+        serveur,
+        pseudonym,
+        emoji,
+      );
+
+      await editReplyIfCurrent(interaction, tracker, {
+        components: updatedComponents,
+        flags: MessageFlags.IsComponentsV2,
+      });
+    })();
   },
 };
