@@ -13,7 +13,6 @@ module.exports = {
     const serveur = interaction.values[0].split("-")[1];
 
     const parts = interaction.customId.split("-");
-
     const commandName = parts[1].replace(/_/g, "-");
 
     let indexArgsStart = 2;
@@ -24,24 +23,24 @@ module.exports = {
       indexArgsStart = 3;
     }
 
-    const argsSansServeur = parts.slice(indexArgsStart).map((part) => {
+    interaction.parametre = {};
+    for (const part of parts.slice(indexArgsStart)) {
       const [name, value] = part.split("=");
-      return { name, value };
-    });
-
-    interaction.parametre = Object.fromEntries(
-      argsSansServeur.map((arg) => [arg.name, arg.value]),
-    );
-
+      interaction.parametre[name] = value;
+    }
     interaction.subcommand = subcommand;
 
     const commandFile = require(
       `../../../../src/commands/slash/${commandName}.js`,
     );
-
     const permission = commandFile?.config?.permission;
 
-    const errorContainer = await errorStaffContainer(serveur);
+    const [errorContainer, staffResult] = await Promise.all([
+      errorStaffContainer(serveur),
+      permission
+        ? discordStaff(interaction.user.id, serveur, permission)
+        : null,
+    ]);
 
     if (errorContainer) {
       return interaction.reply({
@@ -50,23 +49,15 @@ module.exports = {
       });
     }
 
-    if (permission) {
-      const { container } = await discordStaff(
-        interaction.user.id,
-        serveur,
-        permission,
-      );
-
-      if (container) {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+    if (staffResult?.container) {
+      return interaction.reply({
+        components: [staffResult.container],
+        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      });
     }
 
     interaction.parametre.serveur = serveur;
 
-    await commandFile.proxy(client, interaction, config);
+    return commandFile.proxy(client, interaction, config);
   },
 };

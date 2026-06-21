@@ -29,7 +29,7 @@ module.exports = {
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
+            `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}**.`,
           ),
         );
 
@@ -70,7 +70,7 @@ module.exports = {
       }
     }
 
-    const formatServeur = serveur.charAt(0).toUpperCase() + serveur.slice(1);
+    const formatServeur = config.serveur[serveur].nom;
 
     let [body, linkedMinecraftPseudonym, emojiTete] = await Promise.all([
       (async () => {

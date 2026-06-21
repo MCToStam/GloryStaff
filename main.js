@@ -18,7 +18,6 @@ const client = new Client({
   intents: new IntentsBitField([
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildPresences,
   ]),
   partials: [Partials.User, Partials.Channel, Partials.GuildMember],
 });
@@ -107,7 +106,7 @@ const init = async () => {
     client.on(eventName, event.bind(null, client));
   }
 
-  client.login();
+  client.login(process.env.TOKEN);
   log(`Node ${process.version} !`, "READY", "green");
 };
 

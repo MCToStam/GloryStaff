@@ -36,7 +36,7 @@ module.exports = {
         .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `## 🚀 Interdiction Missile - ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
+            `## 🚀 Interdiction Missile - ${config.serveur[serveur].nom}`,
           ),
         )
         .addSeparatorComponents((s) => s);

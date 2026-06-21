@@ -211,7 +211,7 @@ async function buildCandidatureContainer(
       const lastConnectionTimestamp = Math.floor(
         new Date(srv.last_connection + "Z").getTime() / 1000,
       );
-      const serveurLabel = serveur.charAt(0).toUpperCase() + serveur.slice(1);
+      const serveurLabel = config.serveur[serveur].nom;
 
       components.push(
         { type: 14, spacing: 1 },

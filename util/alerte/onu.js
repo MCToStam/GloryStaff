@@ -155,11 +155,11 @@ async function checkONU(client) {
             configuration.data.get("Temps"),
           );
 
-          /*if (roleMentions)
+          if (roleMentions)
             components = [
               new TextDisplayBuilder().setContent(roleMentions),
               ...components,
-            ];*/
+            ];
 
           await channel.send({
             components,

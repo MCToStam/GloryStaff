@@ -30,7 +30,7 @@ module.exports = {
       .addTextDisplayComponents((t) =>
         t.setContent(
           `**Quelles sont les étapes de l'ONU ?**\n- Les rappels\n- Les nouveautés du ${
-            serveur.charAt(0).toUpperCase() + serveur.slice(1)
+            config.serveur[serveur].nom
           } et inter-serveur\n- Les réponses aux demandes d'UNESCO\n- Les demandes de tir de missile de tier 4 ou 5\n- Les demandes d'autonuke\n- Les arrivées ou départs\n- Les publicités et questions`,
         ),
       )

@@ -94,14 +94,7 @@ function formatClassement(classement, serveur, key) {
   const top3 = classementTrie.slice(0, 3).map((entry, index) => {
     const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉";
 
-    const serverName =
-      entry.serveur === serveur
-        ? `**${entry.serveur.charAt(0).toUpperCase()}${entry.serveur
-            .slice(1)
-            .toLowerCase()}**`
-        : `${entry.serveur.charAt(0).toUpperCase()}${entry.serveur
-            .slice(1)
-            .toLowerCase()}`;
+    const serverName = config.serveur[entry.serveur].nom;
 
     const value =
       key === "argentNotation"
@@ -118,9 +111,7 @@ function formatClassement(classement, serveur, key) {
   if (serverEntry && !classementTrie.slice(0, 3).includes(serverEntry)) {
     const rank = classementTrie.indexOf(serverEntry) + 1;
 
-    serverRank = `#${rank} **${serveur.charAt(0).toUpperCase()}${serveur
-      .slice(1)
-      .toLowerCase()}** (${
+    serverRank = `#${rank} **${config.serveur[serveur].nom}** (${
       key === "argentNotation"
         ? serverEntry[key].toLocaleString() + "$"
         : serverEntry[key].toFixed(0)

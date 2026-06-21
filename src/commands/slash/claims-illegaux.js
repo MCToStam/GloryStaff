@@ -228,7 +228,7 @@ module.exports = {
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `Le serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}** ne possèdant pas de "dynmap", cette commande est impossible sur celui-ci.`,
+            `Le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** ne possèdant pas de "dynmap", cette commande est impossible sur celui-ci.`,
           ),
         );
 

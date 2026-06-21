@@ -723,6 +723,22 @@ const CONFIG_STATIC = [
         Role: {
           type: "role",
         },
+        "Texte Affiché": {
+          type: "modal",
+          label: "Modifier",
+          questions: [
+            {
+              texte: "Quel texte sera affiché ?",
+              description:
+                '{date} sera remplacé par exemple par "21 juin 2026 et {nbEvent} par le nombre d\'événement"',
+              placeholder:
+                "En cette soirée du {date}, l'équipe de modérateurs plus...",
+              style: "Paragraph",
+              maxCara: 250,
+              obligatoire: false,
+            },
+          ],
+        },
       },
     },
   },

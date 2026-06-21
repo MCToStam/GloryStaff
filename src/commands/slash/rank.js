@@ -255,7 +255,7 @@ module.exports = {
     }
 
     const subtitle = gradeChoisi.subtitle_rank;
-    const badgeText = serveur.charAt(0).toUpperCase() + serveur.slice(1);
+    const badgeText = config.serveur[serveur].nom;
     const iconPath = getAbsolutePath(
       config.liste_serveur_bedrock.includes(serveur)
         ? "data/icon-bedrock.png"
@@ -432,7 +432,7 @@ module.exports = {
         .map(
           ([date, details]) =>
             `${config.emojigrade[details.grade]} **${details.grade} ${
-              details.serveur.charAt(0).toUpperCase() + details.serveur.slice(1)
+              config.serveur[serveur].nom
             }** : ${date}`,
         )
         .join("\n");
@@ -445,7 +445,7 @@ module.exports = {
         year: "numeric",
       });
       const newEntry = `${config.emojigrade[gradeChoisi.nom]} **${gradeChoisi.nom} ${
-        serveur.charAt(0).toUpperCase() + serveur.slice(1)
+        config.serveur[serveur].nom
       }** : ${today}`;
       historique = historique ? `${historique}\n${newEntry}` : newEntry;
     }

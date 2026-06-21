@@ -55,7 +55,7 @@ module.exports = {
           t.setContent(
             `Le système de Full Build est désactivé sur le serveur ${
               config.serveur[serveur].emoji_formate
-            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
+            } ${config.serveur[serveur].nom} pour votre serveur Discord.`,
           ),
         );
 
@@ -96,7 +96,7 @@ module.exports = {
             `Le système de Full Build n'est pas correctement configuré sur le serveur ${
               config.serveur[serveur].emoji_formate
             } ${
-              serveur.charAt(0).toUpperCase() + serveur.slice(1)
+              config.serveur[serveur].nom
             } pour votre serveur Discord, le choix du salon est manquant.`,
           ),
         );

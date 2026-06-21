@@ -273,7 +273,7 @@ module.exports = {
           .addSeparatorComponents((s) => s)
           .addTextDisplayComponents((t) =>
             t.setContent(
-              `L'événement "**${evenement}**" n'existe pas sur le serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
+              `L'événement "**${evenement}**" n'existe pas sur le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}**.`,
             ),
           );
 
@@ -542,6 +542,24 @@ module.exports = {
           ),
         )
         .addSeparatorComponents((s) => s);
+
+      const texte = configEvenement.data.get("Texte Affiché");
+
+      if (texte) {
+        const dateStr = new Date(timestamp * 1000).toLocaleDateString("fr-FR", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+
+        const texteRemplace = texte
+          .replaceAll("{nbEvent}", nb_evenement)
+          .replaceAll("{date}", dateStr);
+
+        container
+          .addTextDisplayComponents((t) => t.setContent(texteRemplace))
+          .addSeparatorComponents((s) => s);
+      }
 
       for (const evenementData of evenementsSelectionnes) {
         container

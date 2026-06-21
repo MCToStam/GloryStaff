@@ -33,7 +33,7 @@ module.exports = {
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `Le joueur "**${joueur}**" n'existe pas ou n'apparait pas dans les données du serveur ${config.serveur[serveur].emoji_formate} **${serveur.charAt(0).toUpperCase()}${serveur.slice(1)}**.`,
+            `Le joueur "**${joueur}**" n'existe pas ou n'apparait pas dans les données du serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}**.`,
           ),
         );
 

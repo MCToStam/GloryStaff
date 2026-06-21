@@ -6,6 +6,11 @@ const {
 const { discordStaff } = require("../../../util/module/discordLink");
 const { Routine } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+  replyOrUpdate,
+} = require("../../../util/proxy/reply");
 const Configuration = require("../../../util/database/models/Configuration");
 const {
   getCachedEmojiTete,
@@ -29,6 +34,8 @@ module.exports = {
   async proxy(client, interaction, config) {
     const { serveur } = interaction.parametre;
     const guildId = interaction.guild.id;
+    const srvConfig = config.serveur[serveur];
+    const srvLabel = `${srvConfig.emoji_formate} ${srvConfig.nom}`;
 
     const configRoutine = await Configuration.findOne({
       serveur,
@@ -38,86 +45,28 @@ module.exports = {
     });
 
     if (!configRoutine || !configRoutine.active) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) =>
-          t.setContent("## ❌ Système Désactivé"),
-        )
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `Le système de Routine est désactivé sur le serveur ${
-              config.serveur[serveur].emoji_formate
-            } ${serveur}.`,
-          ),
-        );
-
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(
+        interaction,
+        buildErrorContainer(
+          config,
+          "❌ Système Désactivé",
+          `Le système de Routine est désactivé sur le serveur ${srvLabel} pour votre serveur Discord.`,
+        ),
+      );
     }
 
     const salonId = configRoutine.data.get("Salon");
     const grade = configRoutine.data.get("Grade");
 
     if (!salonId || !grade) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) =>
-          t.setContent("## ❌ Configuration Invalide"),
-        )
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `Le système de Routine n'est pas correctement configuré sur ${
-              config.serveur[serveur].emoji_formate
-            } ${serveur}.`,
-          ),
-        );
-
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(
+        interaction,
+        buildErrorContainer(
+          config,
+          "❌ Configuration Invalide",
+          `Le système de Routine n'est pas correctement configuré sur le serveur ${srvLabel} pour votre serveur Discord.`,
+        ),
+      );
     }
 
     const { pseudonym, container } = await discordStaff(
@@ -127,29 +76,7 @@ module.exports = {
     );
 
     if (container) {
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(interaction, container);
     }
 
     const cachedEmoji = getCachedEmojiTete(
@@ -163,19 +90,7 @@ module.exports = {
       cachedEmoji,
     );
 
-    if (interaction.isMessageComponent()) {
-      await interaction.update({
-        components,
-        flags: MessageFlags.IsComponentsV2,
-        withResponse: true,
-      });
-    } else {
-      await interaction.reply({
-        components,
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        withResponse: true,
-      });
-    }
+    await replyOrUpdate(interaction, components);
 
     const tracker = await trackInteractionMessage(interaction);
 

@@ -481,9 +481,7 @@ async function Alerte(client, serveur) {
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
-      t.setContent(
-        `## 🌐 ONU ${serveur.charAt(0).toUpperCase() + serveur.slice(1)}`,
-      ),
+      t.setContent(`## 🌐 ONU ${config.serveur[serveur].nom}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -529,11 +527,7 @@ async function Rappel1(client, serveur, temps) {
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
-      t.setContent(
-        `## 📅 Rappel ONU ${
-          serveur.charAt(0).toUpperCase() + serveur.slice(1)
-        }`,
-      ),
+      t.setContent(`## 📅 Rappel ONU ${config.serveur[serveur].nom}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -570,11 +564,7 @@ async function Rappel2(client, serveur, temps) {
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
-      t.setContent(
-        `## 📅 Rappel ONU ${
-          serveur.charAt(0).toUpperCase() + serveur.slice(1)
-        }`,
-      ),
+      t.setContent(`## 📅 Rappel ONU ${config.serveur[serveur].nom}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
@@ -611,11 +601,7 @@ async function Rappel3(client, serveur, temps) {
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((t) =>
-      t.setContent(
-        `## 📅 Rappel ONU ${
-          serveur.charAt(0).toUpperCase() + serveur.slice(1)
-        }`,
-      ),
+      t.setContent(`## 📅 Rappel ONU ${config.serveur[serveur].nom}`),
     )
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>

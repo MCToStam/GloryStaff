@@ -31,9 +31,7 @@ module.exports = {
         .sort((a, b) => a.classementConnection - b.classementConnection)
         .map(
           (entry, index) =>
-            `#${index + 1} ${config.serveur[serveur].emoji_formate} **${entry.serveur.charAt(0).toUpperCase()}${entry.serveur.slice(
-              1,
-            )}** : ${entry.moyenneConnexion.toFixed(0)} joueurs`,
+            `#${index + 1} ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** : ${entry.moyenneConnexion.toFixed(0)} joueurs`,
         )
         .join("\n");
     } else if (isNotation) {
@@ -41,9 +39,7 @@ module.exports = {
         .sort((a, b) => a.classementNotation - b.classementNotation)
         .map(
           (entry, index) =>
-            `#${index + 1} ${config.serveur[serveur].emoji_formate} **${entry.serveur.charAt(0).toUpperCase()}${entry.serveur.slice(
-              1,
-            )}** : ${entry.argentNotation.toLocaleString()}$`,
+            `#${index + 1} ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** : ${entry.argentNotation.toLocaleString()}$`,
         )
         .join("\n");
     }

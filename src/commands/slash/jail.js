@@ -1,13 +1,17 @@
 const {
   SlashCommandBuilder,
-  MessageFlags,
   ContainerBuilder,
+  MessageFlags,
 } = require("discord.js");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const { discordStaff } = require("../../../util/module/discordLink");
 const { Jail } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Configuration = require("../../../util/database/models/Configuration");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+} = require("../../../util/proxy/reply");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,251 +41,98 @@ module.exports = {
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
   },
+
   async proxy(client, interaction, config) {
     const { serveur, criminel, durée, lien_raison } = interaction.parametre;
+    const srvConfig = config.serveur[serveur];
+    const srvLabel = `${srvConfig.emoji_formate} ${srvConfig.nom}`;
 
-    const dureeRegex = /^(\d+)([hmdb])$/;
-    const match = durée.match(dureeRegex);
+    const match = durée.match(/^(\d+)([hmdb])$/);
 
     if (!match) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## ❌ Durée Invalide"),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            "La durée doit être au format suivant :\n`1h` (1 heure), `30m` (30 minutes), `2d` (2 jours), etc.\n Elle peut aussi être du format `100b` dans le cas d'un jailblock.",
-          ),
-        );
-
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(
+        interaction,
+        buildErrorContainer(
+          config,
+          "❌ Durée Invalide",
+          "La durée doit être au format suivant :\n`1h` (1 heure), `30m` (30 minutes), `2d` (2 jours), etc.\n Elle peut aussi être du format `100b` dans le cas d'un jailblock.",
+        ),
+      );
     }
 
-    const quantite = parseInt(match[1]);
+    const UNITES = { h: "heure", m: "minute", d: "jour", b: "bloc" };
+    const quantite = parseInt(match[1], 10);
     const unite = match[2];
+    const dureeLisible = `${quantite} ${UNITES[unite]}${quantite > 1 ? "s" : ""}`;
 
-    let dureeLisible = "";
+    const [searchRes, configJail] = await Promise.all([
+      fetch(
+        `https://apiv2.nationsglory.fr/forums/userSearch?search=${criminel}`,
+      ),
+      Configuration.findOne({
+        serveur,
+        guildId: interaction.guild.id,
+        categorie: "Jail",
+        systeme: "Jail",
+      }),
+    ]);
 
-    switch (unite) {
-      case "h":
-        dureeLisible = quantite === 1 ? "1 heure" : `${quantite} heures`;
-        break;
-      case "m":
-        dureeLisible = quantite === 1 ? "1 minute" : `${quantite} minutes`;
-        break;
-      case "d":
-        dureeLisible = quantite === 1 ? "1 jour" : `${quantite} jours`;
-        break;
-      case "b":
-        dureeLisible = quantite === 1 ? "1 bloc" : `${quantite} blocs`;
-        break;
-    }
-
-    const searchRes = await fetch(
-      `https://apiv2.nationsglory.fr/forums/userSearch?search=${criminel}`,
-    );
     const similarUsers = await searchRes.json();
-
     const foundUser = similarUsers.find(
       (user) => user.username.toLowerCase() === criminel.toLowerCase(),
     );
 
     if (!foundUser) {
-      let suggestions = similarUsers
+      const suggestions = similarUsers
         .map((user) => `- ${user.username.replace(/_/g, "\\_")}`)
         .join("\n");
 
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## ❌ Criminel Invalide"),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            similarUsers.length === 0
-              ? "L'utilisateur que vous recherchez n'existe pas."
-              : `L'utilisateur que vous recherchez n'existe pas, il s'agit peut-être de\n\n${suggestions}`,
-          ),
-        );
-
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(
+        interaction,
+        buildErrorContainer(
+          config,
+          "❌ Criminel Invalide",
+          similarUsers.length === 0
+            ? "L'utilisateur que vous recherchez n'existe pas."
+            : `L'utilisateur que vous recherchez n'existe pas, il s'agit peut-être de\n\n${suggestions}`,
+        ),
+      );
     }
 
     const vraiCriminel = foundUser.username;
 
-    const configJail = await Configuration.findOne({
-      serveur,
-      guildId: interaction.guild.id,
-      categorie: "Jail",
-      systeme: "Jail",
-    });
-
-    if (!configJail.active) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## ❌ Système Désactivé"),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            `Le système de Jail est désactivé sur le serveur ${
-              config.serveur[serveur].emoji_formate
-            } ${serveur.charAt(0).toUpperCase() + serveur.slice(1)} pour votre serveur Discord.`,
-          ),
-        );
-
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+    if (!configJail || !configJail.active) {
+      return sendTemporaryError(
+        interaction,
+        buildErrorContainer(
+          config,
+          "❌ Système Désactivé",
+          `Le système de Jail est désactivé sur le serveur ${srvLabel} pour votre serveur Discord.`,
+        ),
+      );
     }
 
     if (!configJail.data.get("Salon") || !configJail.data.get("Grade")) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent("## ❌ Configuration Invalide"),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            `Le système de Jail n'est pas correctement configuré sur le serveur ${
-              config.serveur[serveur].emoji_formate
-            } ${
-              serveur.charAt(0).toUpperCase() + serveur.slice(1)
-            } pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
-          ),
-        );
-
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(
+        interaction,
+        buildErrorContainer(
+          config,
+          "❌ Configuration Invalide",
+          `Le système de Jail n'est pas correctement configuré sur le serveur ${srvLabel} pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
+        ),
+      );
     }
 
     const roleAutorise = configJail.data.get("Grade");
 
-    const { container } = await discordStaff(
-      interaction.user.id,
-      serveur,
-      roleAutorise,
-    );
+    const [{ container }, salon] = await Promise.all([
+      discordStaff(interaction.user.id, serveur, roleAutorise),
+      interaction.client.channels.fetch(configJail.data.get("Salon")),
+    ]);
 
     if (container) {
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(interaction, container);
     }
-
-    const salon = await interaction.client.channels.fetch(
-      configJail.data.get("Salon"),
-    );
 
     const { components } = await Jail(
       client,
@@ -303,15 +154,13 @@ module.exports = {
     });
 
     const introContainer = new ContainerBuilder()
-      .setAccentColor(config.serveur[serveur].couleur)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `## 🔎 Connexion de ${vraiCriminel.replace(/_/g, "\\_")}`,
-        ),
+      .setAccentColor(srvConfig.couleur)
+      .addTextDisplayComponents((t) =>
+        t.setContent(`## 🔎 Connexion de ${vraiCriminel.replace(/_/g, "\\_")}`),
       )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
           "Vous serez avertis dès lors que le joueur se connectera dans ce fil.",
         ),
       );
@@ -321,12 +170,10 @@ module.exports = {
       flags: MessageFlags.IsComponentsV2,
     });
 
-    let jailData = getData(`data/${serveur}/jail.json`);
+    const jailDataPath = `data/${serveur}/jail.json`;
+    const jailData = getData(jailDataPath);
 
-    if (!jailData[vraiCriminel]) {
-      jailData[vraiCriminel] = [];
-    }
-
+    jailData[vraiCriminel] ??= [];
     jailData[vraiCriminel].push({
       duree: dureeLisible,
       lien: lien_raison,
@@ -337,43 +184,18 @@ module.exports = {
       jailed: false,
     });
 
-    saveData(`data/${serveur}/jail.json`, jailData);
+    saveData(jailDataPath, jailData);
 
     const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
 
     const userContainer = new ContainerBuilder()
-      .setAccentColor(config.serveur[serveur].couleur)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("## 🚧 Jail"),
-      )
-      .addSeparatorComponents((separator) => separator)
-      .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `Le jail a correctement été envoyé ici : ${messageLink}`,
-        ),
+      .setAccentColor(srvConfig.couleur)
+      .addTextDisplayComponents((t) => t.setContent("## 🚧 Jail"))
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(`Le jail a correctement été envoyé ici : ${messageLink}`),
       );
 
-    if (interaction.isMessageComponent()) {
-      const sentMessage = await interaction.update({
-        components: [userContainer],
-        flags: MessageFlags.IsComponentsV2,
-        withResponse: true,
-      });
-
-      setTimeout(async () => {
-        try {
-          if (sentMessage.resource) {
-            await sentMessage.resource.message.delete();
-          } else {
-            await sentMessage.delete();
-          }
-        } catch (error) {}
-      }, 5_000);
-    } else {
-      return interaction.reply({
-        components: [userContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    return sendTemporaryError(interaction, userContainer);
   },
 };
