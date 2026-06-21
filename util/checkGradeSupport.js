@@ -97,4 +97,4 @@ async function checkGradeSupport(client) {
   }
 }
 
-module.exports = { checkGradeSupport };
+module.exports = checkGradeSupport;

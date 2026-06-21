@@ -9,16 +9,13 @@ const {
 const config = require("../../../config.js");
 const log = require("../../../util/module/log");
 
-function formatOptions(options) {
+function formatOptions(options = []) {
   return options
-    .map((opt) => {
-      if (opt.type === 1 || opt.type === 2) {
-        const sub = formatOptions(opt.options || []);
-        return `${opt.name}${sub ? " " + sub : ""}`;
-      } else {
-        return `<${opt.name}: ${opt.value}>`;
-      }
-    })
+    .map((opt) =>
+      opt.options?.length
+        ? `${opt.name} ${formatOptions(opt.options)}`
+        : `<${opt.name}: ${opt.value}>`,
+    )
     .join(" ");
 }
 
@@ -85,8 +82,7 @@ module.exports = async (client, interaction) => {
       }
     }
 
-    timestamps.set(interaction.user.id, now);
-    setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
+    timestamps.set(interaction.user.id, now + cooldownAmount);
   }
 
   try {
@@ -114,21 +110,23 @@ module.exports = async (client, interaction) => {
         ),
       );
 
-    if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    } else {
-      await interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
-      });
-    }
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          allowedMentions: { parse: [] },
+        });
+      }
+    } catch (e) {}
     log(e, "error", "red");
 
-    const channel = await client.channels.fetch(config.log_channels.error);
+    const channel = await client.channels.cache.get(config.log_channels.error);
 
     const errorLogContainer = new ContainerBuilder()
       .setAccentColor(config.colors.error)
@@ -152,7 +150,7 @@ module.exports = async (client, interaction) => {
     });
   }
 
-  const channel = await client.channels.fetch(config.log_channels.command);
+  const channel = await client.channels.cache.get(config.log_channels.command);
 
   const formattedOptions = formatOptions(interaction.options.data);
   const commandPath = `/${interaction.commandName}${

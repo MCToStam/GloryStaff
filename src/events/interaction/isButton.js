@@ -64,21 +64,23 @@ module.exports = async (client, interaction) => {
         ),
       );
 
-    if (interaction.deferred || interaction.replied) {
-      await interaction.followUp({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    } else {
-      await interaction.reply({
-        components: [errorContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
-      });
-    }
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.followUp({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          components: [errorContainer],
+          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+          allowedMentions: { parse: [] },
+        });
+      }
+    } catch (e) {}
     log(e, "error", "red");
 
-    const channel = await client.channels.fetch(config.log_channels.error);
+    const channel = await client.channels.cache.get(config.log_channels.error);
 
     const errorLogContainer = new ContainerBuilder()
       .setAccentColor(config.colors.error)
@@ -102,7 +104,7 @@ module.exports = async (client, interaction) => {
     });
   }
 
-  const channel = await client.channels.fetch(config.log_channels.button);
+  const channel = await client.channels.cache.get(config.log_channels.button);
 
   const logContainer = new ContainerBuilder()
     .setAccentColor(config.colors.success)

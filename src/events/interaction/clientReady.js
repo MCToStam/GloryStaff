@@ -2,12 +2,17 @@ const config = require("../../../config");
 const { ActivityType } = require("discord.js");
 const log = require("../../../util/module/log");
 const getServerPlayer = require("../../../util/module/getServerPlayer");
-const { updateLogo } = require("../../../util/updateLogo.js");
-const { botLaunch } = require("../../../main.js");
+const { updateLogo } = require("../../../util/updateLogo");
+const { botLaunch } = require("../../../main");
 const { checkEmojiCache } = require("../../../util/module/emoji");
 const { updateSanctionsCache } = require("../../../util/updateCache/sanctions");
 const cron = require("node-cron");
 
+const checkGradeSupport = require("../../../util/checkGradeSupport");
+const {
+  updateAllStaffWebhooks,
+  updateStaff,
+} = require("../../../util/updateCache/staff");
 const {
   classement_notation,
 } = require("../../../util/alerte/classement_notation");
@@ -61,7 +66,7 @@ async function cycleStatus(client, index = 0) {
 
 module.exports = async (client, interaction) => {
   const botStart = new Date();
-  const latence = (botStart.getTime() - botLaunch[0].getTime()) / 1000;
+  const latence = (botStart.getTime() - botLaunch) / 1000;
 
   const guilds = client.guilds.cache.size;
   const usersCount = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
@@ -75,6 +80,18 @@ module.exports = async (client, interaction) => {
   );
 
   await cycleStatus(client);
+
+  cron.schedule(
+    "0 * * * *",
+    async () => {
+      await updateAllStaffWebhooks();
+      await updateStaff(client);
+      await checkGradeSupport;
+    },
+    {
+      timezone: "Europe/Paris",
+    },
+  );
 
   cron.schedule(
     "0 10 * * 1",

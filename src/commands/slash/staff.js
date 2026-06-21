@@ -171,7 +171,6 @@ async function showStaffList(interaction, config, serveur, srvConfig) {
   );
 
   return replyOrUpdate(interaction, [container], {
-    ephemeral: false,
     allowedMentions: { parse: [] },
   });
 }
@@ -423,7 +422,7 @@ async function showStaffManagement(
 
   return interaction.editReply({
     components: [container],
-    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    flags: MessageFlags.IsComponentsV2,
     allowedMentions: { parse: [] },
   });
 }

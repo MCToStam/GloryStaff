@@ -11,9 +11,9 @@ const {
 } = require("discord.js");
 const { readdirSync, statSync } = require("fs");
 const pathModule = require("path");
+let botLaunch;
 const log = require("./util/module/log");
-const { connectMongo } = require("./util/database/index");
-const botLaunch = [];
+const clientStore = require("./util/client");
 const client = new Client({
   intents: new IntentsBitField([
     GatewayIntentBits.Guilds,
@@ -44,30 +44,21 @@ client.container = {
 };
 
 const init = async () => {
-  await connectMongo();
   async function load(type, dirPath, typeLog) {
-    function getFilesRecursively(dir) {
-      let results = [];
-      const list = readdirSync(dir);
-
-      for (const file of list) {
-        const fullPath = pathModule.join(dir, file);
-        const stat = statSync(fullPath);
-
-        if (stat.isDirectory()) {
-          results = results.concat(getFilesRecursively(fullPath));
-        } else if (file.endsWith(".js")) {
-          results.push(fullPath);
-        }
-      }
-
-      return results;
-    }
+    const getFilesRecursively = (dir) =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory()
+          ? getFilesRecursively(pathModule.join(dir, entry.name))
+          : entry.name.endsWith(".js")
+            ? [pathModule.join(dir, entry.name)]
+            : [],
+      );
 
     const files = getFilesRecursively(dirPath);
 
     for (const file of files) {
       const fullPath = pathModule.resolve(file);
+      delete require.cache[require.resolve(fullPath)];
       const command = require(fullPath);
       const commandName = pathModule.basename(file, ".js");
 
@@ -80,20 +71,28 @@ const init = async () => {
         continue;
       }
 
-      log(`✅ Chargement ${typeLog}: ${commandName}`, "LOG", "gray");
       client.container[type].set(command.data.name, command);
     }
   }
 
-  botLaunch.push(new Date());
-  await load("slashCmds", "./src/commands/slash", "Slash command");
-  await load("userCmds", "./src/commands/user", "User command");
-  await load("msgCmds", "./src/commands/message", "Message command");
-  await load("buttons", "./src/events/button", "Button");
-  await load("stringSelects", "./src/events/select/string", "String select");
-  await load("channelSelects", "./src/events/select/channel", "Channel select");
-  await load("roleSelects", "./src/events/select/role", "Role select");
-  await load("modals", "./src/events/modal", "Modals");
+  botLaunch = Date.now();
+  const loaders = [
+    ["slashCmds", "./src/commands/slash", "Slash command"],
+    ["userCmds", "./src/commands/user", "User command"],
+    ["msgCmds", "./src/commands/message", "Message command"],
+    ["buttons", "./src/events/button", "Button"],
+    ["stringSelects", "./src/events/select/string", "String select"],
+    ["channelSelects", "./src/events/select/channel", "Channel select"],
+    ["roleSelects", "./src/events/select/role", "Role select"],
+    ["modals", "./src/events/modal", "Modals"],
+  ];
+
+  await Promise.all(
+    loaders.map(async ([t, p, l]) => {
+      await load(t, p, l);
+      log(`✅ ${l} chargé`, "LOG", "gray");
+    }),
+  );
 
   const eventFiles = readdirSync("./src/events/interaction").filter((file) =>
     file.endsWith(".js"),
@@ -103,10 +102,11 @@ const init = async () => {
     const eventName = file.split(".")[0];
     log(`✅ Chargement de l'Événement ${eventName}`, "LOG", "gray");
     const event = require(`./src/events/interaction/${file}`);
-    client.on(eventName, event.bind(null, client));
+    client.on(eventName, (...args) => event(client, ...args));
   }
 
   client.login(process.env.TOKEN);
+  clientStore.setClient(client);
   log(`Node ${process.version} !`, "READY", "green");
 };
 

@@ -1,10 +1,19 @@
 const log = require("../../../util/module/log");
 const { getData } = require("../../../util/module/getAndSaveData");
-const { discordStaff } = require("../../../util/module/discordLink");
 const getServerCommand = require("../../../util/getServerCommand");
 const Serveur = require("../../../util/database/models/Serveur");
 const Grade = require("../../../util/database/models/Grade");
 const config = require("../../../config");
+
+const fetchJSON = async (url, options) => {
+  const res = await fetch(url, options);
+  return res.json();
+};
+
+const respond = (interaction, data = []) =>
+  interaction.respond(data).catch(() => {});
+
+const sanitize = (v) => v.trim().replace(/\s+/g, "");
 
 module.exports = async (client, interaction) => {
   const slashCmd = client.container.slashCmds.get(interaction.commandName);
@@ -12,33 +21,32 @@ module.exports = async (client, interaction) => {
 
   try {
     const { name, value } = interaction.options.getFocused(true);
+    const query = (value || "").toLowerCase();
 
-    if (name === "joueur") {
-      const sanitizedValue = value.trim().replace(/\s+/g, "");
-      if (!sanitizedValue || sanitizedValue.length < 2) {
-        await interaction.respond([]);
-        return;
-      }
+    const serveurs = async () =>
+      getServerCommand(interaction.guild.id, interaction.user.id);
 
-      const res = await fetch(
-        `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitizedValue}`,
-      );
-      const users = await res.json();
+    if (name === "joueur" || name === "criminel") {
+      const sanitized = sanitize(value || "");
+      if (sanitized.length < 2) return respond(interaction);
 
-      const suggestions = users.slice(0, 25).map((user) => ({
-        name: user.username,
-        value: user.username,
-      }));
-
-      await interaction.respond(suggestions);
-    } else if (name === "staff") {
-      const serveur = await getServerCommand(
-        interaction.guild.id,
-        interaction.user.id,
+      const users = await fetchJSON(
+        `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitized}`,
       );
 
-      if (serveur.length === 0) {
-        return interaction.respond([
+      return respond(
+        interaction,
+        users.slice(0, 25).map((u) => ({
+          name: u.username,
+          value: u.username,
+        })),
+      );
+    }
+
+    if (name === "staff") {
+      const srvList = await serveurs();
+      if (!srvList.length) {
+        return respond(interaction, [
           {
             name: "Tu n'as pas le droit d'effectuer ceci !",
             value: "nopermission",
@@ -46,38 +54,34 @@ module.exports = async (client, interaction) => {
         ]);
       }
 
-      const staffOptions = [];
+      const staffOptions = await Promise.all(
+        srvList.map(async (srv) => {
+          const data = await Serveur.findOne({ serveur: srv }).lean();
+          if (!data?.staff) return [];
 
-      for (const srv of serveur) {
-        const staffServeur = await Serveur.findOne({
-          serveur: srv,
-        }).lean();
-
-        for (const [grade, members] of Object.entries(staffServeur.staff)) {
-          members.forEach((member) => {
-            if (!member || member.trim() === "") return;
-
-            staffOptions.push({
-              name: `${serveur.length > 1 ? `[${srv.toUpperCase()}] ` : ""}${config.grade[grade].nom.normal} : ${member}`,
+          return Object.entries(data.staff).flatMap(([grade, members]) =>
+            (members || []).filter(Boolean).map((member) => ({
+              name: `${srvList.length > 1 ? `[${srv.toUpperCase()}] ` : ""}${
+                config.grade?.[grade]?.nom?.normal || grade
+              } : ${member}`,
               value: member,
-            });
-          });
-        }
-      }
-
-      const filteredOptions = staffOptions.filter((option) =>
-        option.name.toLowerCase().includes(value.toLowerCase()),
+            })),
+          );
+        }),
       );
 
-      return interaction.respond(filteredOptions.slice(0, 25));
-    } else if (name === "paysa" || name === "paysb") {
-      const serveur = await getServerCommand(
-        interaction.guild.id,
-        interaction.user.id,
-      );
+      const flat = staffOptions.flat();
 
-      if (serveur.length === 0) {
-        return interaction.respond([
+      return respond(
+        interaction,
+        flat.filter((o) => o.name.toLowerCase().includes(query)).slice(0, 25),
+      );
+    }
+
+    if (name === "paysa" || name === "paysb") {
+      const srvList = await serveurs();
+      if (!srvList.length) {
+        return respond(interaction, [
           {
             name: "Tu n'as pas le droit d'effectuer ceci !",
             value: "nopermission",
@@ -85,55 +89,29 @@ module.exports = async (client, interaction) => {
         ]);
       }
 
-      const paysRes = await fetch(
-        `${config.glorybot_url}/api/paysCree?serveur=${serveur[0]}`,
+      const paysData = await fetchJSON(
+        `${config.glorybot_url}/api/paysCree?serveur=${srvList[0]}`,
         {
-          method: "GET",
           headers: {
             Authorization: `Bearer ${config.glorybot_token}`,
-            "Content-Type": "application/json",
           },
         },
       );
-      const paysData = await paysRes.json();
 
-      const filteredCountries = paysData
-        .filter((p) => p.toLowerCase().startsWith(value.toLowerCase()))
-        .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }));
-
-      const choices = filteredCountries
-        .slice(0, 25)
-        .map((p) => ({ name: p, value: p }));
-
-      await interaction.respond(choices);
-    } else if (name === "criminel") {
-      const sanitizedValue = value.trim().replace(/\s+/g, "");
-      if (!sanitizedValue) {
-        await interaction.respond([]);
-        return;
-      }
-
-      if (sanitizedValue && sanitizedValue.length > 0) {
-        const res = await fetch(
-          `https://apiv2.nationsglory.fr/forums/userSearch?search=${sanitizedValue}`,
-        );
-        const users = await res.json();
-
-        const suggestions = users.slice(0, 25).map((user) => ({
-          name: user.username,
-          value: user.username,
-        }));
-
-        await interaction.respond(suggestions);
-      }
-    } else if (name === "grade") {
-      const serveur = await getServerCommand(
-        interaction.guild.id,
-        interaction.user.id,
+      return respond(
+        interaction,
+        paysData
+          .filter((p) => p.toLowerCase().startsWith(query))
+          .sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }))
+          .slice(0, 25)
+          .map((p) => ({ name: p, value: p })),
       );
+    }
 
-      if (serveur.length === 0) {
-        return interaction.respond([
+    if (name === "grade") {
+      const srvList = await serveurs();
+      if (!srvList.length) {
+        return respond(interaction, [
           {
             name: "Tu n'as pas le droit d'effectuer ceci !",
             value: "nopermission",
@@ -141,48 +119,55 @@ module.exports = async (client, interaction) => {
         ]);
       }
 
-      const docs = await Grade.find({ serveur: { $in: serveur } });
+      const docs = await Grade.find({ serveur: { $in: srvList } });
 
       const allGrades = docs.flatMap((doc) =>
         doc.categorie.flatMap((cat) =>
           cat.grade.map((g) => ({
             id: g.id,
             nom: g.nom,
-            categorieId: cat.id,
-            categorieNom: cat.nom,
+            catId: cat.id,
+            catNom: cat.nom,
             serveur: doc.serveur,
           })),
         ),
       );
 
-      const filteredGrades = allGrades.filter(
-        (g) =>
-          g.nom.toLowerCase().startsWith(value.toLowerCase()) ||
-          g.categorieNom.toLowerCase().startsWith(value.toLowerCase()),
+      return respond(
+        interaction,
+        allGrades
+          .filter(
+            (g) =>
+              g.nom.toLowerCase().startsWith(query) ||
+              g.catNom.toLowerCase().startsWith(query),
+          )
+          .slice(0, 25)
+          .map((g) => ({
+            name:
+              srvList.length > 1
+                ? `[${g.serveur.toUpperCase()}] ${g.catNom} : ${g.nom}`
+                : `${g.catNom} : ${g.nom}`,
+            value: `${g.catId}_${g.id}`,
+          })),
       );
+    }
 
-      const choices = filteredGrades.slice(0, 25).map((g) => ({
-        name:
-          docs.length > 1
-            ? `[${g.serveur.toUpperCase()}] ${g.categorieNom} : ${g.nom}`
-            : `${g.categorieNom} : ${g.nom}`,
-        value: `${g.categorieId}_${g.id}`,
-      }));
+    if (name === "sanction") {
+      const sanctions = getData("data/sanctionsCache.json");
 
-      await interaction.respond(choices);
-    } else if (name === "sanction") {
-      const sanctionsData = getData("data/sanctionsCache.json");
-      const sanctions = sanctionsData.sanctions
-        .filter((s) => s.name.toLowerCase().includes(value.toLowerCase()))
-        .slice(0, 25)
-        .map((s) => ({
-          name: s.name,
-          value: s.technicalName,
-        }));
-      await interaction.respond(sanctions);
+      return respond(
+        interaction,
+        sanctions.sanctions
+          .filter((s) => s.name.toLowerCase().includes(query))
+          .slice(0, 25)
+          .map((s) => ({
+            name: s.name,
+            value: s.technicalName,
+          })),
+      );
     }
   } catch (e) {
-    await interaction.respond([]);
     log(e, "error", "red");
+    await interaction.respond([]).catch(() => {});
   }
 };

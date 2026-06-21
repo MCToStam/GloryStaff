@@ -40,20 +40,23 @@ async function sendTemporaryError(interaction, container) {
   });
 }
 
-async function replyOrUpdate(interaction, components) {
-  if (interaction.isMessageComponent()) {
-    return interaction.update({
-      components,
-      flags: MessageFlags.IsComponentsV2,
-      withResponse: true,
-    });
-  }
-
-  return interaction.reply({
+async function replyOrUpdate(
+  interaction,
+  components,
+  { ephemeral = true, ...extra } = {},
+) {
+  const payload = {
     components,
-    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+    flags: ephemeral
+      ? MessageFlags.Ephemeral
+      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
     withResponse: true,
-  });
+    ...extra,
+  };
+
+  return interaction.isMessageComponent()
+    ? interaction.update(payload)
+    : interaction.reply(payload);
 }
 
 function buildLinkRequiredContainer() {

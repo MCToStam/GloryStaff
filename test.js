@@ -4,4 +4,5 @@ const { connectMongo } = require("./util/database/index");
 (async () => {
   await connectMongo();
   require("./web");
+  require("./main");
 })();
