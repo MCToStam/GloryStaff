@@ -6,8 +6,8 @@ const GloryStaffConnection = getGloryStaffConnection();
 
 const gradeSchema = new mongoose.Schema(
   {
-    id: { type: String, required: true },
-    nom: { type: String, required: true },
+    id: { type: String, required: true, index: true },
+    nom: { type: String, required: true, index: true },
     couleur: { type: String, required: true },
     subtitle_rank: { type: String, required: true },
     subtitle_derank: { type: String, required: true },

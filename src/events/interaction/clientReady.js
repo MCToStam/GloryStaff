@@ -8,6 +8,7 @@ const { checkEmojiCache } = require("../../../util/module/emoji");
 const { updateSanctionsCache } = require("../../../util/updateCache/sanctions");
 const cron = require("node-cron");
 
+const { loadCaches } = require("../../../util/module/discordLink");
 const checkGradeSupport = require("../../../util/checkGradeSupport");
 const {
   updateAllStaffWebhooks,
@@ -80,6 +81,7 @@ module.exports = async (client, interaction) => {
   );
 
   await cycleStatus(client);
+  await loadCaches();
 
   cron.schedule(
     "0 * * * *",
@@ -87,6 +89,7 @@ module.exports = async (client, interaction) => {
       await updateAllStaffWebhooks();
       await updateStaff(client);
       await checkGradeSupport;
+      await loadCaches();
     },
     {
       timezone: "Europe/Paris",

@@ -10,10 +10,12 @@ const linkSchema = new mongoose.Schema({
     required: true,
     unique: true,
     default: "",
+    index: true,
   },
   pseudoNg: {
-    type: Array,
+    type: [String],
     default: [],
+    index: true,
   },
 });
 

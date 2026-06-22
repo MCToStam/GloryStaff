@@ -5,9 +5,9 @@ const { getGloryStaffConnection } = require("../index");
 const GloryStaffConnection = getGloryStaffConnection();
 
 const absenceSchema = new mongoose.Schema({
-  id: { type: Number, required: true },
-  serveur: { type: String, required: true },
-  staff: { type: String, required: true },
+  id: { type: Number, required: true, index: true },
+  serveur: { type: String, required: true, index: true },
+  staff: { type: String, required: true, index: true },
   debut: { type: Date },
   fin: { type: Date },
   raison: { type: String },

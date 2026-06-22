@@ -5,8 +5,8 @@ const { getGloryStaffConnection } = require("../index");
 const GloryStaffConnection = getGloryStaffConnection();
 
 const evenementSchema = new mongoose.Schema({
-  serveur: { type: String, required: true },
-  nom: { type: String, required: true },
+  serveur: { type: String, required: true, index: true },
+  nom: { type: String, required: true, index: true },
   emoji: { type: String },
   description: { type: String },
   createur: { type: Array },

@@ -12,22 +12,46 @@ const {
   buildLinkRequiredContainer,
 } = require("../proxy/reply");
 
-async function discordLink(discordId) {
-  if (discordId) {
-    const link = await Link.findOne({ discordId }).lean();
-    return link?.pseudoNg?.length ? link.pseudoNg[0] : null;
+const staffCache = new Map();
+const linkCache = new Map();
+
+async function loadCaches() {
+  const links = await Link.find().lean();
+
+  for (const l of links) {
+    if (!l.discordId || !l.pseudoNg?.length) continue;
+    linkCache.set(l.discordId, l.pseudoNg[0]);
   }
 
-  const links = await Link.find({}).lean();
-  if (!links.length) return null;
+  const staffData = await Serveur.find().lean();
 
-  return {
-    data: Object.fromEntries(
-      links
-        .filter((l) => l.pseudoNg?.length)
-        .map((l) => [l.discordId, l.pseudoNg[0]]),
-    ),
-  };
+  for (const srv of staffData) {
+    staffCache.set(srv.serveur, buildStaffIndex(srv.staff));
+  }
+}
+
+function buildStaffIndex(staff) {
+  const index = {};
+
+  for (const [grade, list] of Object.entries(staff)) {
+    if (!list) continue;
+
+    for (const name of list) {
+      index[name] = grade;
+    }
+  }
+
+  return index;
+}
+
+async function discordLink(discordId) {
+  if (!discordId) {
+    return {
+      data: Object.fromEntries(linkCache),
+    };
+  }
+
+  return linkCache.get(discordId) || null;
 }
 
 async function discordStaff(discordId, serveur = "all", gradeMin) {
@@ -52,62 +76,55 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
     return { pseudonym, servers: targetServers, container: false };
   }
 
-  const staffData = await Serveur.find({ serveur: targetServers }).lean();
-
   const GRADES_HIERARCHIE = Object.entries(config.grade)
-    .sort(([, a], [, b]) => a.priorite - b.priorite)
+    .sort(([, a], [, b]) => b.priorite - a.priorite)
     .map(([grade]) => grade);
-  const pseudoLower = pseudonym.toLowerCase();
+
   const minIndex = GRADES_HIERARCHIE.indexOf(gradeMin);
 
   const userServers = [];
 
-  for (const srvData of staffData) {
-    let userGrade = null;
+  for (const srv of targetServers) {
+    const index = staffCache.get(srv);
+    if (!index) continue;
 
-    for (const grade of GRADES_HIERARCHIE) {
-      const staffList = srvData.staff[grade];
-      if (staffList?.some((m) => m.toLowerCase() === pseudoLower)) {
-        userGrade = grade;
-        break;
-      }
-    }
-
+    const userGrade = index[pseudonym];
     if (!userGrade) continue;
 
     if (GRADES_HIERARCHIE.indexOf(userGrade) <= minIndex) {
-      userServers.push(srvData.serveur);
+      userServers.push(srv);
     }
   }
 
-  let container = false;
-
-  if (userServers.length === 0) {
-    if (typeof serveur === "string") {
-      container = buildErrorContainer(
-        config,
-        "❌ Permission Manquante",
-        `Tu n'as pas la permission d'effectuer cette action ${
-          serveur !== "all"
-            ? `pour le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** !`
-            : "!"
-        }`,
-      );
-    } else if (!serveur) {
-      container = buildErrorContainer(
-        config,
-        "❌ Permission Manquante",
-        "Tu n'es opérateur d'aucun serveur de NationsGlory, tu n'as donc pas accès à cette commande.",
-      );
-    }
-  }
-
-  return { pseudonym, servers: userServers, container };
+  return {
+    pseudonym,
+    servers: userServers,
+    container:
+      userServers.length === 0
+        ? buildErrorContainer(
+            config,
+            "❌ Permission Manquante",
+            `Tu n'as pas la permission d'effectuer cette action ${
+              serveur !== "all"
+                ? `pour le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** !`
+                : "!"
+            }`,
+          )
+        : false,
+  };
 }
 
 async function errorStaffContainer(serveur) {
   if (serveur === "non-lie") {
-    return buildLinkRequiredContainer();
+    return buildErrorContainer(
+      config,
+      "❌ Permission Manquante",
+      `Tu n'as pas la permission d'effectuer cette action ${
+        serveur !== "all"
+          ? `pour le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** !`
+          : "!"
+      }`,
+    );
   }
 
   if (serveur === "permission") {
@@ -129,4 +146,4 @@ async function errorStaffContainer(serveur) {
   return false;
 }
 
-module.exports = { discordLink, discordStaff, errorStaffContainer };
+module.exports = { discordLink, discordStaff, errorStaffContainer, loadCaches };

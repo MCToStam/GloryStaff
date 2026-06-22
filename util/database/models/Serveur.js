@@ -9,6 +9,7 @@ const serveurSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    index: true,
   },
   description: { type: String, default: "" },
   banniere: { type: String, default: "" },

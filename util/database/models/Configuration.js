@@ -5,10 +5,10 @@ const { getGloryStaffConnection } = require("../index");
 const GloryStaffConnection = getGloryStaffConnection();
 
 const configurationSchema = new mongoose.Schema({
-  serveur: { type: String, required: true },
-  categorie: { type: String, required: true },
-  systeme: { type: String, required: true },
-  guildId: { type: String, required: true },
+  serveur: { type: String, required: true, index: true },
+  categorie: { type: String, required: true, index: true },
+  systeme: { type: String, required: true, index: true },
+  guildId: { type: String, required: true, index: true },
   active: { type: Boolean, default: false },
   data: { type: Map, default: {} },
 });

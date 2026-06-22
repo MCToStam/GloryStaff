@@ -10,7 +10,7 @@ const CONFIG_STATIC = require("../../util/config");
 const Configuration = require("../../util/database/models/Configuration");
 const log = require("../../util/module/log");
 
-async function sendAttenteStaff(serveur, joueur, id, salon) {
+async function sendAttenteStaff(serveur, joueur, id) {
   const client = getClient();
   if (!client) return;
   const configAttenteStaff = await Configuration.find({
@@ -19,7 +19,7 @@ async function sendAttenteStaff(serveur, joueur, id, salon) {
     systeme: "Attente Staff",
   });
 
-  let { components } = await AttenteStaff(client, serveur, joueur, id, salon);
+  let { components } = await AttenteStaff(client, serveur, joueur, id);
 
   for (const configuration of configAttenteStaff) {
     if (!configuration.active) continue;

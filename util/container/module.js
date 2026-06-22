@@ -198,10 +198,9 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
   return { components, files: [] };
 }
 
-async function AttenteStaff(client, serveur, joueur, id, salon) {
+async function AttenteStaff(client, serveur, joueur, id) {
   if (!joueur) joueur = "ToStam";
   if (!id) id = "719072181631320145";
-  if (!salon) salon = "1391047893678293094";
 
   const pseudo = await discordLink(id);
   const emoji = pseudo
@@ -220,7 +219,7 @@ async function AttenteStaff(client, serveur, joueur, id, salon) {
     .addSeparatorComponents((s) => s)
     .addTextDisplayComponents((t) =>
       t.setContent(
-        `Le joueur **${joueur}** (<@${id}>) attend dans <#${salon}>.`,
+        `Le joueur **${joueur}** (<@${id}>) attend dans <#${config.serveur[serveur].attenteStaff}>.`,
       ),
     );
 
