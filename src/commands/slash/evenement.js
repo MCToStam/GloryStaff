@@ -543,7 +543,7 @@ module.exports = {
         )
         .addSeparatorComponents((s) => s);
 
-      const texte = configEvenement.data.get("Texte Affiché");
+      const texte = configEvenement.data.get("Texte Affiché")?.[0];
 
       if (texte) {
         const dateStr = new Date(timestamp * 1000).toLocaleDateString("fr-FR", {

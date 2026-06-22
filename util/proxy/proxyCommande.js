@@ -11,7 +11,6 @@ const {
 const { buildErrorContainer } = require("../../util/proxy/reply");
 
 async function proxyCommande(client, interaction, config) {
-  console.log("Début proxy");
   const commandName = interaction.commandName
     .normalize("NFD")
     .replace(/[\u0300-\u036f]|[^a-zA-Z0-9_-]/g, "")
@@ -33,7 +32,6 @@ async function proxyCommande(client, interaction, config) {
   );
   interaction.subcommand = subcommand;
 
-  console.log("Début quel serveur");
   const start = Date.now();
 
   const serveur = await getServerCommand(
@@ -42,7 +40,6 @@ async function proxyCommande(client, interaction, config) {
   );
 
   const end = Date.now();
-  console.log(`serveur obtenu a pris ${end - start}ms`, serveur);
 
   if (serveur.length === 0) {
     return interaction.reply({
@@ -81,7 +78,6 @@ async function proxyCommande(client, interaction, config) {
         flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
       });
     }
-    console.log("Pas d'erreur, go");
 
     interaction.parametre.serveur = srv;
     return commandFile.proxy(client, interaction, config);
