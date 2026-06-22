@@ -60,8 +60,9 @@ app.post("/tempsdejeu", (req, res) => {
         console.error(`Erreur sur ${pseudo} du serveur ${serveur}:`, err);
       }
     }
-    log(`✅ Temps de jeu ajouté pour le serveur ${serveur}`, "LOG", "gray");
   }
+
+  log("✅ Temps de jeu ajouté pour tous les serveurs", "LOG", "gray");
 
   res
     .status(200)

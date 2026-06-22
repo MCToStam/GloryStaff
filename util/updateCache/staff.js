@@ -201,7 +201,6 @@ async function updateAllStaffWebhooks() {
       }
 
       saveData(`data/${serveur}/webhookListeDesStaffs.json`, configWebhook);
-      log(`✅ Webhhok mis à jour pour le serveur ${serveur}`, "LOG", "gray");
     } catch (err) {
       console.error(`❌ ${serveur} : erreur d’envoi du webhook :`, err);
     }
@@ -211,7 +210,7 @@ async function updateAllStaffWebhooks() {
 async function updateStaff(client) {
   const promotions = [];
   for (const serveur of config.liste_serveur) {
-    const serverDataGlobal = Serveur.findOne({ serveur }).lean();
+    const serverDataGlobal = await Serveur.findOne({ serveur }).lean();
     const serverData = serverDataGlobal.staff;
 
     const processedData = {
@@ -222,6 +221,7 @@ async function updateStaff(client) {
       "Modérateur Test": serverData.moderateur_test,
       Guide: serverData.guide,
     };
+    return;
 
     const allStaffList = Object.values(processedData).flat().filter(Boolean);
 
@@ -391,8 +391,6 @@ async function updateStaff(client) {
         );
       }
     }
-
-    log(`✅ Données sauvegardées pour le serveur ${serveur}`, "LOG", "gray");
 
     const configAffichage = await Configuration.find({
       serveur,

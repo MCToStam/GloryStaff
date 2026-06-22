@@ -90,7 +90,6 @@ const init = async () => {
   await Promise.all(
     loaders.map(async ([t, p, l]) => {
       await load(t, p, l);
-      log(`✅ ${l} chargé`, "LOG", "gray");
     }),
   );
 

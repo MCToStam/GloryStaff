@@ -12,11 +12,7 @@ const {
   buildLinkRequiredContainer,
 } = require("../proxy/reply");
 
-const GRADES_HIERARCHIE = Object.entries(config.grade)
-  .sort(([, a], [, b]) => b.priorite - a.priorite)
-  .map(([grade]) => grade);
-
-async function fetchLinkFromDb(discordId) {
+async function discordLink(discordId) {
   if (discordId) {
     const link = await Link.findOne({ discordId }).lean();
     return link?.pseudoNg?.length ? link.pseudoNg[0] : null;
@@ -32,15 +28,6 @@ async function fetchLinkFromDb(discordId) {
         .map((l) => [l.discordId, l.pseudoNg[0]]),
     ),
   };
-}
-
-async function discordLink(discordId) {
-  try {
-    const fromDb = await fetchLinkFromDb(discordId);
-    if (fromDb !== null) return fromDb;
-  } catch (err) {
-    console.warn("⚠️ Lecture MongoDB Link indisponible, tentative via l'API.");
-  }
 }
 
 async function discordStaff(discordId, serveur = "all", gradeMin) {
@@ -67,6 +54,9 @@ async function discordStaff(discordId, serveur = "all", gradeMin) {
 
   const staffData = await Serveur.find({ serveur: targetServers }).lean();
 
+  const GRADES_HIERARCHIE = Object.entries(config.grade)
+    .sort(([, a], [, b]) => a.priorite - b.priorite)
+    .map(([grade]) => grade);
   const pseudoLower = pseudonym.toLowerCase();
   const minIndex = GRADES_HIERARCHIE.indexOf(gradeMin);
 

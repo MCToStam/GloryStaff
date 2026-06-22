@@ -8,14 +8,7 @@ const {
   errorStaffContainer,
   discordStaff,
 } = require("../../util/module/discordLink");
-
-function infoContainer(config, title, description) {
-  return new ContainerBuilder()
-    .setAccentColor(config.colors.error)
-    .addTextDisplayComponents((t) => t.setContent(`## ${title}`))
-    .addSeparatorComponents((s) => s)
-    .addTextDisplayComponents((t) => t.setContent(description));
-}
+const { buildErrorContainer } = require("../../util/proxy/reply");
 
 async function proxyCommande(client, interaction, config) {
   const commandName = interaction.commandName
@@ -47,7 +40,7 @@ async function proxyCommande(client, interaction, config) {
   if (serveur.length === 0) {
     return interaction.reply({
       components: [
-        infoContainer(
+        buildErrorContainer(
           config,
           "❌ Aucun Serveur",
           "Aucun serveur par défaut n'a été trouvé pour votre utilisateur Discord, assurez vous d'avoir lié votre compte Discord avec votre compte NationsGlory ainsi que d'être membre du staff d'un serveur NationsGlory.",
@@ -96,7 +89,7 @@ async function proxyCommande(client, interaction, config) {
     .map((arg) => `${arg.name}=${arg.value}`)
     .join("-");
 
-  const container = infoContainer(
+  const container = buildErrorContainer(
     config,
     "❌ Plusieurs Serveurs",
     "Plusieurs serveurs ont été trouvés associés à votre compte NationsGlory, veuillez choisir celui concerné par votre commande.",
