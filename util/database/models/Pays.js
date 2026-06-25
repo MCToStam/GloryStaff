@@ -179,6 +179,8 @@ const paysSchema = new mongoose.Schema({
   level: { type: Number, default: 0 },
   progress: { type: Number, default: 0 },
   notationsPosition: { type: Number, default: 0 },
+  isFullBuild: { type: Boolean, default: false },
+  isUnderAbsence: { type: Boolean, default: false },
   tags: { type: [String], default: [] },
   discord: { type: String, default: "" },
   allianceName: { type: String, default: "" },
@@ -208,6 +210,9 @@ const paysSchema = new mongoose.Schema({
   restrictMissile: { type: Boolean, default: false },
   empire: { type: Boolean, default: false },
   referent: { type: Boolean, default: false },
+  allies: { type: [String], default: [] },
+  enemies: { type: [String], default: [] },
+  annexions: { type: [String], default: [] },
   update: { type: Number, default: Date.now },
   assauts: { type: assautsSchema, default: {} },
   recherche_et_developpement: {

@@ -43,13 +43,13 @@ async function sendTemporaryError(interaction, container) {
 async function replyOrUpdate(
   interaction,
   components,
-  { ephemeral = true, ...extra } = {},
+  { ephemeral = false, ...extra } = {},
 ) {
   const payload = {
     components,
     flags: ephemeral
-      ? MessageFlags.Ephemeral
-      : MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+      ? MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral
+      : MessageFlags.IsComponentsV2,
     withResponse: true,
     ...extra,
   };

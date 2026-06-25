@@ -13,7 +13,6 @@ const { readdirSync, statSync } = require("fs");
 const pathModule = require("path");
 let botLaunch;
 const log = require("./util/module/log");
-const clientStore = require("./util/client");
 const client = new Client({
   intents: new IntentsBitField([
     GatewayIntentBits.Guilds,
@@ -105,7 +104,6 @@ const init = async () => {
   }
 
   client.login(process.env.TOKEN);
-  clientStore.setClient(client);
   log(`Node ${process.version} !`, "READY", "green");
 };
 
