@@ -130,7 +130,9 @@ async function modeAutomatique(client, interaction, config, serveur) {
 
   const embedDescription = await Promise.all(
     Object.entries(repartition).map(async ([staff, range]) => {
-      const emoji = (await getEmojiTete(client, staff)) || "🧑";
+      const emoji =
+        (await getEmojiTete(client, staff)) ||
+        "<:tete_default:1517896405841215619>";
       return `${emoji} **${staff.replace(/_/g, "\\_")}** : ${range}`;
     }),
   );
@@ -271,7 +273,9 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     const container = new ContainerBuilder()
       .setAccentColor(config.serveur[serveur].couleur || config.colors.success)
       .addTextDisplayComponents((t) =>
-        t.setContent(`## 🧑‍⚖️ Qui note de **${start} à ${end}** ?`),
+        t.setContent(
+          `## <:tete_default:1517896405841215619>‍⚖️ Qui note de **${start} à ${end}** ?`,
+        ),
       )
       .addSeparatorComponents((separator) => separator)
       .addActionRowComponents(...actionRows);
@@ -326,7 +330,9 @@ async function modeManuel(client, interaction, config, serveur, subId) {
       const repartitionText = (
         await Promise.all(
           Array.from(cache.entries()).map(async ([s, range]) => {
-            const emoji = (await getEmojiTete(client, s)) || "🧑";
+            const emoji =
+              (await getEmojiTete(client, s)) ||
+              "<:tete_default:1517896405841215619>";
             return `${emoji} **${s.replace(/_/g, "\\_")}** : ${range}`;
           }),
         )
@@ -380,7 +386,9 @@ async function modeManuel(client, interaction, config, serveur, subId) {
     const nextContainer = new ContainerBuilder()
       .setAccentColor(config.serveur[serveur].couleur || config.colors.success)
       .addTextDisplayComponents((t) =>
-        t.setContent(`## 🧑‍⚖️ Qui note de **${nextStart} à ${nextEnd}** ?`),
+        t.setContent(
+          `## <:tete_default:1517896405841215619>‍⚖️ Qui note de **${nextStart} à ${nextEnd}** ?`,
+        ),
       )
       .addSeparatorComponents((separator) => separator)
       .addActionRowComponents(...actionRows);

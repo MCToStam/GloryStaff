@@ -224,7 +224,9 @@ async function showStaffManagement(
     discordLink(false).then((r) => r?.data ?? {}),
     fetchPublicProfile(staff, config),
     fetchBedrockPseudonym(serveur, staff, config),
-    getEmojiTete(client, staff).then((emoji) => emoji || "🧑"),
+    getEmojiTete(client, staff).then(
+      (emoji) => emoji || "<:tete_default:1517896405841215619>",
+    ),
     Configuration.findOne({
       serveur,
       guildId: interaction.guild.id,

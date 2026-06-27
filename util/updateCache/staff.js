@@ -430,7 +430,9 @@ async function updateStaff(client) {
           ? (
               await Promise.all(
                 membresPresents.map(async (m) => {
-                  const emoji = (await getEmojiTete(client, m)) || "🧑";
+                  const emoji =
+                    (await getEmojiTete(client, m)) ||
+                    "<:tete_default:1517896405841215619>";
                   return `${emoji} ${escapeUnderscore(m)}`;
                 }),
               )
@@ -462,7 +464,9 @@ async function updateStaff(client) {
         const absentsText = (
           await Promise.all(
             membresAbsents.map(async (m) => {
-              const emoji = (await getEmojiTete(client, m)) || "🧑";
+              const emoji =
+                (await getEmojiTete(client, m)) ||
+                "<:tete_default:1517896405841215619>";
               return `${emoji} ${escapeUnderscore(m)}`;
             }),
           )

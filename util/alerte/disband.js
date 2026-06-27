@@ -351,7 +351,9 @@ async function disband_18h15(client) {
 
         let headEmoji = null;
         if (c.chef) {
-          headEmoji = (await getEmojiTete(client, c.chef)) || "🧑";
+          headEmoji =
+            (await getEmojiTete(client, c.chef)) ||
+            "<:tete_default:1517896405841215619>";
         }
 
         const leaderInfo = c.chef ? `\n↪ Créé par ${headEmoji}${c.chef}` : "";

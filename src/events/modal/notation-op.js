@@ -38,7 +38,9 @@ module.exports = {
       const emojiPays =
         (await getEmojiDrapeau(client, serveur, data.pays)) || "🏳️";
 
-      const emojiStaff = (await getEmojiTete(client, staff)) || "🧑";
+      const emojiStaff =
+        (await getEmojiTete(client, staff)) ||
+        "<:tete_default:1517896405841215619>";
 
       const informationContainer = new ContainerBuilder()
         .setAccentColor(config.serveur[serveur].couleur)

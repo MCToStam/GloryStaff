@@ -120,7 +120,9 @@ async function repartition_notation(client) {
       const numberKeysValues = (
         await Promise.all(
           Object.entries(donnee).map(async ([key, value]) => {
-            const emoji = (await getEmojiTete(client, key)) || "🧑";
+            const emoji =
+              (await getEmojiTete(client, key)) ||
+              "<:tete_default:1517896405841215619>";
             const emojiText = emoji.id
               ? `<:${emoji.name}:${emoji.id}>`
               : emoji.name;

@@ -16,8 +16,161 @@ const {
   sendTemporaryError,
   replyOrUpdate,
 } = require("../../../util/proxy/reply");
+const {
+  getCachedEmojiTete,
+  getEmojiTete,
+} = require("../../../util/module/emoji");
 
 const EVENEMENTS_PAR_PAGE = 5;
+
+function formatCreateurs(createurs, teteEmojis) {
+  return createurs
+    .map(
+      (pseudo) =>
+        `${teteEmojis.get(pseudo) || "<:tete_default:1517896405841215619>"} ${pseudo}`,
+    )
+    .join(", ");
+}
+
+function buildEvenementLancerComponents({
+  evenementData,
+  configEvenement,
+  config,
+  serveur,
+  date,
+  timestamp,
+  fileName,
+  teteEmojis,
+}) {
+  const container = new ContainerBuilder()
+    .setAccentColor(config.serveur[serveur].couleur)
+    .addTextDisplayComponents((t) =>
+      t.setContent(`## ${evenementData.emoji ?? "🎉"} ${evenementData.nom}`),
+    )
+    .addSeparatorComponents((s) => s);
+
+  if (evenementData.description) {
+    container.addTextDisplayComponents((t) =>
+      t.setContent(`**💬 Description :** ${evenementData.description}`),
+    );
+  }
+
+  if (evenementData.createur.length > 0) {
+    const createurTexte = evenementData.createur
+      .map((pseudo) => `${teteEmojis.get(pseudo) || "🧑"} ${pseudo}`)
+      .join(", ");
+
+    container.addTextDisplayComponents((t) =>
+      t.setContent(
+        `**🏗️ Créateur${evenementData.createur.length > 1 ? "s" : ""} :** ${createurTexte}`,
+      ),
+    );
+  }
+
+  if (date) {
+    container.addTextDisplayComponents((t) =>
+      t.setContent(
+        `**📅 Démarrage le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
+      ),
+    );
+  }
+
+  if (evenementData.image?.data) {
+    container
+      .addSeparatorComponents((s) => s)
+      .addMediaGalleryComponents((m) =>
+        m.addItems((item) => item.setURL(`attachment://${fileName}`)),
+      );
+  }
+
+  let components = [container];
+  if (configEvenement?.data?.get("Role")?.length > 0) {
+    const roleMentions = configEvenement.data
+      .get("Role")
+      .map((roleId) => `<@&${roleId}>`)
+      .join(", ");
+
+    const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
+    components = [roleTextDisplay, container];
+  }
+
+  return components;
+}
+
+function buildEvenementAleatoireComponents({
+  evenementsSelectionnes,
+  configEvenement,
+  config,
+  serveur,
+  nb_evenement,
+  timestamp,
+  date,
+  teteEmojis,
+}) {
+  const container = new ContainerBuilder()
+    .setAccentColor(config.serveur[serveur].couleur)
+    .addTextDisplayComponents((t) =>
+      t.setContent(
+        `## 🎈 Événement${evenementsSelectionnes.length > 1 ? "s" : ""} du Jour`,
+      ),
+    )
+    .addSeparatorComponents((s) => s);
+
+  const texte = configEvenement?.data?.get("Texte Affiché")?.[0];
+
+  if (texte) {
+    const safeTimestamp = timestamp || Math.floor(Date.now() / 1000);
+    const dateStr = new Date(safeTimestamp * 1000).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const texteRemplace = texte
+      .replaceAll("{nbEvent}", nb_evenement)
+      .replaceAll("{date}", dateStr);
+
+    container
+      .addTextDisplayComponents((t) => t.setContent(texteRemplace))
+      .addSeparatorComponents((s) => s);
+  }
+
+  for (const evenementData of evenementsSelectionnes) {
+    const createurTexte =
+      evenementData.createur.length > 0
+        ? `\n- Créé par ${formatCreateurs(evenementData.createur, teteEmojis)}`
+        : "";
+
+    container.addTextDisplayComponents((t) =>
+      t.setContent(
+        `**${evenementData.emoji ?? "🎉"} ${evenementData.nom}**${evenementData.description ? `\n> *${evenementData.description}*` : ""}${createurTexte}`,
+      ),
+    );
+  }
+
+  if (date) {
+    container
+      .addSeparatorComponents((s) => s)
+      .addTextDisplayComponents((t) =>
+        t.setContent(
+          `**📅 Démarrage le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
+        ),
+      );
+  }
+
+  let components = [container];
+  if (configEvenement?.data?.get("Role")?.length > 0) {
+    const roleMentions = configEvenement.data
+      .get("Role")
+      .map((roleId) => `<@&${roleId}>`)
+      .join(", ");
+
+    const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
+    components = [roleTextDisplay, container];
+  }
+
+  return components;
+}
 
 function getTimeZoneOffsetMs(timeZone, date) {
   const dtf = new Intl.DateTimeFormat("en-US", {
@@ -260,42 +413,12 @@ module.exports = {
         systeme: "Événement",
       });
 
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `## ${evenementData.emoji ?? "🎉"} ${evenementData.nom}`,
-          ),
-        )
-        .addSeparatorComponents((s) => s);
-
-      if (evenementData.description) {
-        container.addTextDisplayComponents((t) =>
-          t.setContent(`**💬 Description :** ${evenementData.description}`),
-        );
-      }
-
-      if (evenementData.createur.length > 0) {
-        container.addTextDisplayComponents((t) =>
-          t.setContent(
-            `**🏗️ Créateur${evenementData.createur.length > 1 ? "s" : ""} :** ${evenementData.createur.join(", ")}`,
-          ),
-        );
-      }
-
-      if (date) {
-        container.addTextDisplayComponents((t) =>
-          t.setContent(
-            `**📅 Démarrage le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
-          ),
-        );
-      }
+      const fileName = evenementData.image?.data
+        ? `evenementData.${evenementData.image.extension || "png"}`
+        : null;
 
       const files = [];
-
       if (evenementData.image?.data) {
-        const fileName = `evenementData.${evenementData.image.extension || "png"}`;
-
         files.push(
           new AttachmentBuilder(
             Buffer.from(evenementData.image.data, "base64"),
@@ -304,29 +427,32 @@ module.exports = {
             },
           ),
         );
-
-        container
-          .addSeparatorComponents((s) => s)
-          .addMediaGalleryComponents((m) =>
-            m.addItems((item) => item.setURL(`attachment://${fileName}`)),
-          );
       }
 
-      let components = [container];
-      if (configEvenement?.data?.get("Role")?.length > 0) {
-        const roleMentions = configEvenement.data
-          .get("Role")
-          .map((roleId) => `<@&${roleId}>`)
-          .join(", ");
+      const teteEmojis = new Map(
+        evenementData.createur.map((pseudo) => [
+          pseudo,
+          getCachedEmojiTete(pseudo, "🧑"),
+        ]),
+      );
 
-        const roleTextDisplay = new TextDisplayBuilder().setContent(
-          roleMentions,
-        );
-        components = [roleTextDisplay, container];
-      }
+      const components = buildEvenementLancerComponents({
+        evenementData,
+        configEvenement,
+        config,
+        serveur,
+        date,
+        timestamp,
+        fileName,
+        teteEmojis,
+      });
 
       const channel = await client.channels.fetch(interaction.channelId);
-      await channel.send({ components, flags: MessageFlags.IsComponentsV2 });
+      const message = await channel.send({
+        components,
+        files,
+        flags: MessageFlags.IsComponentsV2,
+      });
 
       const userContainer = new ContainerBuilder()
         .setAccentColor(config.serveur[serveur].couleur)
@@ -336,7 +462,34 @@ module.exports = {
           t.setContent("Le message d'événement a bien été envoyé"),
         );
 
-      return sendTemporaryError(interaction, userContainer);
+      sendTemporaryError(interaction, userContainer);
+
+      if (evenementData.createur.length > 0) {
+        void (async () => {
+          const resolvedEntries = await Promise.all(
+            evenementData.createur.map(async (pseudo) => [
+              pseudo,
+              (await getEmojiTete(client, pseudo)) || "🧑",
+            ]),
+          );
+
+          const updatedComponents = buildEvenementLancerComponents({
+            evenementData,
+            configEvenement,
+            config,
+            serveur,
+            date,
+            timestamp,
+            fileName,
+            teteEmojis: new Map(resolvedEntries),
+          });
+
+          await channel.messages.edit(message.id, {
+            components: updatedComponents,
+            flags: MessageFlags.IsComponentsV2,
+          });
+        })();
+      }
     }
 
     if (sousCommande === "aléatoire") {
@@ -391,66 +544,33 @@ module.exports = {
 
       const evenementsSelectionnes = tousLesEvenements.slice(0, nb_evenement);
 
-      const container = new ContainerBuilder()
-        .setAccentColor(config.serveur[serveur].couleur)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `## 🎈 Événement${evenementsSelectionnes.length > 1 ? "s" : ""} du Jour`,
-          ),
-        )
-        .addSeparatorComponents((s) => s);
+      const uniqueCreateurs = [
+        ...new Set(evenementsSelectionnes.flatMap((e) => e.createur || [])),
+      ];
 
-      const texte = configEvenement?.data?.get("Texte Affiché")?.[0];
+      const teteEmojis = new Map(
+        uniqueCreateurs.map((pseudo) => [
+          pseudo,
+          getCachedEmojiTete(pseudo, "🧑"),
+        ]),
+      );
 
-      if (texte) {
-        const dateStr = new Date(timestamp * 1000).toLocaleDateString("fr-FR", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        });
-
-        const texteRemplace = texte
-          .replaceAll("{nbEvent}", nb_evenement)
-          .replaceAll("{date}", dateStr);
-
-        container
-          .addTextDisplayComponents((t) => t.setContent(texteRemplace))
-          .addSeparatorComponents((s) => s);
-      }
-
-      for (const evenementData of evenementsSelectionnes) {
-        container
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              `**${evenementData.emoji ?? "🎉"} ${evenementData.nom}**${evenementData.description ? `\n> *${evenementData.description}*` : ""}${evenementData.createur.length > 0 ? `\n- Créé par ${evenementData.createur.join(", ")}` : ""}`,
-            ),
-          )
-          .addSeparatorComponents((s) => s);
-      }
-
-      if (date) {
-        container.addTextDisplayComponents((t) =>
-          t.setContent(
-            `**📅 Démarrage le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
-          ),
-        );
-      }
-
-      let components = [container];
-      if (configEvenement?.data?.get("Role")?.length > 0) {
-        const roleMentions = configEvenement.data
-          .get("Role")
-          .map((roleId) => `<@&${roleId}>`)
-          .join(", ");
-
-        const roleTextDisplay = new TextDisplayBuilder().setContent(
-          roleMentions,
-        );
-        components = [roleTextDisplay, container];
-      }
+      const components = buildEvenementAleatoireComponents({
+        evenementsSelectionnes,
+        configEvenement,
+        config,
+        serveur,
+        nb_evenement,
+        timestamp,
+        date,
+        teteEmojis,
+      });
 
       const channel = await client.channels.fetch(interaction.channelId);
-      await channel.send({ components, flags: MessageFlags.IsComponentsV2 });
+      const message = await channel.send({
+        components,
+        flags: MessageFlags.IsComponentsV2,
+      });
 
       const userContainer = new ContainerBuilder()
         .setAccentColor(config.serveur[serveur].couleur)
@@ -461,6 +581,33 @@ module.exports = {
         );
 
       sendTemporaryError(interaction, userContainer);
+
+      if (uniqueCreateurs.length > 0) {
+        void (async () => {
+          const resolvedEntries = await Promise.all(
+            uniqueCreateurs.map(async (pseudo) => [
+              pseudo,
+              (await getEmojiTete(client, pseudo)) || "🧑",
+            ]),
+          );
+
+          const updatedComponents = buildEvenementAleatoireComponents({
+            evenementsSelectionnes,
+            configEvenement,
+            config,
+            serveur,
+            nb_evenement,
+            timestamp,
+            date,
+            teteEmojis: new Map(resolvedEntries),
+          });
+
+          await channel.messages.edit(message.id, {
+            components: updatedComponents,
+            flags: MessageFlags.IsComponentsV2,
+          });
+        })();
+      }
     }
   },
 };

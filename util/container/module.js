@@ -64,7 +64,9 @@ async function Guerre(client, serveur, guerre) {
       date: "1763222880",
       lien: "https://nationsglory.fr/forums/thread/declaration-de-guerre-empiretibetain-vs-alaska-provocation-rp.140577",
     };
-  const emoji = (await getEmojiTete(client, guerre.auteur)) || "🧑";
+  const emoji =
+    (await getEmojiTete(client, guerre.auteur)) ||
+    "<:tete_default:1517896405841215619>";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
@@ -99,7 +101,9 @@ async function Guerrenontraitée(client, serveur, guerre, delaiJour) {
       lien: "https://nationsglory.fr/forums/thread/declaration-de-guerre-empiretibetain-vs-alaska-provocation-rp.140577",
     };
   if (!delaiJour) delaiJour = 2;
-  const emoji = (await getEmojiTete(client, guerre.auteur)) || "🧑";
+  const emoji =
+    (await getEmojiTete(client, guerre.auteur)) ||
+    "<:tete_default:1517896405841215619>";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
@@ -135,7 +139,9 @@ async function Plainte(client, serveur, plainte) {
       date: "1768063680",
       lien: "https://nationsglory.fr/forums/thread/plainte-n6364-onu-contre-freez3r.237636",
     };
-  const emoji = (await getEmojiTete(client, plainte.auteur)) || "🧑";
+  const emoji =
+    (await getEmojiTete(client, plainte.auteur)) ||
+    "<:tete_default:1517896405841215619>";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
@@ -170,7 +176,9 @@ async function Plaintenontraitée(client, serveur, plainte, delaiJour) {
       lien: "https://nationsglory.fr/forums/thread/plainte-n6364-onu-contre-freez3r.237636",
     };
   if (!delaiJour) delaiJour = 2;
-  const emoji = (await getEmojiTete(client, plainte.auteur)) || "🧑";
+  const emoji =
+    (await getEmojiTete(client, plainte.auteur)) ||
+    "<:tete_default:1517896405841215619>";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
@@ -204,7 +212,8 @@ async function AttenteStaff(client, serveur, joueur, id) {
 
   const pseudo = await discordLink(id);
   const emoji = pseudo
-    ? (await getEmojiTete(client, pseudo)) || "🧑"
+    ? (await getEmojiTete(client, pseudo)) ||
+      "<:tete_default:1517896405841215619>"
     : undefined;
 
   const container = new ContainerBuilder()
@@ -385,7 +394,7 @@ async function ConquêteTerritoriale(
   if (!paysa) paysa = "France";
   if (!paysb) paysb = "Allemagne";
 
-  const tete = emojis.tete || "🧑";
+  const tete = emojis.tete || "<:tete_default:1517896405841215619>";
   const drapeauA = emojis.drapeauA || "🏳️";
   const drapeauB = emojis.drapeauB || "🏳️";
 
@@ -411,7 +420,7 @@ async function FullBuild(client, serveur, pseudo, paysa, paysb, emojis = {}) {
   if (!paysa) paysa = "France";
   if (!paysb) paysb = "Allemagne";
 
-  const tete = emojis.tete || "🧑";
+  const tete = emojis.tete || "<:tete_default:1517896405841215619>";
   const drapeauA = emojis.drapeauA || "🏳️";
   const drapeauB = emojis.drapeauB || "🏳️";
 
@@ -457,7 +466,9 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
             ? `pendant ${formatDuree(s.duree)} `
             : "";
 
-      const tete = (await getEmojiTete(client, s.staff)) || "🧑";
+      const tete =
+        (await getEmojiTete(client, s.staff)) ||
+        "<:tete_default:1517896405841215619>";
 
       return `${config.serveur[s.serveur].emoji_formate} **${
         s.type
@@ -466,7 +477,8 @@ async function SanctionStaff(client, serveur, pseudonyme, newSanctions) {
   );
 
   const message = `**${
-    (await getEmojiTete(client, pseudonyme)) || "🧑"
+    (await getEmojiTete(client, pseudonyme)) ||
+    "<:tete_default:1517896405841215619>"
   } ${pseudonyme}** a reçu ${newSanctions.length} ${
     newSanctions.length > 1 ? "nouvelles sanctions" : "nouvelle sanction"
   } :\n\n${lignes.join("\n")}`;

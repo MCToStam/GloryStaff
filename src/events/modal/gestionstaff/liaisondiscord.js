@@ -116,7 +116,7 @@ module.exports = {
         const data = await res.json();
         return data.pseudo_mc || null;
       })(),
-      getEmojiTete(client, joueur) || "🧑",
+      getEmojiTete(client, joueur) || "<:tete_default:1517896405841215619>",
     ]);
 
     const [configRoutine, configJail] = await Promise.all([

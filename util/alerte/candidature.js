@@ -186,7 +186,7 @@ async function buildCandidatureContainer(
     { type: 14, spacing: 1 },
     {
       type: 10,
-      content: `${(await getEmojiTete(client, candidature.auteur)) || "🧑"} **Auteur :** ${candidature.auteur}`,
+      content: `${(await getEmojiTete(client, candidature.auteur)) || "<:tete_default:1517896405841215619>"} **Auteur :** ${candidature.auteur}`,
     },
     {
       type: 10,

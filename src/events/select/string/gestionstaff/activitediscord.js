@@ -254,7 +254,9 @@ module.exports = {
       name: "gestionstaff_activitediscord.png",
     });
 
-    const emojiTete = (await getEmojiTete(client, joueur)) || "🧑";
+    const emojiTete =
+      (await getEmojiTete(client, joueur)) ||
+      "<:tete_default:1517896405841215619>";
 
     const container = new ContainerBuilder()
       .setAccentColor(config.serveur[serveur].couleur)
