@@ -45,28 +45,26 @@ module.exports = {
     });
 
     if (!configRoutine || !configRoutine.active) {
-      return sendTemporaryError(
-        interaction,
-        buildErrorContainer(
-          config,
-          "❌ Système Désactivé",
-          `Le système de Routine est désactivé sur le serveur ${srvLabel} pour votre serveur Discord.`,
-        ),
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Système Désactivé",
+        `Le système de Routine est désactivé sur le serveur ${srvLabel} pour votre serveur Discord.`,
       );
+
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const salonId = configRoutine.data.get("Salon");
     const grade = configRoutine.data.get("Grade");
 
     if (!salonId || !grade) {
-      return sendTemporaryError(
-        interaction,
-        buildErrorContainer(
-          config,
-          "❌ Configuration Invalide",
-          `Le système de Routine n'est pas correctement configuré sur le serveur ${srvLabel} pour votre serveur Discord.`,
-        ),
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Configuration Invalide",
+        `Le système de Routine n'est pas correctement configuré sur le serveur ${srvLabel} pour votre serveur Discord.`,
       );
+
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const { pseudonym, container } = await discordStaff(
@@ -75,9 +73,7 @@ module.exports = {
       grade,
     );
 
-    if (container) {
-      return sendTemporaryError(interaction, container);
-    }
+    if (container) return sendTemporaryError(interaction, container);
 
     const cachedEmoji = getCachedEmojiTete(
       pseudonym,

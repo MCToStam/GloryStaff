@@ -9,6 +9,11 @@ const {
 } = require("discord.js");
 const Pays = require("../../../util/database/models/Pays");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+  replyOrUpdate,
+} = require("../../../util/proxy/reply");
 
 function getAllChunksFromPolygon(xList, zList) {
   const polygon = xList.map((x, i) => [
@@ -220,41 +225,13 @@ module.exports = {
     const { serveur, dimension } = interaction.parametre;
 
     if (config.liste_serveur_bedrock.includes(serveur)) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) =>
-          t.setContent("## ❌ Serveur Incomptatible"),
-        )
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `Le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** ne possèdant pas de "dynmap", cette commande est impossible sur celui-ci.`,
-          ),
-        );
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Serveur Incomptatible",
+        `Le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}** ne possèdant pas de "dynmap", cette commande est impossible sur celui-ci.`,
+      );
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const dimensionKey = dimension || "world";
@@ -381,16 +358,6 @@ module.exports = {
         ),
       );
 
-    if (interaction.isMessageComponent()) {
-      return interaction.update({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } else {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    }
+    await replyOrUpdate(interaction, [container]);
   },
 };

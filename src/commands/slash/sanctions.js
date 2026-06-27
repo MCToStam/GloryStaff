@@ -15,6 +15,11 @@ const {
 const { discordStaff } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const fs = require("node:fs");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+  replyOrUpdate,
+} = require("../../../util/proxy/reply");
 
 function formatDuration(minutes) {
   if (!minutes || minutes <= 0) return "0 minute";
@@ -57,38 +62,13 @@ module.exports = {
       );
 
       if (!sanctionData) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) =>
-            t.setContent("## ❌ Sanction Introuvable"),
-          )
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent("La sanction demandé n'a pas pu être trouvée."),
-          );
+        const errorContainer = buildErrorContainer(
+          config,
+          "❌ Sanction Introuvable",
+          "La sanction demandé n'a pas pu être trouvée.",
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       } else {
         const container = new ContainerBuilder()
           .setAccentColor(config.serveur[serveur].couleur)
@@ -114,17 +94,7 @@ module.exports = {
             ),
           );
 
-        if (interaction.isMessageComponent()) {
-          return interaction.update({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        } else {
-          return interaction.reply({
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        }
+        await replyOrUpdate(interaction, [container]);
       }
     } else if (config.liste_serveur_java.includes(serveur)) {
       const container = new ContainerBuilder()
@@ -171,19 +141,7 @@ module.exports = {
         name: "sanctions.png",
       });
 
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
-          files: [attachment],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      } else {
-        return interaction.reply({
-          components: [container],
-          files: [attachment],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      }
+      await replyOrUpdate(interaction, [container]);
     } else {
       const { servers } = await discordStaff(
         interaction.user.id,
@@ -243,19 +201,7 @@ module.exports = {
           name: "sanctions.png",
         });
 
-        if (interaction.isMessageComponent()) {
-          return interaction.update({
-            components: [container],
-            files: [attachment],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        } else {
-          return interaction.reply({
-            components: [container],
-            files: [attachment],
-            flags: MessageFlags.IsComponentsV2,
-          });
-        }
+        await replyOrUpdate(interaction, [container]);
       }
 
       container.addTextDisplayComponents((t) =>
@@ -300,17 +246,7 @@ module.exports = {
           ),
         );
 
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      }
+      await replyOrUpdate(interaction, [container]);
     }
   },
 };

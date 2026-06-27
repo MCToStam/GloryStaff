@@ -9,6 +9,7 @@ const {
 } = require("discord.js");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Grade = require("../../../util/database/models/Grade");
+const { replyOrUpdate } = require("../../../util/proxy/reply");
 
 module.exports = {
   config: { permission: "super_moderateur" },
@@ -87,16 +88,6 @@ module.exports = {
       ),
     );
 
-    if (interaction.isMessageComponent()) {
-      return interaction.update({
-        components: [gradeContainer],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } else {
-      return interaction.reply({
-        components: [gradeContainer],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    }
+    await replyOrUpdate(interaction, [gradeContainer]);
   },
 };

@@ -9,6 +9,16 @@ const { discordLink } = require("../../../util/module/discordLink");
 const { FullBuild } = require("../../../util/container/module");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Configuration = require("../../../util/database/models/Configuration");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+} = require("../../../util/proxy/reply");
+const {
+  getCachedEmojiTete,
+  getCachedEmojiDrapeau,
+  getEmojiTete,
+  getEmojiDrapeau,
+} = require("../../../util/module/emoji");
 
 module.exports = {
   config: { permission: "super_moderateur" },
@@ -45,94 +55,38 @@ module.exports = {
     });
 
     if (!configExpansion.active) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) =>
-          t.setContent("## ❌ Système Désactivé"),
-        )
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `Le système de Full Build est désactivé sur le serveur ${
-              config.serveur[serveur].emoji_formate
-            } ${config.serveur[serveur].nom} pour votre serveur Discord.`,
-          ),
-        );
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Système Désactivé",
+        `Le système de Full Build est désactivé sur le serveur ${
+          config.serveur[serveur].emoji_formate
+        } ${config.serveur[serveur].nom} pour votre serveur Discord.`,
+      );
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     if (!configExpansion.data.get("Salon")) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) =>
-          t.setContent("## ❌ Configuration Invalide"),
-        )
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `Le système de Full Build n'est pas correctement configuré sur le serveur ${
-              config.serveur[serveur].emoji_formate
-            } ${
-              config.serveur[serveur].nom
-            } pour votre serveur Discord, le choix du salon est manquant.`,
-          ),
-        );
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Configuration Invalide",
+        `Le système de Full Build n'est pas correctement configuré sur le serveur ${
+          config.serveur[serveur].emoji_formate
+        } ${
+          config.serveur[serveur].nom
+        } pour votre serveur Discord, le choix du salon est manquant.`,
+      );
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
-    }
-
-    if (interaction.isMessageComponent()) {
-      await interaction.deferUpdate();
-    } else {
-      await interaction.deferReply();
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const pseudo = await discordLink(interaction.user.id);
+
+    const cachedEmojis = {
+      tete: getCachedEmojiTete(pseudo),
+      drapeauA: getCachedEmojiDrapeau(serveur, paysa),
+      drapeauB: getCachedEmojiDrapeau(serveur, paysb),
+    };
 
     const { components } = await FullBuild(
       client,
@@ -140,30 +94,29 @@ module.exports = {
       pseudo,
       paysa,
       paysb,
+      cachedEmojis,
     );
 
     const salon = await client.channels.fetch(
       configExpansion.data.get("Salon"),
     );
 
-    let message;
+    let roleTextDisplay = null;
+
     if (configExpansion.data.get("Role").length > 0) {
       const roleMentions = configExpansion.data
         .get("Role")
         .map((roleId) => `<@&${roleId}>`)
         .join(", ");
-
-      const roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
-      message = await salon.send({
-        components: [roleTextDisplay, ...components],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } else {
-      message = await salon.send({
-        components,
-        flags: MessageFlags.IsComponentsV2,
-      });
+      roleTextDisplay = new TextDisplayBuilder().setContent(roleMentions);
     }
+
+    const message = await salon.send({
+      components: roleTextDisplay
+        ? [roleTextDisplay, ...components]
+        : components,
+      flags: MessageFlags.IsComponentsV2,
+    });
 
     const messageLink = `https://discord.com/channels/${message.guildId}/${message.channelId}/${message.id}`;
 
@@ -177,21 +130,29 @@ module.exports = {
         ),
       );
 
-    const sentMessage = await interaction.editReply({
-      components: [userContainer],
-      flags: MessageFlags.IsComponentsV2,
-      withResponse: true,
-    });
+    sendTemporaryError(interaction, userContainer);
 
-    setTimeout(async () => {
-      try {
-        if (sentMessage.resource) {
-          await sentMessage.resource.message.delete();
-        } else {
-          await sentMessage.delete();
-        }
-      } catch (error) {}
-    }, 5_000);
+    const [tete, drapeauA, drapeauB] = await Promise.all([
+      getEmojiTete(client, pseudo),
+      getEmojiDrapeau(client, serveur, paysa),
+      getEmojiDrapeau(client, serveur, paysb),
+    ]);
+
+    const { components: updatedComponents } = await FullBuild(
+      client,
+      serveur,
+      pseudo,
+      paysa,
+      paysb,
+      { tete, drapeauA, drapeauB },
+    );
+
+    await salon.messages.edit(message.id, {
+      components: roleTextDisplay
+        ? [roleTextDisplay, ...updatedComponents]
+        : updatedComponents,
+      flags: MessageFlags.IsComponentsV2,
+    });
 
     if (salon.type === ChannelType.GuildNews) await message.crosspost();
   },

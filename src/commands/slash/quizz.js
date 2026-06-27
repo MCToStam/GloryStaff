@@ -8,6 +8,11 @@ const {
 } = require("discord.js");
 const { getData, saveData } = require("../../../util/module/getAndSaveData");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+  replyOrUpdate,
+} = require("../../../util/proxy/reply");
 
 module.exports = {
   serveur: ["521060626211012630"],
@@ -35,41 +40,13 @@ module.exports = {
 
     const data = getData(`data/${serveur}/quizz.json`);
     if (!data) {
-      const errorContainer = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((text) =>
-          text.setContent(`## ❌ Données Manquantes`),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((text) =>
-          text.setContent(
-            "Les données de quizz ne sont pas disponible sur votre serveur NationsGlory.",
-          ),
-        );
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Données Manquantes",
+        "Les données de quizz ne sont pas disponible sur votre serveur NationsGlory.",
+      );
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [errorContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     let dernierQuizz = data[data.length - 1];
@@ -128,39 +105,13 @@ module.exports = {
 
     if (subcommand === "envoyer") {
       if (questionsValides.length < 3 || dernierQuizz.envoyer !== 0) {
-        const erreurContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((text) =>
-            text.setContent(`## ❌ Données Manquantes`),
-          )
-          .addSeparatorComponents((separator) => separator)
-          .addTextDisplayComponents((text) =>
-            text.setContent("Les 3 questions ne sont pas définies."),
-          );
+        const errorContainer = buildErrorContainer(
+          config,
+          "❌ Données Manquantes",
+          "Les 3 questions ne sont pas définies.",
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = interaction.update({
-            components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-            return;
-          }, 5_000);
-          return;
-        } else {
-          return interaction.reply({
-            components: [erreurContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       }
 
       const ancienneSemaine = data.find(
@@ -260,10 +211,7 @@ module.exports = {
           ),
         );
 
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
+      await replyOrUpdate(interaction, [container]);
     } else if (subcommand === "gerer") {
       const container = new ContainerBuilder()
         .setAccentColor(config.serveur[serveur].couleur)
@@ -297,29 +245,7 @@ module.exports = {
           );
       });
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      await replyOrUpdate(interaction, [container]);
     }
   },
 };

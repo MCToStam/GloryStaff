@@ -186,14 +186,13 @@ async function showStaffManagement(
   const staffData = getData(`data/${serveur}/staff/${staff}.json`);
 
   if (!staffData) {
-    return sendTemporaryError(
-      interaction,
-      buildErrorContainer(
-        config,
-        "❌ Erreur",
-        `Le joueur "**${staff}**" n'existe pas ou ne fait pas partie du staff du serveur ${srvConfig.emoji_formate} **${srvConfig.nom}**.`,
-      ),
+    const errorContainer = buildErrorContainer(
+      config,
+      "❌ Erreur",
+      `Le joueur "**${staff}**" n'existe pas ou ne fait pas partie du staff du serveur ${srvConfig.emoji_formate} **${srvConfig.nom}**.`,
     );
+
+    return sendTemporaryError(interaction, errorContainer);
   }
 
   if (interaction.isMessageComponent()) {

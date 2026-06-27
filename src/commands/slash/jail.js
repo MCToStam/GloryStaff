@@ -12,6 +12,10 @@ const {
   buildErrorContainer,
   sendTemporaryError,
 } = require("../../../util/proxy/reply");
+const {
+  getCachedEmojiTete,
+  getEmojiTete,
+} = require("../../../util/module/emoji");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -50,14 +54,13 @@ module.exports = {
     const match = durée.match(/^(\d+)([hmdb])$/);
 
     if (!match) {
-      return sendTemporaryError(
-        interaction,
-        buildErrorContainer(
-          config,
-          "❌ Durée Invalide",
-          "La durée doit être au format suivant :\n`1h` (1 heure), `30m` (30 minutes), `2d` (2 jours), etc.\n Elle peut aussi être du format `100b` dans le cas d'un jailblock.",
-        ),
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Durée Invalide",
+        "La durée doit être au format suivant :\n`1h` (1 heure), `30m` (30 minutes), `2d` (2 jours), etc.\n Elle peut aussi être du format `100b` dans le cas d'un jailblock.",
       );
+
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const UNITES = { h: "heure", m: "minute", d: "jour", b: "bloc" };
@@ -87,40 +90,37 @@ module.exports = {
         .map((user) => `- ${user.username.replace(/_/g, "\\_")}`)
         .join("\n");
 
-      return sendTemporaryError(
-        interaction,
-        buildErrorContainer(
-          config,
-          "❌ Criminel Invalide",
-          similarUsers.length === 0
-            ? "L'utilisateur que vous recherchez n'existe pas."
-            : `L'utilisateur que vous recherchez n'existe pas, il s'agit peut-être de\n\n${suggestions}`,
-        ),
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Criminel Invalide",
+        similarUsers.length === 0
+          ? "L'utilisateur que vous recherchez n'existe pas."
+          : `L'utilisateur que vous recherchez n'existe pas, il s'agit peut-être de\n\n${suggestions}`,
       );
+
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const vraiCriminel = foundUser.username;
 
     if (!configJail || !configJail.active) {
-      return sendTemporaryError(
-        interaction,
-        buildErrorContainer(
-          config,
-          "❌ Système Désactivé",
-          `Le système de Jail est désactivé sur le serveur ${srvLabel} pour votre serveur Discord.`,
-        ),
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Système Désactivé",
+        `Le système de Jail est désactivé sur le serveur ${srvLabel} pour votre serveur Discord.`,
       );
+
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     if (!configJail.data.get("Salon") || !configJail.data.get("Grade")) {
-      return sendTemporaryError(
-        interaction,
-        buildErrorContainer(
-          config,
-          "❌ Configuration Invalide",
-          `Le système de Jail n'est pas correctement configuré sur le serveur ${srvLabel} pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
-        ),
+      const errorContainer = buildErrorContainer(
+        config,
+        "❌ Configuration Invalide",
+        `Le système de Jail n'est pas correctement configuré sur le serveur ${srvLabel} pour votre serveur Discord, le choix du salon et/ou du grade autorisé est manquant.`,
       );
+
+      return sendTemporaryError(interaction, errorContainer);
     }
 
     const roleAutorise = configJail.data.get("Grade");
@@ -134,12 +134,14 @@ module.exports = {
       return sendTemporaryError(interaction, container);
     }
 
+    const cacheEmoji = getCachedEmojiTete(vraiCriminel);
     const { components } = await Jail(
       client,
       serveur,
       vraiCriminel,
       dureeLisible,
       lien_raison,
+      cacheEmoji,
     );
 
     const message = await salon.send({
@@ -196,6 +198,22 @@ module.exports = {
         t.setContent(`Le jail a correctement été envoyé ici : ${messageLink}`),
       );
 
-    return sendTemporaryError(interaction, userContainer);
+    sendTemporaryError(interaction, userContainer);
+
+    const vraiEmoji = getEmojiTete(client, vraiCriminel);
+
+    const { components: updatedComponents } = await Jail(
+      client,
+      serveur,
+      vraiCriminel,
+      dureeLisible,
+      lien_raison,
+      vraiEmoji,
+    );
+
+    await salon.messages.edit(message.id, {
+      components: updatedComponents,
+      flags: MessageFlags.IsComponentsV2,
+    });
   },
 };

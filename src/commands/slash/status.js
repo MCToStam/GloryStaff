@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 const { getAbsolutePath } = require("../../../util/module/getAndSaveData");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const { sendTemporaryError } = require("../../../util/proxy/reply");
 
 module.exports = {
   config: { permission: "super_moderateur" },
@@ -94,30 +95,9 @@ module.exports = {
         t.setContent(`Le message de status a été envoyé ici : ${messageLink}`),
       );
 
+    sendTemporaryError(interaction, userContainer);
+
     if (channel.type === ChannelType.GuildNews)
       await messageMaintenance.crosspost();
-
-    if (interaction.isMessageComponent()) {
-      const sentMessage = await interaction.update({
-        components: [userContainer],
-        flags: MessageFlags.IsComponentsV2,
-        withResponse: true,
-      });
-
-      setTimeout(async () => {
-        try {
-          if (sentMessage.resource) {
-            await sentMessage.resource.message.delete();
-          } else {
-            await sentMessage.delete();
-          }
-        } catch (error) {}
-      }, 5_000);
-    } else {
-      return interaction.reply({
-        components: [userContainer],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
   },
 };

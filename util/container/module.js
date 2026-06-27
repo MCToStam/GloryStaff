@@ -228,7 +228,14 @@ async function AttenteStaff(client, serveur, joueur, id) {
   return { components, files: [] };
 }
 
-async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
+async function Jail(
+  client,
+  serveur,
+  vraiCriminel,
+  dureeLisible,
+  lien_raison,
+  emoji,
+) {
   const buttonEnable = vraiCriminel ? false : true;
   if (!vraiCriminel) vraiCriminel = "ToStam";
   if (!dureeLisible) dureeLisible = "30 minutes";
@@ -240,12 +247,13 @@ async function Jail(client, serveur, vraiCriminel, dureeLisible, lien_raison) {
     "https://nationsglory.fr/forums/thread/",
   );
 
-  let descriptionEmbed = `**Durée** : ${dureeLisible}\n`;
-  descriptionEmbed += isLienValide
-    ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
-    : `**Raison :** ${lien_raison}`;
+  const descriptionEmbed = `**Durée** : ${dureeLisible}\n${
+    isLienValide
+      ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
+      : `**Raison :** ${lien_raison}}`
+  }`;
 
-  const teteEmoji = (await getEmojiTete(client, vraiCriminel)) || "🚧";
+  const teteEmoji = emoji || "🚧";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
@@ -365,14 +373,21 @@ async function Routine(client, serveur, pseudonym, emoji) {
   return { components, files: [] };
 }
 
-async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
+async function ConquêteTerritoriale(
+  client,
+  serveur,
+  pseudo,
+  paysa,
+  paysb,
+  emojis = {},
+) {
   if (!pseudo) pseudo = "ToStam";
   if (!paysa) paysa = "France";
   if (!paysb) paysb = "Allemagne";
 
-  const tete = (await getEmojiTete(client, pseudo)) || "🧑";
-  const drapeauA = (await getEmojiDrapeau(client, serveur, paysa)) || "🏳️";
-  const drapeauB = (await getEmojiDrapeau(client, serveur, paysb)) || "🏳️";
+  const tete = emojis.tete || "🧑";
+  const drapeauA = emojis.drapeauA || "🏳️";
+  const drapeauB = emojis.drapeauB || "🏳️";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)
@@ -391,14 +406,14 @@ async function ConquêteTerritoriale(client, serveur, pseudo, paysa, paysb) {
   return { components, files: [] };
 }
 
-async function FullBuild(client, serveur, pseudo, paysa, paysb) {
+async function FullBuild(client, serveur, pseudo, paysa, paysb, emojis = {}) {
   if (!pseudo) pseudo = "ToStam";
   if (!paysa) paysa = "France";
   if (!paysb) paysb = "Allemagne";
 
-  const tete = (await getEmojiTete(client, pseudo)) || "🧑";
-  const drapeauA = (await getEmojiDrapeau(client, serveur, paysa)) || "🏳️";
-  const drapeauB = (await getEmojiDrapeau(client, serveur, paysb)) || "🏳️";
+  const tete = emojis.tete || "🧑";
+  const drapeauA = emojis.drapeauA || "🏳️";
+  const drapeauB = emojis.drapeauB || "🏳️";
 
   const container = new ContainerBuilder()
     .setAccentColor(config.serveur[serveur].couleur)

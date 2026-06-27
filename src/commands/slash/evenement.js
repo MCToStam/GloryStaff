@@ -11,10 +11,46 @@ const { discordStaff } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Evenement = require("../../../util/database/models/Evenement");
 const Configuration = require("../../../util/database/models/Configuration");
+const {
+  buildErrorContainer,
+  sendTemporaryError,
+  replyOrUpdate,
+} = require("../../../util/proxy/reply");
 
 const EVENEMENTS_PAR_PAGE = 5;
 
+function getTimeZoneOffsetMs(timeZone, date) {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  const parts = dtf.formatToParts(date).reduce((acc, part) => {
+    acc[part.type] = part.value;
+    return acc;
+  }, {});
+
+  const asUTC = Date.UTC(
+    Number(parts.year),
+    Number(parts.month) - 1,
+    Number(parts.day),
+    Number(parts.hour),
+    Number(parts.minute),
+    Number(parts.second),
+  );
+
+  return asUTC - date.getTime();
+}
+
 function parseDateDiscord(dateString) {
+  if (!dateString) return null;
+
   const match = dateString.match(
     /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2})[h:](\d{2})$/,
   );
@@ -23,7 +59,7 @@ function parseDateDiscord(dateString) {
 
   const [, jour, mois, annee, heure, minute] = match;
 
-  const date = new Date(
+  const wallClockAsUTC = Date.UTC(
     Number(annee),
     Number(mois) - 1,
     Number(jour),
@@ -31,7 +67,10 @@ function parseDateDiscord(dateString) {
     Number(minute),
   );
 
-  return Math.floor(date.getTime() / 1000);
+  const offset = getTimeZoneOffsetMs("Europe/Paris", new Date(wallClockAsUTC));
+  const realTimestampMs = wallClockAsUTC - offset;
+
+  return Math.floor(realTimestampMs / 1000);
 }
 
 module.exports = {
@@ -59,7 +98,7 @@ module.exports = {
           option
             .setName("date")
             .setDescription("La date de démarrage (ex: 25/12/2026 18:00)")
-            .setRequired(true),
+            .setRequired(false),
         ),
     )
     .addSubcommand((sub) =>
@@ -77,7 +116,7 @@ module.exports = {
           option
             .setName("date")
             .setDescription("La date de démarrage (ex: 25/12/2026 18:00)")
-            .setRequired(true),
+            .setRequired(false),
         ),
     ),
 
@@ -97,38 +136,13 @@ module.exports = {
       );
 
       if (servers.length === 0) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              "Tu n'as pas la permission de gérer les événements de ce serveur.",
-            ),
-          );
+        const errorContainer = buildErrorContainer(
+          config,
+          "## ❌ Permission Manquante",
+          "Tu n'as pas la permission de gérer les événements de ce serveur.",
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       }
 
       const page = 0;
@@ -208,57 +222,20 @@ module.exports = {
         ),
       );
 
-      if (interaction.isMessageComponent()) {
-        return interaction.update({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      } else {
-        return interaction.reply({
-          components: [container],
-          flags: MessageFlags.IsComponentsV2,
-        });
-      }
+      replyOrUpdate(interaction, [container]);
     }
 
     if (sousCommande === "lancer") {
       const timestamp = parseDateDiscord(date);
 
-      if (!timestamp) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) =>
-            t.setContent("## ❌ Format invalide"),
-          )
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              "Utilise : `JJ/MM/AAAA HHhMM` ou `JJ/MM/AAAA HH:MM`\nExemple : `19/06/2026 20h30`",
-            ),
-          );
+      if (date && !timestamp) {
+        const errorContainer = buildErrorContainer(
+          config,
+          "❌ Format Invalide",
+          "Utilise : `JJ/MM/AAAA HHhMM` ou `JJ/MM/AAAA HH:MM`\nExemple : `19/06/2026 20h30`",
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       }
 
       const evenementData = await Evenement.findOne({
@@ -267,38 +244,13 @@ module.exports = {
       }).lean();
 
       if (!evenementData) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              `L'événement "**${evenement}**" n'existe pas sur le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}**.`,
-            ),
-          );
+        const errorContainer = buildErrorContainer(
+          config,
+          "❌ Événement Introuvable",
+          `L'événement "**${evenement}**" n'existe pas sur le serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}**.`,
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       }
 
       const configEvenement = await Configuration.findOne({
@@ -331,11 +283,13 @@ module.exports = {
         );
       }
 
-      container.addTextDisplayComponents((t) =>
-        t.setContent(
-          `**📅 Démarre le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
-        ),
-      );
+      if (date) {
+        container.addTextDisplayComponents((t) =>
+          t.setContent(
+            `**📅 Démarrage le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
+          ),
+        );
+      }
 
       const files = [];
 
@@ -359,7 +313,7 @@ module.exports = {
       }
 
       let components = [container];
-      if (configEvenement.data.get("Role").length > 0) {
+      if (configEvenement?.data?.get("Role")?.length > 0) {
         const roleMentions = configEvenement.data
           .get("Role")
           .map((roleId) => `<@&${roleId}>`)
@@ -382,139 +336,42 @@ module.exports = {
           t.setContent("Le message d'événement a bien été envoyé"),
         );
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [userContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [userContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      return sendTemporaryError(interaction, userContainer);
     }
 
     if (sousCommande === "aléatoire") {
       const timestamp = parseDateDiscord(date);
 
-      if (!timestamp) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) =>
-            t.setContent("## ❌ Format invalide"),
-          )
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              "Utilise : `JJ/MM/AAAA HHhMM` ou `JJ/MM/AAAA HH:MM`\nExemple : `19/06/2026 20h30`",
-            ),
-          );
+      if (date && !timestamp) {
+        const errorContainer = buildErrorContainer(
+          config,
+          "❌ Format Invalide",
+          "Utilise : `JJ/MM/AAAA HHhMM` ou `JJ/MM/AAAA HH:MM`\nExemple : `19/06/2026 20h30`",
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       }
 
       const tousLesEvenements = await Evenement.find({ serveur }).lean();
 
       if (tousLesEvenements.length === 0) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent("Aucun événement n'a été créé sur ce serveur."),
-          );
+        const errorContainer = buildErrorContainer(
+          config,
+          "## ❌ Manque d'Événements",
+          "Aucun événement n'a été créé sur ce serveur.",
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        sendTemporaryError(interaction, errorContainer);
       }
 
       if (nb_evenement > tousLesEvenements.length) {
-        const errorContainer = new ContainerBuilder()
-          .setAccentColor(config.colors.error)
-          .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
-          .addSeparatorComponents((s) => s)
-          .addTextDisplayComponents((t) =>
-            t.setContent(
-              `Il n'y a que **${tousLesEvenements.length}** événement${tousLesEvenements.length > 1 ? "s" : ""} disponible${tousLesEvenements.length > 1 ? "s" : ""} sur ce serveur.`,
-            ),
-          );
+        const errorContainer = buildErrorContainer(
+          config,
+          "## ❌ Manque d'Événements",
+          `Il n'y a que **${tousLesEvenements.length}** événement${tousLesEvenements.length > 1 ? "s" : ""} disponible${tousLesEvenements.length > 1 ? "s" : ""} sur ce serveur.`,
+        );
 
-        if (interaction.isMessageComponent()) {
-          const sentMessage = await interaction.update({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2,
-            withResponse: true,
-          });
-
-          setTimeout(async () => {
-            try {
-              if (sentMessage.resource) {
-                await sentMessage.resource.message.delete();
-              } else {
-                await sentMessage.delete();
-              }
-            } catch (error) {}
-          }, 5_000);
-        } else {
-          return interaction.reply({
-            components: [errorContainer],
-            flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-          });
-        }
+        return sendTemporaryError(interaction, errorContainer);
       }
 
       const configEvenement = await Configuration.findOne({
@@ -543,7 +400,7 @@ module.exports = {
         )
         .addSeparatorComponents((s) => s);
 
-      const texte = configEvenement.data.get("Texte Affiché")?.[0];
+      const texte = configEvenement?.data?.get("Texte Affiché")?.[0];
 
       if (texte) {
         const dateStr = new Date(timestamp * 1000).toLocaleDateString("fr-FR", {
@@ -571,14 +428,16 @@ module.exports = {
           .addSeparatorComponents((s) => s);
       }
 
-      container.addTextDisplayComponents((t) =>
-        t.setContent(
-          `**📅 Démarre le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
-        ),
-      );
+      if (date) {
+        container.addTextDisplayComponents((t) =>
+          t.setContent(
+            `**📅 Démarrage le <t:${timestamp}:F> • <t:${timestamp}:R>**`,
+          ),
+        );
+      }
 
       let components = [container];
-      if (configEvenement.data.get("Role").length > 0) {
+      if (configEvenement?.data?.get("Role")?.length > 0) {
         const roleMentions = configEvenement.data
           .get("Role")
           .map((roleId) => `<@&${roleId}>`)
@@ -601,29 +460,7 @@ module.exports = {
           t.setContent("Le message d'événement a bien été envoyé"),
         );
 
-      if (interaction.isMessageComponent()) {
-        const sentMessage = await interaction.update({
-          components: [userContainer],
-          flags: MessageFlags.IsComponentsV2,
-          withResponse: true,
-        });
-
-        setTimeout(async () => {
-          try {
-            if (sentMessage.resource) {
-              await sentMessage.resource.message.delete();
-            } else {
-              await sentMessage.delete();
-            }
-          } catch (error) {}
-        }, 5_000);
-        return;
-      } else {
-        return interaction.reply({
-          components: [userContainer],
-          flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-        });
-      }
+      sendTemporaryError(interaction, userContainer);
     }
   },
 };

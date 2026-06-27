@@ -3,6 +3,7 @@ const { getData } = require("../../../util/module/getAndSaveData");
 const getServerCommand = require("../../../util/getServerCommand");
 const Serveur = require("../../../util/database/models/Serveur");
 const Grade = require("../../../util/database/models/Grade");
+const Evenement = require("../../../util/database/models/Evenement");
 const config = require("../../../config");
 
 const fetchJSON = async (url, options) => {
@@ -148,6 +149,34 @@ module.exports = async (client, interaction) => {
                 ? `[${g.serveur.toUpperCase()}] ${g.catNom} : ${g.nom}`
                 : `${g.catNom} : ${g.nom}`,
             value: `${g.catId}_${g.id}`,
+          })),
+      );
+    }
+
+    if (name === "evenement") {
+      const srvList = await serveurs();
+      if (!srvList.length) {
+        return respond(interaction, [
+          {
+            name: "Tu n'as pas le droit d'effectuer ceci !",
+            value: "nopermission",
+          },
+        ]);
+      }
+
+      const events = await Evenement.find({ serveur: { $in: srvList } });
+
+      return respond(
+        interaction,
+        events
+          .filter((event) => event.nom.toLowerCase().startsWith(query))
+          .slice(0, 25)
+          .map((event) => ({
+            name:
+              srvList.length > 1
+                ? `[${event.serveur.toUpperCase()}] ${event.nom}`
+                : event.nom,
+            value: event.nom,
           })),
       );
     }

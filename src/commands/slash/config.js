@@ -5,6 +5,7 @@ const {
 } = require("discord.js");
 const allConfig = require("../../../util/container/allConfig");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
+const { replyOrUpdate } = require("../../../util/proxy/reply");
 
 module.exports = {
   config: { permission: "guide" },
@@ -21,16 +22,7 @@ module.exports = {
     const { serveur } = interaction.parametre;
 
     const container = await allConfig(serveur, interaction.user.id);
-    if (interaction.isMessageComponent()) {
-      return interaction.update({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } else {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    }
+
+    await replyOrUpdate(interaction, [container]);
   },
 };

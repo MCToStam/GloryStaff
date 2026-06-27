@@ -10,6 +10,7 @@ const {
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const { discordLink } = require("../../../util/module/discordLink");
 const Absense = require("../../../util/database/models/Absence");
+const { replyOrUpdate } = require("../../../util/proxy/reply");
 
 module.exports = {
   config: { permission: "guide" },
@@ -115,16 +116,6 @@ module.exports = {
       ),
     );
 
-    if (interaction.isMessageComponent()) {
-      return interaction.update({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2,
-      });
-    } else {
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    await replyOrUpdate(interaction, [container]);
   },
 };
