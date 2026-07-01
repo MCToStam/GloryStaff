@@ -141,7 +141,7 @@ module.exports = {
         name: "sanctions.png",
       });
 
-      await replyOrUpdate(interaction, [container]);
+      await replyOrUpdate(interaction, [container], { files: [attachment] });
     } else {
       const { servers } = await discordStaff(
         interaction.user.id,
@@ -201,7 +201,7 @@ module.exports = {
           name: "sanctions.png",
         });
 
-        await replyOrUpdate(interaction, [container]);
+        await replyOrUpdate(interaction, [container], { files: [attachment] });
       }
 
       container.addTextDisplayComponents((t) =>

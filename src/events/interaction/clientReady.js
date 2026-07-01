@@ -32,12 +32,6 @@ const {
 } = require("../../../util/alerte/joueurConnecteSalon");
 const { plainte } = require("../../../util/alerte/plainte");
 const {
-  recapitulatif_hebdomadaire,
-} = require("../../../util/alerte/recapitulatif_hebdomadaire");
-const {
-  recapitulatif_mensuel,
-} = require("../../../util/alerte/recapitulatif_mensuel");
-const {
   repartition_notation,
 } = require("../../../util/alerte/repartition_notation");
 const { sanction } = require("../../../util/alerte/sanction");
@@ -154,26 +148,6 @@ module.exports = async (client, interaction) => {
         await sanction(client, serveur);
       }
       await updateSanctionsCache();
-    },
-    {
-      timezone: "Europe/Paris",
-    },
-  );
-
-  cron.schedule(
-    "15 10 * * 1",
-    async () => {
-      // await recapitulatif_hebdomadaire(client);
-    },
-    {
-      timezone: "Europe/Paris",
-    },
-  );
-
-  cron.schedule(
-    "15 10 1 * *",
-    async () => {
-      // await recapitulatif_mensuel(client);
     },
     {
       timezone: "Europe/Paris",

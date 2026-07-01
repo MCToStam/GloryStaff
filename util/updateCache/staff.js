@@ -221,16 +221,28 @@ async function updateStaff(client) {
       "Modérateur Test": serverData.moderateur_test,
       Guide: serverData.guide,
     };
-    return;
 
     const allStaffList = Object.values(processedData).flat().filter(Boolean);
 
-    const staffDirectoryPath = path.join(__dirname, "data", "staff");
+    const staffDirectoryPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "data",
+      "staff",
+    );
     if (!fs.existsSync(staffDirectoryPath)) {
       fs.mkdirSync(staffDirectoryPath, { recursive: true });
     }
 
-    const staffServerDir = path.join(__dirname, "data", serveur, "staff");
+    const staffServerDir = path.join(
+      __dirname,
+      "..",
+      "..",
+      "data",
+      serveur,
+      "staff",
+    );
     if (!fs.existsSync(staffServerDir)) {
       fs.mkdirSync(staffServerDir, { recursive: true });
     }
@@ -252,6 +264,8 @@ async function updateStaff(client) {
         if (staffName) {
           const filePath = path.join(
             __dirname,
+            "..",
+            "..",
             "data",
             serveur,
             "staff",
