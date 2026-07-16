@@ -126,7 +126,7 @@ module.exports = async (client, interaction) => {
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `**🔧 Action Effectuée :** ${interaction.commandName}`,
+          `**🔧 Action Éffectuée :** ${interaction.commandName}`,
         ),
       )
       .addTextDisplayComponents((textDisplay) =>

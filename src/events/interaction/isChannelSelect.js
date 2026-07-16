@@ -86,7 +86,7 @@ module.exports = async (client, interaction) => {
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `**🔧 Action Effectuée :** ${interaction.customId}`,
+          `**🔧 Action Éffectuée :** ${interaction.customId}`,
         ),
       )
       .addTextDisplayComponents((textDisplay) =>

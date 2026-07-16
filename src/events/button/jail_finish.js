@@ -22,19 +22,10 @@ module.exports = {
 
     const roleAutorise = configJail.data.get("Grade");
 
-    const gradeAutorise = {
-      Administrateur: "administrateur",
-      "Super-Modérateur": "super_moderateur",
-      "Modérateur Plus": "moderateur_plus",
-      Modérateur: "moderateur",
-      "Modérateur Test": "moderateur_test",
-      Guide: "guide",
-    };
-
     const { pseudonym, servers, container } = await discordStaff(
       interaction.user.id,
       serveur,
-      gradeAutorise[roleAutorise],
+      roleAutorise,
     );
 
     if (container) {
@@ -102,7 +93,7 @@ module.exports = {
     const userContainer = new ContainerBuilder()
       .setAccentColor(config.colors.success)
       .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent("## ✅ Jail Effectué"),
+        textDisplay.setContent("## ✅ Jail Éffectué"),
       )
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>

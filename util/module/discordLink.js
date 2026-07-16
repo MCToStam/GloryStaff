@@ -55,7 +55,8 @@ async function discordLink(discordId) {
 }
 
 async function discordStaff(discordId, serveur = "all", gradeMin) {
-  const pseudonym = await discordLink(discordId);
+  // const pseudonym = await discordLink(discordId);
+  const pseudonym = "Hannya601";
 
   if (!pseudonym) {
     return {

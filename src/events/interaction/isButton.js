@@ -89,9 +89,7 @@ module.exports = async (client, interaction) => {
       )
       .addSeparatorComponents((separator) => separator)
       .addTextDisplayComponents((textDisplay) =>
-        textDisplay.setContent(
-          `**🔧 Action Effectuée :** ${interaction.customId}`,
-        ),
+        textDisplay.setContent(`**🔧 Action É :** ${interaction.customId}`),
       )
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(`**💢 Erreur :** \`\`\`${e}\`\`\``),

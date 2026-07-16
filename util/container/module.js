@@ -248,18 +248,22 @@ async function Jail(
   const buttonEnable = vraiCriminel ? false : true;
   if (!vraiCriminel) vraiCriminel = "ToStam";
   if (!dureeLisible) dureeLisible = "30 minutes";
-  if (!lien_raison)
+  if (!lien_raison && lien_raison !== false)
     lien_raison =
       "https://nationsglory.fr/forums/thread/plainte-n6386-onu-contre-ninnin22.237988#answer-453729293094";
 
-  const isLienValide = lien_raison.startsWith(
-    "https://nationsglory.fr/forums/thread/",
+  const isLienValide = /^https:\/\/nationsglory\.fr\/forums\/thread\/\S+$/.test(
+    lien_raison,
   );
 
-  const descriptionEmbed = `**Durée** : ${dureeLisible}\n${
-    isLienValide
-      ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
-      : `**Raison :** ${lien_raison}}`
+  const descriptionEmbed = `**Durée** : ${dureeLisible}${
+    lien_raison
+      ? `\n${
+          isLienValide
+            ? `**Lien de la plainte :** [Clic Ici](${lien_raison})`
+            : `**Raison :** ${lien_raison}`
+        }`
+      : ""
   }`;
 
   const teteEmoji = emoji || "🚧";
@@ -270,7 +274,8 @@ async function Jail(
       textDisplay.setContent(
         `## ${teteEmoji} Jail sur ${vraiCriminel.replace(/_/g, "\\_")}`,
       ),
-    )
+    );
+  container
     .addSeparatorComponents((separator) => separator)
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(descriptionEmbed),
@@ -280,13 +285,13 @@ async function Jail(
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId("jail_finish")
-          .setLabel("✅ Jail Effectué")
+          .setLabel("✅ Jail Éffectué")
           .setStyle(ButtonStyle.Success)
           .setDisabled(buttonEnable),
         ...(isLienValide
           ? [
               new ButtonBuilder()
-                .setLabel("🔗 Aller sur la plainte")
+                .setLabel("🔗 Aller sur la Plainte")
                 .setStyle(ButtonStyle.Link)
                 .setURL(lien_raison),
             ]

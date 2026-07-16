@@ -21,7 +21,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setContexts(0)
     .setName("jail")
-    .setDescription("Effectue un jail")
+    .setDescription("Éffectue un jail")
     .addStringOption((option) =>
       option
         .setName("criminel")
@@ -39,7 +39,7 @@ module.exports = {
       option
         .setName("lien_raison")
         .setDescription("Lien ou raison du jail")
-        .setRequired(true),
+        .setRequired(false),
     ),
 
   async execute(client, interaction, config) {
@@ -130,9 +130,7 @@ module.exports = {
       interaction.client.channels.fetch(configJail.data.get("Salon")),
     ]);
 
-    if (container) {
-      return sendTemporaryError(interaction, container);
-    }
+    if (container) return sendTemporaryError(interaction, container);
 
     const cacheEmoji = getCachedEmojiTete(vraiCriminel);
     const { components } = await Jail(
@@ -140,7 +138,7 @@ module.exports = {
       serveur,
       vraiCriminel,
       dureeLisible,
-      lien_raison,
+      lien_raison ?? false,
       cacheEmoji,
     );
 
@@ -200,14 +198,14 @@ module.exports = {
 
     sendTemporaryError(interaction, userContainer);
 
-    const vraiEmoji = getEmojiTete(client, vraiCriminel);
+    const vraiEmoji = await getEmojiTete(client, vraiCriminel);
 
     const { components: updatedComponents } = await Jail(
       client,
       serveur,
       vraiCriminel,
       dureeLisible,
-      lien_raison,
+      lien_raison ?? false,
       vraiEmoji,
     );
 

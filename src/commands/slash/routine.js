@@ -25,7 +25,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setContexts(0)
     .setName("routine")
-    .setDescription("Effectue une routine"),
+    .setDescription("Éffectue une routine"),
 
   async execute(client, interaction, config) {
     await proxyCommande(client, interaction, config);
