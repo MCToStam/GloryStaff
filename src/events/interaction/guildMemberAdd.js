@@ -1,6 +1,5 @@
 const { discordStaff } = require("../../../util/module/discordLink");
 const log = require("../../../util/module/log");
-const canSendMP = require("../../../util/module/canSendMP");
 const { ContainerBuilder, MessageFlags } = require("discord.js");
 const config = require("../../../config");
 
@@ -54,27 +53,27 @@ module.exports = async (client, member) => {
       "gray",
     );
 
-    if (canSendMP(client, member.user.id)) {
-      const container = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(`## 👋 Bienvenue ${member.user.displayName}`),
-        )
-        .addSeparatorComponents((separator) => separator)
-        .addTextDisplayComponents((textDisplay) =>
-          textDisplay.setContent(
-            `Merci d'avoir rejoint le serveur support de GloryBot et GloryStaff.\n\n` +
-              `Ton rôle t'a été attribué automatiquement en fonction de ton implication sur les serveurs suivants :\n` +
-              `${guideServers.join(", ")}\n\n` +
-              `📌 Besoin d'aide ? N'hésite jamais à poser une question !`,
-          ),
-        );
+    const container = new ContainerBuilder()
+      .setAccentColor(config.colors.error)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(`## 👋 Bienvenue ${member.user.displayName}`),
+      )
+      .addSeparatorComponents((separator) => separator)
+      .addTextDisplayComponents((textDisplay) =>
+        textDisplay.setContent(
+          `Merci d'avoir rejoint le serveur support de GloryBot et GloryStaff.\n\n` +
+            `Ton rôle t'a été attribué automatiquement en fonction de ton implication sur les serveurs suivants :\n` +
+            `${guideServers.join(", ")}\n\n` +
+            `📌 Besoin d'aide ? N'hésite jamais à poser une question !`,
+        ),
+      );
 
+    try {
       await member.send({
         components: [container],
         flags: MessageFlags.IsComponentsV2,
       });
-    }
+    } catch (e) {}
   } catch (error) {
     console.error("Erreur lors du traitement de guildMemberAdd:", error);
   }

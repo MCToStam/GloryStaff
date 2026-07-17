@@ -8,9 +8,11 @@ const {
   ButtonBuilder,
 } = require("discord.js");
 const { getEmojiTete } = require("../../../../util/module/emoji");
-const { getData } = require("../../../../util/module/getAndSaveData");
 const { getServeur } = require("../../../../util/module/getServeur");
-const { generateConnexionGraph } = require("../../../../util/connexion");
+const {
+  generateConnexionTimeline,
+  getConnexionResume,
+} = require("../../../../util/generateConnexionTimeline");
 const Configuration = require("../../../../util/database/models/Configuration");
 const Serveur = require("../../../../util/database/models/Serveur");
 
@@ -24,82 +26,27 @@ module.exports = {
     const joueur = interaction.customId.split("/")[1];
     const semaineOffset = Number(interaction.customId.split("/")[2]);
 
-    const staffData = getData(`data/${serveur}/staff/${joueur}.json`);
+    await interaction.deferUpdate();
 
-    if (!staffData) {
-      const container = new ContainerBuilder()
-        .setAccentColor(config.colors.error)
-        .addTextDisplayComponents((t) => t.setContent("## ❌ Erreur"))
-        .addSeparatorComponents((s) => s)
-        .addTextDisplayComponents((t) =>
-          t.setContent(
-            `Le joueur "**${joueur}**" n'existe pas ou ne fait pas partie du staff du serveur ${config.serveur[serveur].emoji_formate} **${config.serveur[serveur].nom}**.`,
-          ),
-        );
+    const description = await getConnexionResume(
+      serveur,
+      joueur,
+      semaineOffset,
+    );
 
-      return interaction.reply({
-        components: [container],
-        flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
-      });
-    }
+    const buffer = await generateConnexionTimeline(
+      serveur,
+      joueur,
+      semaineOffset,
+    );
 
-    await interaction.deferUpdate({});
-
-    const sessions = staffData["vocal_time"] || [];
-    const tempsJeu = {};
-
-    sessions.forEach(({ start, end }) => {
-      const startDate = new Date(start);
-      const endDate = new Date(end);
-
-      if (endDate <= startDate) return;
-
-      let current = new Date(startDate);
-
-      while (current < endDate) {
-        const nextDay = new Date(current);
-        nextDay.setHours(24, 0, 0, 0);
-
-        const segmentEnd = new Date(
-          Math.min(nextDay.getTime(), endDate.getTime()),
-        );
-
-        const day = ("0" + current.getDate()).slice(-2);
-        const month = ("0" + (current.getMonth() + 1)).slice(-2);
-        const year = current.getFullYear();
-        const dateString = `${day}-${month}-${year}`;
-
-        const durationSec = Math.floor((segmentEnd - current) / 1000);
-
-        if (!tempsJeu[dateString]) tempsJeu[dateString] = 0;
-        tempsJeu[dateString] += durationSec;
-
-        current = nextDay;
-      }
-    });
-
-    const today = new Date();
-
-    const now = new Date();
-    const jours = [
-      "Lundi",
-      "Mardi",
-      "Mercredi",
-      "Jeudi",
-      "Vendredi",
-      "Samedi",
-      "Dimanche",
-    ];
-
-    now.setDate(now.getDate() + semaineOffset * 7);
-
-    const base = new Date(today);
+    const base = new Date();
     const currentDay = base.getDay();
     const diffToMonday = (currentDay === 0 ? -6 : 1) - currentDay;
     base.setDate(base.getDate() + diffToMonday);
     base.setDate(base.getDate() + semaineOffset * 7);
 
-    const monday = new Date(today);
+    const monday = new Date();
     const currentDay2 = monday.getDay();
     const diffToMonday2 = (currentDay2 === 0 ? -6 : 1) - currentDay2;
     monday.setDate(monday.getDate() + diffToMonday2 + semaineOffset * 7);
@@ -109,44 +56,6 @@ module.exports = {
       month: "2-digit",
       year: "numeric",
     });
-
-    let description = "";
-
-    const labels = [];
-    const values = [];
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(now);
-      date.setDate(now.getDate() + diffToMonday + i);
-
-      const day = ("0" + date.getDate()).slice(-2);
-      const month = ("0" + (date.getMonth() + 1)).slice(-2);
-      const year = date.getFullYear();
-      const dateString = `${day}-${month}-${year}`;
-
-      labels.push(jours[i]);
-      values.push(tempsJeu[dateString] || 0);
-
-      const tempsSec = tempsJeu[dateString] || 0;
-      const temps = formatDuration(tempsSec);
-
-      description += `**${jours[i]} ${day} ${moisEnTexte(
-        month,
-      )} :** ${temps}\n`;
-    }
-
-    const total = values.reduce((acc, val) => acc + val, 0);
-    const moyenne = values.length > 0 ? total / values.length : 0;
-    description += `\n**Moyenne de connexion cette semaine :** ${formatDuration(
-      Math.floor(moyenne),
-    )}`;
-
-    const buffer = await generateConnexionGraph(
-      serveur,
-      tempsJeu,
-      semaineOffset,
-      true,
-    );
 
     const staffServeur = await Serveur.findOne({
       serveur,
