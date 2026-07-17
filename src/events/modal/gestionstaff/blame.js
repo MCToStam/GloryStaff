@@ -220,7 +220,7 @@ module.exports = {
 
     container.addTextDisplayComponents((t) =>
       t.setContent(
-        `**Grade :** ${config.grade[gradeDuJoueur].emoji} ${gradeDuJoueur}`,
+        `**Grade :** ${config.grade[gradeDuJoueur].emoji} ${config.grade[gradeDuJoueur].nom.normal}`,
       ),
     );
 

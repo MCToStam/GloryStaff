@@ -351,7 +351,18 @@ async function generateConnexionTimeline(serveur, pseudo, semaineOffset = 0) {
 
   if (isCurrentWeek) {
     const now = new Date();
-    const hour = now.getHours() + now.getMinutes() / 60;
+
+    const parisTime = new Intl.DateTimeFormat("fr-FR", {
+      timeZone: "Europe/Paris",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
+
+    const hours = Number(parisTime.find((p) => p.type === "hour").value);
+    const minutes = Number(parisTime.find((p) => p.type === "minute").value);
+
+    const hour = hours + minutes / 60;
     const x = gridLeft + hour * HOUR_COL_WIDTH;
 
     ctx.save();
@@ -412,8 +423,8 @@ async function getConnexionResume(serveur, pseudo, semaineOffset = 0) {
   const moyenne =
     joursPourMoyenne > 0 ? Math.floor(total / joursPourMoyenne) : 0;
 
-  description += `\n**Moyenne de connexion${
-    semaineOffset === 0 ? " (jours écoulés)" : " cette semaine"
+  description += `\n**Moyenne de connexion ${
+    semaineOffset === 0 ? "sur les jours écoulés" : "cette semaine"
   } :** ${joursPourMoyenne > 0 ? formatDuration(moyenne) : "N/A"}`;
 
   return description;

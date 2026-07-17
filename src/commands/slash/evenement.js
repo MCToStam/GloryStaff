@@ -229,6 +229,7 @@ function parseDateDiscord(dateString) {
 module.exports = {
   config: { permission: "moderateur_plus" },
   data: new SlashCommandBuilder()
+    .setContexts(0)
     .setName("evenement")
     .setDescription("Gestion des événements")
     .addSubcommand((sub) =>

@@ -10,7 +10,6 @@ const { replyOrUpdate } = require("../../../util/proxy/reply");
 module.exports = {
   config: { permission: "guide" },
   data: new SlashCommandBuilder()
-    .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels)
     .setContexts(0)
     .setName("config")
     .setDescription("Affiche la configuration d’un système"),
