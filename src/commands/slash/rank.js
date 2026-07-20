@@ -17,39 +17,14 @@ const { discordLink } = require("../../../util/module/discordLink");
 const proxyCommande = require("../../../util/proxy/proxyCommande");
 const Grade = require("../../../util/database/models/Grade");
 
-// ---------- Color helpers ----------
-
-function hexToRgb(color) {
-  const hex =
-    typeof color === "number"
-      ? color.toString(16).padStart(6, "0")
-      : String(color).replace("#", "");
-  return {
-    r: parseInt(hex.slice(0, 2), 16),
-    g: parseInt(hex.slice(2, 4), 16),
-    b: parseInt(hex.slice(4, 6), 16),
-  };
-}
-
-function rgba({ r, g, b }, a = 1) {
-  return `rgba(${r},${g},${b},${a})`;
-}
-
-function mixColor(a, b, ratio) {
-  return {
-    r: Math.round(a.r * ratio + b.r * (1 - ratio)),
-    g: Math.round(a.g * ratio + b.g * (1 - ratio)),
-    b: Math.round(a.b * ratio + b.b * (1 - ratio)),
-  };
-}
-
 function getContrastTextColor(colorNumber) {
-  const { r, g, b } = hexToRgb(colorNumber);
+  const hex = colorNumber.toString(16).padStart(6, "0");
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness > 180 ? "#55545B" : "#FBF0CA";
 }
-
-// ---------- Text helpers ----------
 
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
   const words = text.split(" ");
@@ -69,29 +44,23 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
   ctx.fillText(line, x, y + offsetY);
 }
 
-// Manually-tracked (letter-spaced) text, canvas has no native letter-spacing
-function fillTextTracked(ctx, text, x, y, spacing) {
-  let cx = x;
-  for (const ch of text) {
-    ctx.fillText(ch, cx, y);
-    cx += ctx.measureText(ch).width + spacing;
-  }
-  return cx - spacing;
-}
+function drawRoundedHexagonPath(ctx, x, y, width, height, radius) {
+  const points = [
+    { x: x + width / 2, y: y },
+    { x: x + width, y: y + height / 4 },
+    { x: width + x, y: y + (height * 3) / 4 },
+    { x: x + width / 2, y: y + height },
+    { x: x, y: y + (height * 3) / 4 },
+    { x: x, y: y + height / 4 },
+  ];
 
-function measureTrackedWidth(ctx, text, spacing) {
-  let w = 0;
-  for (const ch of text) w += ctx.measureText(ch).width + spacing;
-  return w - spacing;
-}
-
-function drawRoundedRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let i = 0; i < points.length; i++) {
+    const p1 = points[i];
+    const p2 = points[(i + 1) % points.length];
+    ctx.arcTo(p1.x, p1.y, p2.x, p2.y, radius);
+  }
   ctx.closePath();
 }
 
@@ -294,242 +263,165 @@ module.exports = {
     );
     const avatarUrl = `https://skins.nationsglory.fr/body/${pseudonym}/3d/4?vr=-20&hr=10&hrh=20&vrla=50&vrra=-10&vrll=-10&vrrl=20&ratio=12&format=png&displayHair=true&headOnly=false&layers=false`;
 
-    // Rank tier among the hierarchy (needed both for the visual + historique)
-    const gradesValides = Object.entries(config.grade)
-      .sort(([, a], [, b]) => b.priorite - a.priorite)
-      .map(([grade]) => grade.nom);
-
-    const tierIndex = gradesValides.indexOf(gradeChoisi.nom);
-    const tierTotal = gradesValides.length;
-
-    // ---------- Canvas ----------
-
     const W = 1920;
     const H = 1080;
     const canvas = createCanvas(W, H);
     const ctx = canvas.getContext("2d");
 
-    const gradeRgb = hexToRgb(gradeChoisi.couleur);
-    const darkBase = { r: 13, g: 14, b: 18 };
-    const darkerBase = { r: 8, g: 9, b: 12 };
-
-    // 1. Base gradient, tinted by the grade color
-    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-    bgGrad.addColorStop(0, rgba(mixColor(gradeRgb, darkBase, 0.4), 1));
-    bgGrad.addColorStop(0.55, rgba(darkBase, 1));
-    bgGrad.addColorStop(1, rgba(darkerBase, 1));
-    ctx.fillStyle = bgGrad;
+    ctx.fillStyle = "#eeeff3";
     ctx.fillRect(0, 0, W, H);
 
-    // 2. Diagonal light streak for movement
-    ctx.save();
-    ctx.translate(W * 0.72, H * 0.15);
-    ctx.rotate((-14 * Math.PI) / 180);
-    const streakGrad = ctx.createLinearGradient(-260, 0, 260, 0);
-    streakGrad.addColorStop(0, "rgba(255,255,255,0)");
-    streakGrad.addColorStop(0.5, rgba(gradeRgb, 0.14));
-    streakGrad.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = streakGrad;
-    ctx.fillRect(-260, -200, 520, H * 1.8);
-    ctx.restore();
+    const hexWidth = 600;
+    const hexHeight = 665;
+    const hexX = (W * 0.45 - hexWidth) / 2;
+    const hexY = (H - hexHeight) / 2;
+    const hexCornerRadius = 50;
 
-    // 3. Giant faint watermark letter (first letter of the grade name)
-    ctx.save();
-    ctx.font = "900 760px Arial";
-    ctx.fillStyle = rgba(gradeRgb, 0.07);
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "right";
-    ctx.fillText(
-      (gradeChoisi.nom || "?").charAt(0).toUpperCase(),
-      W + 90,
-      H * 0.52,
+    ctx.fillStyle = gradeChoisi.couleur;
+    drawRoundedHexagonPath(
+      ctx,
+      hexX,
+      hexY,
+      hexWidth,
+      hexHeight,
+      hexCornerRadius,
     );
-    ctx.textAlign = "left";
-    ctx.restore();
-
-    // 4. Vignette
-    const vGrad = ctx.createRadialGradient(
-      W / 2,
-      H / 2,
-      H * 0.25,
-      W / 2,
-      H / 2,
-      W * 0.8,
-    );
-    vGrad.addColorStop(0, "rgba(0,0,0,0)");
-    vGrad.addColorStop(1, "rgba(0,0,0,0.5)");
-    ctx.fillStyle = vGrad;
-    ctx.fillRect(0, 0, W, H);
-
-    // 5. Avatar glow + avatar with a soft bottom fade (no hard hex crop)
-    const avatar = await loadImage(avatarUrl);
-    const imgH = 900;
-    const imgW = imgH * (avatar.width / avatar.height);
-    const avatarX = W * 0.18 - imgW / 2;
-    const avatarY = H - imgH + 70;
-
-    const glowCx = avatarX + imgW / 2;
-    const glowCy = avatarY + imgH * 0.42;
-    const glowGrad = ctx.createRadialGradient(
-      glowCx,
-      glowCy,
-      0,
-      glowCx,
-      glowCy,
-      imgH * 0.62,
-    );
-    glowGrad.addColorStop(0, rgba(gradeRgb, 0.4));
-    glowGrad.addColorStop(1, rgba(gradeRgb, 0));
-    ctx.fillStyle = glowGrad;
-    ctx.beginPath();
-    ctx.arc(glowCx, glowCy, imgH * 0.62, 0, Math.PI * 2);
     ctx.fill();
 
-    const avatarCanvas = createCanvas(imgW, imgH);
-    const avatarCtx = avatarCanvas.getContext("2d");
-    avatarCtx.drawImage(avatar, 0, 0, imgW, imgH);
-    const fadeMask = avatarCtx.createLinearGradient(0, 0, 0, imgH);
-    fadeMask.addColorStop(0, "rgba(255,255,255,1)");
-    fadeMask.addColorStop(0.85, "rgba(255,255,255,1)");
-    fadeMask.addColorStop(1, "rgba(255,255,255,0)");
-    avatarCtx.globalCompositeOperation = "destination-in";
-    avatarCtx.fillStyle = fadeMask;
-    avatarCtx.fillRect(0, 0, imgW, imgH);
-    ctx.drawImage(avatarCanvas, avatarX, avatarY, imgW, imgH);
+    ctx.save();
+    const points = [
+      { x: hexX + hexWidth / 2, y: hexY },
+      { x: hexX + hexWidth, y: hexY + hexHeight / 4 },
+      { x: hexX + hexWidth, y: hexY + (hexHeight * 3) / 4 },
+      { x: hexX + hexWidth / 2, y: hexY + hexHeight },
+      { x: hexX, y: hexY + (hexHeight * 3) / 4 },
+      { x: hexX, y: hexY + hexHeight / 4 },
+    ];
 
-    // 6. Right-side text panel
-    const textStartX = W * 0.44;
+    const topPadding = 120;
+    ctx.beginPath();
+    ctx.moveTo(points[1].x, points[0].y - topPadding);
+    ctx.lineTo(points[1].x, points[1].y);
+    ctx.arcTo(
+      points[2].x,
+      points[2].y,
+      points[3].x,
+      points[3].y,
+      hexCornerRadius,
+    );
+    ctx.arcTo(
+      points[3].x,
+      points[3].y,
+      points[4].x,
+      points[4].y,
+      hexCornerRadius,
+    );
+    ctx.arcTo(
+      points[4].x,
+      points[4].y,
+      points[5].x,
+      points[5].y,
+      hexCornerRadius,
+    );
+    ctx.lineTo(points[5].x, points[0].y - topPadding);
+    ctx.closePath();
+    ctx.clip();
 
-    // Badge pill (server)
-    const badgeY = 150;
-    const badgeHeight = 62;
-    const icon = await loadImage(iconPath);
-    ctx.font = "26px Arial";
-    const badgeTextWidth = measureTrackedWidth(ctx, badgeText.toUpperCase(), 2);
-    const badgePaddingX = 26;
-    const badgeWidth = icon.width + 16 + badgeTextWidth + badgePaddingX * 2;
+    const avatar = await loadImage(avatarUrl);
+    const imgH = 882;
+    const imgW = imgH * (avatar.width / avatar.height);
+    ctx.drawImage(
+      avatar,
+      hexX + hexWidth / 2 - imgW / 2,
+      hexY + hexHeight - imgH + 100,
+      imgW,
+      imgH,
+    );
+    ctx.restore();
+
+    const textStartX = W * 0.45 + 10;
+    const hexCenterY = hexY + hexHeight / 2;
+    const badgeWidth = 223;
+    const badgeHeight = 69;
+    const badgeRadius = 12;
+    const spacing = 24;
+
+    ctx.font = "bold 128px Arial";
+    const pseudoHeight = 128;
+    const pseudoY = hexCenterY;
+    const badgeY = pseudoY - pseudoHeight / 2 - spacing - badgeHeight;
+    const badgeX = textStartX;
 
     const badgeColor = config.serveur[serveur].couleur || 0x7b70ff;
-    const badgeRgb = hexToRgb(badgeColor);
-
-    drawRoundedRect(ctx, textStartX, badgeY, badgeWidth, badgeHeight, badgeHeight / 2);
-    ctx.fillStyle = rgba(badgeRgb, 0.16);
+    ctx.fillStyle = `#${badgeColor.toString(16).padStart(6, "0")}`;
+    ctx.beginPath();
+    ctx.moveTo(badgeX + badgeRadius, badgeY);
+    ctx.lineTo(badgeX + badgeWidth - badgeRadius, badgeY);
+    ctx.quadraticCurveTo(
+      badgeX + badgeWidth,
+      badgeY,
+      badgeX + badgeWidth,
+      badgeY + badgeRadius,
+    );
+    ctx.lineTo(badgeX + badgeWidth, badgeY + badgeHeight - badgeRadius);
+    ctx.quadraticCurveTo(
+      badgeX + badgeWidth,
+      badgeY + badgeHeight,
+      badgeX + badgeWidth - badgeRadius,
+      badgeY + badgeHeight,
+    );
+    ctx.lineTo(badgeX + badgeRadius, badgeY + badgeHeight);
+    ctx.quadraticCurveTo(
+      badgeX,
+      badgeY + badgeHeight,
+      badgeX,
+      badgeY + badgeHeight - badgeRadius,
+    );
+    ctx.lineTo(badgeX, badgeY + badgeRadius);
+    ctx.quadraticCurveTo(badgeX, badgeY, badgeX + badgeRadius, badgeY);
+    ctx.closePath();
     ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = rgba(badgeRgb, 0.6);
-    ctx.stroke();
 
-    const contrastColor = getContrastTextColor(badgeColor) === "#55545B"
-      ? rgba(badgeRgb, 1)
-      : "#FBF0CA";
-
-    const tmpIcon = createCanvas(icon.width, icon.height);
-    const tmpIconCtx = tmpIcon.getContext("2d");
-    tmpIconCtx.drawImage(icon, 0, 0);
-    tmpIconCtx.globalCompositeOperation = "source-in";
-    tmpIconCtx.fillStyle = rgba(badgeRgb, 1);
-    tmpIconCtx.fillRect(0, 0, icon.width, icon.height);
-
+    const icon = await loadImage(iconPath);
     const iconY = badgeY + (badgeHeight - icon.height) / 2;
-    ctx.drawImage(tmpIcon, textStartX + badgePaddingX, iconY);
-    ctx.fillStyle = rgba(badgeRgb, 1);
+    ctx.font = "32px Arial";
+    const textWidth = ctx.measureText(badgeText).width;
+    const totalWidth = icon.width + 16 + textWidth;
+    const startX = badgeX + (badgeWidth - totalWidth) / 2;
+    const contrastColor = getContrastTextColor(badgeColor);
+
+    const tmpCanvas = createCanvas(icon.width, icon.height);
+    const tmpCtx = tmpCanvas.getContext("2d");
+    tmpCtx.drawImage(icon, 0, 0);
+    tmpCtx.globalCompositeOperation = "source-in";
+    tmpCtx.fillStyle = contrastColor;
+    tmpCtx.fillRect(0, 0, icon.width, icon.height);
+
+    ctx.drawImage(tmpCanvas, startX, iconY, icon.width, icon.height);
+    ctx.fillStyle = contrastColor;
     ctx.textBaseline = "middle";
-    fillTextTracked(
-      ctx,
-      badgeText.toUpperCase(),
-      textStartX + badgePaddingX + icon.width + 16,
-      badgeY + badgeHeight / 2,
-      2,
-    );
+    ctx.fillText(badgeText, startX + icon.width + 16, badgeY + badgeHeight / 2);
 
-    // Rank progress bar
-    const barY = badgeY + badgeHeight + 46;
-    const barWidth = 320;
-    const barHeight = 6;
-
-    ctx.font = "22px Arial";
-    ctx.fillStyle = "rgba(255,255,255,0.45)";
-    fillTextTracked(ctx, "PROGRESSION DU GRADE", textStartX, barY - 20, 3);
-
-    ctx.textAlign = "right";
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.font = "bold 22px Arial";
-    ctx.fillText(
-      `${tierIndex >= 0 ? tierIndex + 1 : "?"} / ${tierTotal}`,
-      textStartX + barWidth,
-      barY - 20,
-    );
-    ctx.textAlign = "left";
-
-    drawRoundedRect(ctx, textStartX, barY, barWidth, barHeight, barHeight / 2);
-    ctx.fillStyle = "rgba(255,255,255,0.1)";
-    ctx.fill();
-
-    if (tierIndex >= 0 && tierTotal > 0) {
-      const fillWidth = Math.max(
-        barHeight,
-        (barWidth * (tierIndex + 1)) / tierTotal,
-      );
-      const barGrad = ctx.createLinearGradient(
-        textStartX,
-        0,
-        textStartX + fillWidth,
-        0,
-      );
-      barGrad.addColorStop(0, rgba(gradeRgb, 0.5));
-      barGrad.addColorStop(1, rgba(gradeRgb, 1));
-      drawRoundedRect(ctx, textStartX, barY, fillWidth, barHeight, barHeight / 2);
-      ctx.fillStyle = barGrad;
-      ctx.fill();
-    }
-
-    // Pseudonym
-    let fontSize = 132;
+    let fontSize = 128;
     ctx.font = `bold ${fontSize}px Arial`;
-    while (ctx.measureText(pseudonym).width > 980 && fontSize > 48) {
+    while (ctx.measureText(pseudonym).width > 1000 && fontSize > 40) {
       fontSize -= 4;
       ctx.font = `bold ${fontSize}px Arial`;
     }
 
-    const pseudoY = barY + 150;
-    ctx.shadowColor = rgba(gradeRgb, 0.5);
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = "#F5F6F8";
-    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#3b3e46";
     ctx.fillText(pseudonym, textStartX, pseudoY);
-    ctx.shadowBlur = 0;
-    ctx.shadowColor = "transparent";
 
-    // Accent line under the name
-    const lineY = pseudoY + 34;
-    const lineGrad = ctx.createLinearGradient(
-      textStartX,
-      0,
-      textStartX + 140,
-      0,
-    );
-    lineGrad.addColorStop(0, rgba(gradeRgb, 1));
-    lineGrad.addColorStop(1, rgba(gradeRgb, 0.1));
-    drawRoundedRect(ctx, textStartX, lineY, 140, 5, 2.5);
-    ctx.fillStyle = lineGrad;
-    ctx.fill();
-
-    // Subtitle
-    ctx.font = "34px Arial";
-    ctx.fillStyle = "rgba(255,255,255,0.65)";
-    const subtitleY = lineY + 56;
-    drawWrappedText(
-      ctx,
-      subtitle ? subtitle.toUpperCase() : "",
-      textStartX,
-      subtitleY,
-      900,
-      50,
-    );
+    ctx.fillStyle = "#8f939b";
+    ctx.font = "48px Arial";
+    const subtitleY = pseudoY + pseudoHeight / 2 + spacing + 24;
+    drawWrappedText(ctx, subtitle, textStartX, subtitleY, 1000, 60);
 
     const buffer = await canvas.toBuffer("image/png");
 
-    // ---------- Historique ----------
+    const gradesValides = Object.entries(config.grade)
+      .sort(([, a], [, b]) => b.priorite - a.priorite)
+      .map(([grade]) => grade.nom);
 
     const staffData = getData(`data/staff/${pseudonym}.json`);
     let historique = "";
