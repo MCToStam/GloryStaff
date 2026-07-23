@@ -37,7 +37,11 @@ module.exports = {
 
     const guildId = interaction.guild.id;
 
-    if (configRoutine.active && configRoutine.data.get("Salon")) {
+    if (
+      configRoutine &&
+      configRoutine.active &&
+      configRoutine.data.get("Salon")
+    ) {
       const salon = await interaction.client.channels.fetch(
         configRoutine.data.get("Salon"),
       );

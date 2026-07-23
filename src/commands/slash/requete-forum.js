@@ -43,7 +43,7 @@ module.exports = {
       const errorContainer = buildErrorContainer(
         config,
         "❌ Système Désactivé",
-        `Ce système n'est disponible uniquement sur le serveur **${config.serveur.delta.emoji_formate} ${config.serveur.delta.name}**.`,
+        `Ce système n'est disponible uniquement sur le serveur **${config.serveur.delta.emoji_formate} ${config.serveur.delta.nom}**.`,
       );
 
       return sendTemporaryError(interaction, errorContainer);

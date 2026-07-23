@@ -13,6 +13,7 @@ const log = require("../../util/module/log");
 async function sendAttenteStaff(serveur, joueur, id) {
   const client = getClient();
   if (!client) return;
+
   const configAttenteStaff = await Configuration.find({
     serveur,
     categorie: "Attente Staff",

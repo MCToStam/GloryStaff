@@ -742,6 +742,27 @@ const CONFIG_STATIC = [
       },
     },
   },
+  {
+    nom: "Récapitulatif Assaut",
+    emoji: "<:evenement:1517878287072890932>",
+    permission: "moderateur_test",
+    systeme: {
+      "Récapitulatif Assaut": {
+        emoji: "<:evenement:1517878287072890932>",
+        details: "Ce système permet de gérer les surveillances des assauts.",
+        Salon: {
+          type: "channel",
+          salonAutorise: [0, 5, 10, 11, 12],
+        },
+        Grade: {
+          type: "grade",
+        },
+        Role: {
+          type: "role",
+        },
+      },
+    },
+  },
 ];
 
 module.exports = CONFIG_STATIC;

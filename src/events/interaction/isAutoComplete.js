@@ -79,7 +79,12 @@ module.exports = async (client, interaction) => {
       );
     }
 
-    if (name === "paysa" || name === "paysb") {
+    if (
+      name === "paysa" ||
+      name === "paysb" ||
+      name === "pays_attaquant" ||
+      name === "pays_defenseur"
+    ) {
       const srvList = await serveurs();
       if (!srvList.length) {
         return respond(interaction, [

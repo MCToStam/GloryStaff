@@ -29,7 +29,7 @@ async function classement_notation(client) {
   const sortedData = [...data].sort((a, b) => b.bourse - a.bourse);
 
   const topCountries = sortedData
-    .slice(0, 3)
+    .slice(0, 5)
     .map(
       (entry) =>
         `${config.serveur[entry.server].emoji_formate} ${entry.pays}・${entry.bourse}$`,
@@ -86,7 +86,7 @@ async function classement_notation(client) {
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>
           t.setContent(
-            `**Top 3 Inter-Serveur :**\n${topCountries}\n\n**Top 10 ${serveur} :**\n${topServerCountries}`,
+            `<:nationsglory:1529062865410064384> **Top 5 Inter-Serveur :**\n${topCountries}\n\n**${config.serveur[serveur].emoji_formate} Top 10 ${config.serveur[serveur].nom} :**\n${topServerCountries}`,
           ),
         )
         .addSeparatorComponents((s) => s)
@@ -94,16 +94,16 @@ async function classement_notation(client) {
           new ActionRowBuilder().addComponents(
             new ButtonBuilder()
               .setCustomId("notation_help")
-              .setLabel("Informations")
+              .setLabel("ℹ️ Informations")
               .setStyle(ButtonStyle.Success),
 
             new ButtonBuilder()
               .setCustomId(`notation_op-${week}`)
-              .setLabel("Qui note mon pays ?")
+              .setLabel("🚨 Qui note mon pays ?")
               .setStyle(ButtonStyle.Primary),
 
             new ButtonBuilder()
-              .setLabel("Page des Notations")
+              .setLabel("🏆 Page des Notations")
               .setURL(`https://nationsglory.fr/notations/${serveur}/${week}`)
               .setStyle(ButtonStyle.Link),
           ),

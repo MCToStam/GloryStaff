@@ -40,6 +40,23 @@ async function sendTemporaryError(interaction, container) {
   });
 }
 
+async function sendTemporaryMessage(interaction, container) {
+  if (interaction.isMessageComponent()) {
+    const sentMessage = await interaction.update({
+      components: [container],
+      flags: MessageFlags.IsComponentsV2,
+      withResponse: true,
+    });
+
+    return;
+  }
+
+  return interaction.reply({
+    components: [container],
+    flags: MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral,
+  });
+}
+
 async function replyOrUpdate(
   interaction,
   components,
@@ -80,5 +97,6 @@ module.exports = {
   buildLinkRequiredContainer,
   buildErrorContainer,
   sendTemporaryError,
+  sendTemporaryMessage,
   replyOrUpdate,
 };

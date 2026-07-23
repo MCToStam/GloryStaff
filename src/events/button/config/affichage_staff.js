@@ -27,7 +27,11 @@ module.exports = {
       systeme: "Affichage Staff",
     });
 
-    if (!configStaff?.active || !configStaff.data.get("Salon")) {
+    if (
+      !configStaff ||
+      !configStaff?.active ||
+      !configStaff.data.get("Salon")
+    ) {
       const container = new ContainerBuilder()
         .setAccentColor(config.colors.error)
         .addTextDisplayComponents((t) =>

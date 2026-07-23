@@ -230,6 +230,17 @@ async function AttenteStaff(client, serveur, joueur, id) {
       t.setContent(
         `Le joueur **${joueur}** (<@${id}>) attend dans <#${config.serveur[serveur].attenteStaff}>.`,
       ),
+    )
+    .addSeparatorComponents((s) => s)
+    .addActionRowComponents(
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setLabel("🎙️ Créer un salon de Traitement")
+          .setStyle(ButtonStyle.Link)
+          .setURL(
+            `https://discord.com/channels/427943983000453140/${config.serveur[serveur].traitement}`,
+          ),
+      ),
     );
 
   const components = [container];

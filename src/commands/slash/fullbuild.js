@@ -54,7 +54,7 @@ module.exports = {
       systeme: "Full Build",
     });
 
-    if (!configExpansion.active) {
+    if (!configExpansion || !configExpansion.active) {
       const errorContainer = buildErrorContainer(
         config,
         "❌ Système Désactivé",
