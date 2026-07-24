@@ -1,6 +1,6 @@
 # GloryStaff
 
-![License](https://img.shields.io/github/license/VOTRE_UTILISATEUR/GloryStaff)
+![License](https://img.shields.io/github/license/MCToStam/GloryStaff)
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
 ![Contributions welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen)
 ![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)
