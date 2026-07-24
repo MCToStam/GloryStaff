@@ -56,6 +56,7 @@ DISCORD_TOKEN=
 MONGO_URI_GLORYPROJECTS=
 MONGO_URI_GLORYSTAFF=
 MONGO_URI_GLORYBOT=
+DISCORD_SELFBOT_TOKEN=
 ```
 
 > **Important :** Une instance MongoDB fonctionnelle est nécessaire pour utiliser le bot.
