@@ -4,13 +4,45 @@ const bodyParser = require("body-parser");
 const fs = require("node:fs");
 const path = require("node:path");
 require("./util/attentestaff");
+const config = require("./config");
 
 const app = express();
 const port = 21319;
 
 app.use(bodyParser.json());
 
-app.post("/tempsdejeu", (req, res) => {
+const rateLimits = new Map();
+
+function rateLimit({ windowMs, max }) {
+  return (req, res, next) => {
+    const ip = req.ip;
+    const now = Date.now();
+
+    if (!rateLimits.has(ip)) {
+      rateLimits.set(ip, []);
+    }
+
+    const requests = rateLimits.get(ip).filter((time) => now - time < windowMs);
+
+    if (requests.length >= max) {
+      return res.status(429).json({
+        error: "Trop de requêtes, veuillez réessayer plus tard.",
+      });
+    }
+
+    requests.push(now);
+    rateLimits.set(ip, requests);
+
+    next();
+  };
+}
+
+const tempsDeJeuLimiter = rateLimit({
+  windowMs: 23 * 60 * 60 * 1000,
+  max: 1,
+});
+
+app.post("/tempsdejeu", tempsDeJeuLimiter, (req, res) => {
   const { date, serveurs } = req.body;
 
   if (!date || !serveurs) {
@@ -18,6 +50,8 @@ app.post("/tempsdejeu", (req, res) => {
   }
 
   for (const [serveur, joueurs] of Object.entries(serveurs)) {
+    if (!config.liste_serveur.includes(serveur)) continue;
+
     const staffDir = path.join(__dirname, "data", serveur, "staff");
     const serveurDir = path.join(
       __dirname,
