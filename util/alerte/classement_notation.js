@@ -19,7 +19,7 @@ async function classement_notation(client) {
 
   const response = await fetch(`${config.glorybot_url}/api/notations/${week}`, {
     headers: {
-      Authorization: `Bearer ${config.glorybot_token}`,
+      Authorization: `Bearer ${process.env.GLORYBOT_TOKEN}`,
     },
   });
 

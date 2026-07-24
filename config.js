@@ -1,0 +1,237 @@
+class config {
+  constructor() {
+    this.support_serveur_id = "1132299932418719788";
+    this.developpeur = ["719072181631320145"];
+    this.colors = { error: 0xff0000, success: 0x3fff00 };
+    this.log_channels = {
+      error: "743742205671505962",
+      retourBotKick: "743742205671505962",
+      avis: "743742205671505962",
+      command: "743742205671505962",
+      button: "743742205671505962",
+      selectMenu: "743742205671505962",
+      modal: "743742205671505962",
+      invitationBot: "743742205671505962",
+    };
+    this.glorybot_url = "http://fi2.bot-hosting.net:20247";
+    this.serveur = {
+      blue: {
+        nom: "Blue",
+        type: "java",
+        attenteStaff: "1391069556537167984",
+        traitement: "1389898062129926234",
+        role: "1251837070960496720",
+        emoji: "1476883482365001819",
+        emoji_formate: "<:NGBlue:1476883482365001819>",
+        salon: "1251837868024926270",
+        couleur: 0x3b49c2,
+        dynmap: "https://blue.nationsglory.fr",
+      },
+      white: {
+        nom: "White",
+        type: "java",
+        attenteStaff: "1391045742860439584",
+        traitement: "1391430353734074408",
+        role: "1251837239986618409",
+        emoji: "1476883783230820522",
+        emoji_formate: "<:NGWhite:1476883783230820522>",
+        salon: "1251838119989481472",
+        couleur: 0xc2c3cc,
+        dynmap: "https://white.nationsglory.fr",
+      },
+      black: {
+        nom: "Black",
+        type: "java",
+        attenteStaff: "1391046393367625828",
+        traitement: "1391430748107575438",
+        role: "1318217219732455454",
+        emoji: "1476883458922909736",
+        emoji_formate: "<:NGBlack:1476883458922909736>",
+        salon: "1318940909995425812",
+        couleur: 0x21212e,
+        dynmap: "https://black.nationsglory.fr",
+      },
+      cyan: {
+        nom: "Cyan",
+        type: "java",
+        attenteStaff: "1391047893678293094",
+        traitement: "1391432030834655282",
+        role: "1251837288736882778",
+        emoji: "1476883539122192607",
+        emoji_formate: "<:NGCyan:1476883539122192607>",
+        salon: "1318941220738695168",
+        couleur: 0x6ec0ee,
+        dynmap: "https://cyan.nationsglory.fr",
+      },
+      lime: {
+        nom: "Lime",
+        type: "java",
+        attenteStaff: "1391046910638297209",
+        traitement: "1391431292968767572",
+        role: "1251837366964850738",
+        emoji: "1476883637164314726",
+        emoji_formate: "<:NGLime:1476883637164314726>",
+        salon: "1318942170668863529",
+        couleur: 0x7ac95f,
+        dynmap: "https://lime.nationsglory.fr",
+      },
+      coral: {
+        nom: "Coral",
+        type: "java",
+        attenteStaff: "1391048652683874485",
+        traitement: "1391432502148730950",
+        role: "1251837386078552144",
+        emoji: "1476883513247531114",
+        emoji_formate: "<:NGCoral:1476883513247531114>",
+        salon: "1318942381709459486",
+        couleur: 0xfc5c65,
+        dynmap: "https://coral.nationsglory.fr",
+      },
+      mocha: {
+        nom: "Mocha",
+        type: "java",
+        attenteStaff: "1383786152435122216",
+        traitement: "1388283659446128791",
+        role: "1318214064022753291",
+        emoji: "1476883663298891896",
+        emoji_formate: "<:NGMocha:1476883663298891896>",
+        salon: "1318258428908535828",
+        couleur: 0x823d14,
+        dynmap: "https://mocha.nationsglory.fr",
+      },
+      jade: {
+        nom: "Jade",
+        type: "java",
+        attenteStaff: "1391127281979887667",
+        traitement: "1391434137587683474",
+        role: "1251837477606653973",
+        emoji: "1476883610027036792",
+        emoji_formate: "<:NGJade:1476883610027036792>",
+        salon: "1318942850443903067",
+        couleur: 0x00bc7d,
+        dynmap: "https://jade.nationsglory.fr",
+      },
+      alpha: {
+        nom: "Alpha",
+        type: "bedrock",
+        attenteStaff: "1391050490263113788",
+        traitement: "1391434718154588210",
+        role: "1251837590039035925",
+        emoji: "1476883395953954966",
+        emoji_formate: "<:NGAlpha:1476883395953954966>",
+        salon: "1318943259606782022",
+        couleur: 0xf4264b,
+        dynmap: "",
+      },
+      sigma: {
+        nom: "Sigma",
+        type: "bedrock",
+        attenteStaff: "1391050842903417003",
+        traitement: "1391435534110560451",
+        role: "1251837650323898409",
+        emoji: "1476883759625277533",
+        emoji_formate: "<:NGSigma:1476883759625277533>",
+        salon: "1318943370659495936",
+        couleur: 0x21212f,
+        dynmap: "",
+      },
+      omega: {
+        nom: "Omega",
+        type: "bedrock",
+        attenteStaff: "1391051674495484004",
+        traitement: "1391435990324744222",
+        role: "1251837703176196180",
+        emoji: "1476883688787804200",
+        emoji_formate: "<:NGOmega:1476883688787804200>",
+        salon: "1318943503245377616",
+        couleur: 0x828294,
+        dynmap: "",
+      },
+      delta: {
+        nom: "Delta",
+        type: "bedrock",
+        attenteStaff: "1391052026997243944",
+        traitement: "1391436573899358381",
+        role: "1251837608242315284",
+        emoji: "1476883562258235504",
+        emoji_formate: "<:NGDelta:1476883562258235504>",
+        salon: "1318943648187945022",
+        couleur: 0xf6c005,
+        dynmap: "",
+      },
+      epsilon: {
+        nom: "Epsilon",
+        type: "bedrock",
+        attenteStaff: "1391049795023667311",
+        traitement: "1391433470382964777",
+        role: "1318213474702327858",
+        emoji: "1476883585133707359",
+        emoji_formate: "<:NGEpsilon:1476883585133707359>",
+        salon: "1318258350298894396",
+        couleur: 0x3b49c1,
+        dynmap: "",
+      },
+    };
+    this.liste_serveur = Object.keys(this.serveur);
+    this.liste_serveur_java = Object.entries(this.serveur)
+      .filter(([, data]) => data.type === "java")
+      .map(([name]) => name);
+    this.liste_serveur_bedrock = Object.entries(this.serveur)
+      .filter(([, data]) => data.type === "bedrock")
+      .map(([name]) => name);
+    this.role = {
+      administrateur: "1459879870304878729",
+      super_moderateur: "1459879904127619235",
+      staffng: "1459879937682051122",
+    };
+    this.grade = {
+      guide: {
+        couleur: "#ae6eee",
+        emoji: "1441505228007411783",
+        priorite: 1,
+        nom: { normal: "Guide", pluriel: "Guides" },
+      },
+      moderateur_test: {
+        couleur: "#7fff60",
+        emoji: "1441505233183309946",
+        priorite: 2,
+        nom: { normal: "Modérateur Test", pluriel: "Modérateurs Tests" },
+      },
+      moderateur: {
+        couleur: "#7ac95f",
+        emoji: "1441505230394228897",
+        priorite: 3,
+        nom: { normal: "Modérateur", pluriel: "Modérateurs" },
+      },
+      moderateur_plus: {
+        couleur: "#159713",
+        emoji: "1441505229450379294",
+        priorite: 4,
+        nom: { normal: "Modérateur Plus", pluriel: "Modérateurs Plus" },
+      },
+      super_moderateur: {
+        couleur: "#3b49c2",
+        emoji: "1441505231501525063",
+        priorite: 5,
+        nom: { normal: "Super Modérateur", pluriel: "Super Modérateurs" },
+      },
+      administrateur: {
+        couleur: "#c80425",
+        emoji: "1441505235813273601",
+        priorite: 6,
+        nom: { normal: "Administrateur", pluriel: "Administrateurs" },
+      },
+    };
+    this.emojigrade = {
+      Guide: "<:guide:1441505228007411783>",
+      "Modérateur Test": "<:moderateur_test:1441505233183309946>",
+      "Modérateur Confirmé": "<:moderateur:1441505230394228897>",
+      Modérateur: "<:moderateur:1441505230394228897>",
+      "Modérateur Plus": "<:moderateur_plus:1441505229450379294>",
+      "Super-Modérateur": "<:super_moderateur:1441505231501525063>",
+      Administrateur: "<:administrateur:1441505235813273601>",
+    };
+  }
+}
+
+module.exports = new config();

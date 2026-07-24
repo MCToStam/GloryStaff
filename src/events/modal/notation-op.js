@@ -24,7 +24,7 @@ module.exports = {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${config.glorybot_token}`,
+          Authorization: `Bearer ${process.env.GLORYBOT_TOKEN}`,
           "Content-Type": "application/json",
         },
       },

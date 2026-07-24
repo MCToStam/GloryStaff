@@ -89,7 +89,7 @@ async function disband_14h00(client) {
         `${config.glorybot_url}/api/disband?serveur=${serveur}`,
         {
           headers: {
-            Authorization: `Bearer ${config.glorybot_token}`,
+            Authorization: `Bearer ${process.env.GLORYBOT_TOKEN}`,
             "Content-Type": "application/json",
           },
         },

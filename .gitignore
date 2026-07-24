@@ -1,12 +1,7 @@
 /node_modules
-/config.js
-/index.js
 /.env
 /package-lock.json
 /eslint.config.mjs
 /data/*
-/backups/*
 !/data/logo/
-/data/logo/*
-!/data/logo/*.png
 /util/rankMessage.js

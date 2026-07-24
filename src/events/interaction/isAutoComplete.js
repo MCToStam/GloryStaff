@@ -99,7 +99,7 @@ module.exports = async (client, interaction) => {
         `${config.glorybot_url}/api/paysCree?serveur=${srvList[0]}`,
         {
           headers: {
-            Authorization: `Bearer ${config.glorybot_token}`,
+            Authorization: `Bearer ${process.env.GLORYBOT_TOKEN}`,
           },
         },
       );

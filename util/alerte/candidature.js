@@ -199,7 +199,7 @@ async function buildCandidatureContainer(
       `https://publicapi.nationsglory.fr/user/${candidature.auteur}`,
       {
         headers: {
-          Authorization: `Bearer ${config.apitoken_backup}`,
+          Authorization: `Bearer ${process.env.NG_API_TOKEN}`,
           accept: "application/json",
         },
       },

@@ -437,7 +437,7 @@ async function fetchPublicProfile(staff, config) {
       `https://publicapi.nationsglory.fr/user/${encodeURIComponent(staff)}`,
       {
         headers: {
-          Authorization: `Bearer ${config.apitoken_backup}`,
+          Authorization: `Bearer ${process.env.NG_API_TOKEN}`,
           Accept: "application/json",
         },
         signal: controller.signal,

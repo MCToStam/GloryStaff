@@ -1,13 +1,14 @@
 const fs = require("node:fs");
 const { discordStaff } = require("../util/module/discordLink");
+const ServeurDiscord = require("../util/database/models/ServeurDiscord");
 
 async function getServerCommand(guildId, userId) {
   const { servers } = await discordStaff(userId, "all", "guide");
   if (servers.length === 1) return servers;
   if (!guildId) return [];
-  const rawDatas = fs.readFileSync("data/logo/serveur.json", "utf-8");
-  const data = JSON.parse(rawDatas);
-  if (data[guildId] && servers.includes(data[guildId])) return [data[guildId]];
+  const guildData = await ServeurDiscord.findOne({ guildId: guildId });
+  if (guildData && servers.includes(guildData.serveur))
+    return [guildData.serveur];
   if (servers.length >= 1) return servers;
   else return [];
 }
