@@ -132,7 +132,7 @@ module.exports = {
       .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(
-          `## ${emojiTete} Activité - ${joueur.replace(/_/g, "\\_")}`,
+          `## ${emojiTete} Activité - ${joueur.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
         ),
       )
       .addSeparatorComponents((s) => s)

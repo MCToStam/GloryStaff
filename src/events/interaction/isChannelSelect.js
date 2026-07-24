@@ -113,9 +113,11 @@ module.exports = async (client, interaction) => {
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
         `**👷 Utilisateur :** ${
-          interaction.user.globalName?.replace(/_/g, "\\_") ||
-          interaction.user.username?.replace(/_/g, "\\_")
-        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${interaction.customId.replace(/_/g, "\\_")}`,
+          interaction.user.globalName
+            ?.replace(/\\/g, "\\\\")
+            .replace(/_/g, "\\_") ||
+          interaction.user.username?.replace(/\\/g, "\\\\").replace(/_/g, "\\_")
+        } (<@${interaction.user.id}>)\n**🔧 Valeur :** ${interaction.customId.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
       ),
     );
 

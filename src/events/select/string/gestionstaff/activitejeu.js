@@ -50,7 +50,7 @@ module.exports = {
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>
         t.setContent(
-          `Le compte NationsGlory "${joueur.replace(/_/g, "\\_")}" n'est relié a aucun compte Minecraft, son temps de jeu ne peut donc pas être enregistré sur les serveur Bedrock.`,
+          `Le compte NationsGlory "${joueur.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}" n'est relié a aucun compte Minecraft, son temps de jeu ne peut donc pas être enregistré sur les serveur Bedrock.`,
         ),
       );
 
@@ -260,7 +260,7 @@ module.exports = {
       .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((t) =>
         t.setContent(
-          `## ${emojiTete} Gestion Staff - ${joueur.replace(/_/g, "\\_")}`,
+          `## ${emojiTete} Gestion Staff - ${joueur.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
         ),
       )
       .addSeparatorComponents((s) => s)

@@ -127,7 +127,7 @@ async function repartition_notation(client) {
               ? `<:${emoji.name}:${emoji.id}>`
               : emoji.name;
 
-            return `${emojiText} **${key.replace(/_/g, "\\_")} :** ${value}`;
+            return `${emojiText} **${key.replace(/\\/g, "\\\\").replace(/_/g, "\\_")} :** ${value}`;
           }),
         )
       ).join("\n");

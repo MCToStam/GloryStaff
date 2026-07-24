@@ -33,7 +33,7 @@ module.exports = {
           const linkedId = Object.keys(linkData).find(
             (id) => linkData[id] === name,
           );
-          const escapedName = name.replace(/_/g, "\\_");
+          const escapedName = name.replace(/\\/g, "\\\\").replace(/_/g, "\\_");
           return linkedId ? `${escapedName} ( <@${linkedId}> )` : escapedName;
         })
         .join(", ");

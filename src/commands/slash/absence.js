@@ -47,7 +47,7 @@ module.exports = {
         section
           .addTextDisplayComponents((textDisplay) =>
             textDisplay.setContent(
-              `## 📅 Absences - ${pseudo.replace(/_/g, "\\_")}`,
+              `## 📅 Absences - ${pseudo.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
             ),
           )
           .setButtonAccessory((button) =>

@@ -87,7 +87,10 @@ module.exports = {
 
     if (!foundUser) {
       const suggestions = similarUsers
-        .map((user) => `- ${user.username.replace(/_/g, "\\_")}`)
+        .map(
+          (user) =>
+            `- ${user.username.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
+        )
         .join("\n");
 
       const errorContainer = buildErrorContainer(
@@ -156,7 +159,9 @@ module.exports = {
     const introContainer = new ContainerBuilder()
       .setAccentColor(srvConfig.couleur)
       .addTextDisplayComponents((t) =>
-        t.setContent(`## 🔎 Connexion de ${vraiCriminel.replace(/_/g, "\\_")}`),
+        t.setContent(
+          `## 🔎 Connexion de ${vraiCriminel.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
+        ),
       )
       .addSeparatorComponents((s) => s)
       .addTextDisplayComponents((t) =>

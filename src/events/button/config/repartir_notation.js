@@ -133,7 +133,7 @@ async function modeAutomatique(client, interaction, config, serveur) {
       const emoji =
         (await getEmojiTete(client, staff)) ||
         "<:tete_default:1517896405841215619>";
-      return `${emoji} **${staff.replace(/_/g, "\\_")}** : ${range}`;
+      return `${emoji} **${staff.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}** : ${range}`;
     }),
   );
 
@@ -333,7 +333,7 @@ async function modeManuel(client, interaction, config, serveur, subId) {
             const emoji =
               (await getEmojiTete(client, s)) ||
               "<:tete_default:1517896405841215619>";
-            return `${emoji} **${s.replace(/_/g, "\\_")}** : ${range}`;
+            return `${emoji} **${s.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}** : ${range}`;
           }),
         )
       ).join("\n");

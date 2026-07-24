@@ -25,7 +25,9 @@ module.exports = {
       const container = new ContainerBuilder()
         .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((t) =>
-          t.setContent(`## 💢 Blâme - ${joueur.replace(/_/g, "\\_")}`),
+          t.setContent(
+            `## 💢 Blâme - ${joueur.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
+          ),
         )
         .addSeparatorComponents((s) => s)
         .addTextDisplayComponents((t) =>

@@ -22,7 +22,9 @@ module.exports = async (client, guild) => {
     const targetUserID = "719072181631320145";
     const targetUser = await client.users.fetch(targetUserID);
 
-    const escapedServerName = guild.name.replace(/_/g, "\\_");
+    const escapedServerName = guild.name
+      .replace(/\\/g, "\\\\")
+      .replace(/_/g, "\\_");
     const creationTimestamp = Math.floor(guild.createdTimestamp / 1000);
     const serverIconURL = guild.iconURL({ dynamic: true, size: 512 });
 

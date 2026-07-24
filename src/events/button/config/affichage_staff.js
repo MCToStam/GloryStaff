@@ -60,7 +60,8 @@ module.exports = {
       .sort(([, a], [, b]) => b.priorite - a.priorite)
       .map(([grade]) => grade);
 
-    const escapeUnderscore = (text = "") => text.replace(/_/g, "\\_");
+    const escapeUnderscore = (text = "") =>
+      text.replace(/\\/g, "\\\\").replace(/_/g, "\\_");
 
     const now = new Date();
 

@@ -221,7 +221,9 @@ async function AttenteStaff(client, serveur, joueur, id) {
     .addTextDisplayComponents((t) =>
       t.setContent(
         `## ${emoji || "🕓"} Attente Staff ${
-          pseudo ? `- ${pseudo.replace(/_/g, "\\_")}` : ""
+          pseudo
+            ? `- ${pseudo.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`
+            : ""
         }`,
       ),
     )
@@ -283,7 +285,7 @@ async function Jail(
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
-        `## ${teteEmoji} Jail sur ${vraiCriminel.replace(/_/g, "\\_")}`,
+        `## ${teteEmoji} Jail sur ${vraiCriminel.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
       ),
     );
   container
@@ -325,7 +327,7 @@ async function Routine(client, serveur, pseudonym, emoji) {
     .setAccentColor(config.serveur[serveur].couleur)
     .addTextDisplayComponents((textDisplay) =>
       textDisplay.setContent(
-        `## ${teteEmoji} Routine de ${pseudonym.replace(/_/g, "\\_")}`,
+        `## ${teteEmoji} Routine de ${pseudonym.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
       ),
     )
     .addSeparatorComponents((separator) => separator)

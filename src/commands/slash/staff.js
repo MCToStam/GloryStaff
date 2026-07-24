@@ -99,7 +99,7 @@ async function showStaffList(interaction, config, serveur, srvConfig) {
     const memberNames = members
       .map((name) => {
         const linkedId = idByName.get(name);
-        const escapedName = name.replace(/_/g, "\\_");
+        const escapedName = name.replace(/\\/g, "\\\\").replace(/_/g, "\\_");
         return linkedId ? `${escapedName} ( <@${linkedId}> )` : escapedName;
       })
       .join(", ");
@@ -330,7 +330,7 @@ async function showStaffManagement(
     .setAccentColor(srvConfig.couleur)
     .addTextDisplayComponents((t) =>
       t.setContent(
-        `## ${emojiTete} Gestion Staff - ${staff.replace(/_/g, "\\_")}`,
+        `## ${emojiTete} Gestion Staff - ${staff.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
       ),
     )
     .addSeparatorComponents((s) => s)

@@ -55,7 +55,7 @@ module.exports = {
       .setAccentColor(config.serveur[serveur].couleur)
       .addTextDisplayComponents((textDisplay) =>
         textDisplay.setContent(
-          `## 📅 Absences - ${pseudo.replace(/_/g, "\\_")}`,
+          `## 📅 Absences - ${pseudo.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
         ),
       )
       .addSeparatorComponents((s) => s)

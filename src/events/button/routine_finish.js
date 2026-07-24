@@ -66,7 +66,7 @@ module.exports = {
         .setAccentColor(config.serveur[serveur].couleur)
         .addTextDisplayComponents((textDisplay) =>
           textDisplay.setContent(
-            `## ${teteEmoji} Routine de ${pseudo.replace(/_/g, "\\_")}`,
+            `## ${teteEmoji} Routine de ${pseudo.replace(/\\/g, "\\\\").replace(/_/g, "\\_")}`,
           ),
         )
         .addSeparatorComponents((separator) => separator)

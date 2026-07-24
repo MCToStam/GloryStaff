@@ -64,7 +64,8 @@ async function updateAllStaffWebhooks() {
       (c) => c.nom === "Candidature",
     );
 
-    const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
+    const escapeUnderscore = (text) =>
+      text.replace(/\\/g, "\\\\").replace(/_/g, "\\_");
 
     const now = new Date();
     const absenceData = await Absense.find({
@@ -416,7 +417,8 @@ async function updateStaff(client) {
       (c) => c.nom === "Candidature",
     );
 
-    const escapeUnderscore = (text) => text.replace(/_/g, "\\_");
+    const escapeUnderscore = (text) =>
+      text.replace(/\\/g, "\\\\").replace(/_/g, "\\_");
 
     const GRADES = Object.entries(config.grade)
       .sort(([, a], [, b]) => b.priorite - a.priorite)
