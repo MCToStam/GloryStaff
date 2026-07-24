@@ -1,5 +1,10 @@
 # GloryStaff
 
+![License](https://img.shields.io/github/license/VOTRE_UTILISATEUR/GloryStaff)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
+![Contributions welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen)
+![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)
+
 > GloryStaff est un outil unique qui a pour but de faciliter le travail répétitif. Il peut être configuré très facilement et en autonomie totale !
 
 ## ✨ Fonctionnalités
