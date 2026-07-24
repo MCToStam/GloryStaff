@@ -8,7 +8,7 @@ module.exports = {
     name: "config_salon",
   },
 
-  async execute(client, interaction) {
+  async execute(client, interaction, config) {
     const [_, type, systemName, key] = interaction.customId.split("-");
 
     const serveur = await getServeur(interaction);

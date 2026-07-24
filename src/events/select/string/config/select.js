@@ -10,7 +10,7 @@ module.exports = {
     name: "config_select",
   },
 
-  async execute(client, interaction) {
+  async execute(client, interaction, config) {
     const [_, type, systemName, param] = interaction.customId.split("-");
 
     const valeur = interaction.values[0].replace("config_select-", "");

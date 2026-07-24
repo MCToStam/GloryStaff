@@ -9,3 +9,4 @@
 !/data/logo/
 /data/logo/*
 !/data/logo/*.png
+/util/rankMessage.js

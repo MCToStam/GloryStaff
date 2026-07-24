@@ -104,7 +104,7 @@ const init = async () => {
     client.on(eventName, (...args) => event(client, ...args));
   }
 
-  client.login(process.env.TOKEN);
+  client.login(process.env.DISCORD_TOKEN);
   clientStore.setClient(client);
   log(`Node ${process.version} !`, "READY", "green");
 };

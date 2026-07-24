@@ -2,9 +2,9 @@
   "name": "glorystaff",
   "version": "1.0.0",
   "description": "GloryStaff, un outil unique qui a pour but de faciliter le travail répétitif. Il peut être configuré très facilement et en autonomie totale !",
-  "main": "main.js",
+  "main": "start.js",
   "scripts": {
-    "start": "node test.js",
+    "start": "node start.js",
     "clean": "npx prettier . --write",
     "format": "node .vscode/clean.js"
   },

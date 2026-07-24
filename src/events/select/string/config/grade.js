@@ -10,7 +10,7 @@ module.exports = {
     name: "config_grade",
   },
 
-  async execute(client, interaction) {
+  async execute(client, interaction, config) {
     const [_, type, systemName, key] = interaction.customId.split("-");
 
     const grade = interaction.values[0].replace("config_grade-", "");

@@ -8,7 +8,7 @@ module.exports = {
     name: "config_toggle",
   },
 
-  async execute(client, interaction) {
+  async execute(client, interaction, config) {
     const [_, systemName, type] = interaction.customId.split("-");
     const serveur = await getServeur(interaction);
 
