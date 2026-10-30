@@ -19,7 +19,7 @@
     "cheerio": "^1.1.2",
     "discord.js": "^14.26.4",
     "discord.js-selfbot-v13": "^3.7.1",
-    "dotenv": "^17.2.3",
+    "dotenv": "^18.0.9",
     "express": "^5.1.0",
     "luxon": "^3.7.2",
     "mongoose": "^9.2.2",
